@@ -18,7 +18,7 @@ pallet-timestamp = { version = "3.0.0", default-features = false }
 orml-traits = { version = "0.4.1-dev", default-features = false, path = "../orml-traits" }
 orml-nft = { version = "0.4.1-dev", default-features = false, path = "../orml-nft" }
 nftmart-config = { default-features = false, path = "../nftmart-config" }
-nftmart-core = { default-features = false, path = "../nftmart-core" }
+nftmart-core = { path = "../nftmart-core" }
 
 [dev-dependencies]
 sp-io = { version = "3.0.0" }

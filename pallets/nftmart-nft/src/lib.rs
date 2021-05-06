@@ -9,7 +9,7 @@ use frame_support::{
 use sp_std::vec::Vec;
 use frame_system::pallet_prelude::*;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
-use nftmart_core::constants_types::{Balance, ACCURACY};
+use nftmart_core::constants_types::{Balance};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
@@ -340,7 +340,7 @@ pub mod module {
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
-				min_order_deposit: ACCURACY,
+				min_order_deposit: nftmart_core::constants_types::ACCURACY,
 				_phantom: Default::default(),
 			}
 		}
