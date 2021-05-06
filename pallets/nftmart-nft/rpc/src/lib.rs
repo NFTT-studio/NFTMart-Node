@@ -9,7 +9,7 @@ pub use nftmart_rpc_runtime_api::NFTMartApi as NFTMartRuntimeApi;
 #[rpc]
 pub trait NFTMartApi {
 	#[rpc(name = "nftmart_mintTokenDeposit")]
-	fn mint_token_deposit(&self, metadata_len: u32) -> Result<String>;
+	fn mint_token_deposit(&self, metadata_len: u32, quantity: u32) -> Result<(String, String)>;
 
 	#[rpc(name = "nftmart_createClassDeposit")]
 	fn create_class_deposit(&self, metadata_len: u32, name_len: u32, description_len: u32) -> Result<(String, String)>;
@@ -66,15 +66,15 @@ where
 		{"id":1,"jsonrpc":"2.0","method":"nftmart_mintTokenDeposit","params":[4, 3]}
 		{"jsonrpc":"2.0","result":["1040000000000","3120000000000"],"id":1}
 	 */
-	fn mint_token_deposit(&self, metadata_len: u32) -> Result<String> {
+	fn mint_token_deposit(&self, metadata_len: u32, quantity: u32) -> Result<(String, String)> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(self.client.info().best_hash);
-		api.mint_token_deposit(&at, metadata_len).map_err(|e| RpcError {
+		api.mint_token_deposit(&at, metadata_len, quantity).map_err(|e| RpcError {
 			code: ErrorCode::ServerError(Error::RuntimeError.into()),
 			message: "Unable to query dispatch info.".into(),
 			data: Some(format!("{:?}", e).into()),
-		}).map(|deposit|{
-			format!("{}", deposit)
+		}).map(|(deposit, total_deposit)|{
+			(format!("{}", deposit), format!("{}", total_deposit))
 		})
 	}
 

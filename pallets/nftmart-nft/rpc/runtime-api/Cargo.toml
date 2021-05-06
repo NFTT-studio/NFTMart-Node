@@ -8,10 +8,11 @@ edition = "2018"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-sp-api = { version = "3.0.0", default-features = false, path = "../../../../primitives/api" }
-sp-std = { version = "3.0.0", default-features = false, path = "../../../../primitives/std" }
-sp-core = { version = "3.0.0", default-features = false, path = "../../../../primitives/core" }
-nftmart-nft = { version = "3.0.0", default-features = false, path = "../../../nftmart-nft" }
+sp-api = { version = "3.0.0", default-features = false  }
+sp-std = { version = "3.0.0", default-features = false  }
+sp-core = { version = "3.0.0", default-features = false }
+nftmart-nft = { default-features = false, path = "../../../nftmart-nft" }
+nftmart-core = { default-features = false, path = "../../../nftmart-core" }
 
 [features]
 default = ["std"]

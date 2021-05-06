@@ -53,6 +53,7 @@ substrate-frame-rpc-system = '3.0.0'
 
 # local dependencies
 node-template-runtime = { path = '../runtime', version = '3.0.0' }
+nftmart-core = { path = '../pallets/nftmart-core' }
 
 [features]
 default = []

@@ -1,0 +1,7 @@
+[package]
+name = "nftmart-core"
+version = "3.0.0"
+authors = ["NFTMart Developers"]
+edition = "2018"
+
+[dependencies]

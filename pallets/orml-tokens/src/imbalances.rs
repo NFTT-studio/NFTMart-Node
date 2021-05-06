@@ -1,7 +1,7 @@
 // wrapping these imbalances in a private module is necessary to ensure absolute
 // privacy of the inner member.
 use crate::{Config, TotalIssuance};
-use frame_support::traits::{Get, Imbalance, TryDrop, SameOrOther};
+use frame_support::traits::{Get, Imbalance, TryDrop};
 use sp_runtime::traits::{Saturating, Zero};
 use sp_std::{marker, mem, result};
 
@@ -13,12 +13,6 @@ pub struct PositiveImbalance<T: Config, GetCurrencyId: Get<T::CurrencyId>>(
 	T::Balance,
 	marker::PhantomData<GetCurrencyId>,
 );
-
-impl<T: Config, GetCurrencyId: Get<T::CurrencyId>> Default for PositiveImbalance<T, GetCurrencyId> {
-	fn default() -> Self {
-		PositiveImbalance(Zero::zero(), Default::default())
-	}
-}
 
 impl<T: Config, GetCurrencyId: Get<T::CurrencyId>> PositiveImbalance<T, GetCurrencyId> {
 	/// Create a new positive imbalance from a balance.
@@ -35,12 +29,6 @@ pub struct NegativeImbalance<T: Config, GetCurrencyId: Get<T::CurrencyId>>(
 	T::Balance,
 	marker::PhantomData<GetCurrencyId>,
 );
-
-impl<T: Config, GetCurrencyId: Get<T::CurrencyId>> Default for NegativeImbalance<T, GetCurrencyId> {
-	fn default() -> Self {
-		NegativeImbalance(Zero::zero(), Default::default())
-	}
-}
 
 impl<T: Config, GetCurrencyId: Get<T::CurrencyId>> NegativeImbalance<T, GetCurrencyId> {
 	/// Create a new negative imbalance from a balance.
@@ -85,14 +73,14 @@ impl<T: Config, GetCurrencyId: Get<T::CurrencyId>> Imbalance<T::Balance> for Pos
 		self.0 = self.0.saturating_add(other.0);
 		mem::forget(other);
 	}
-	fn offset(self, other: Self::Opposite) -> SameOrOther<Self, Self::Opposite> {
+	fn offset(self, other: Self::Opposite) -> result::Result<Self, Self::Opposite> {
 		let (a, b) = (self.0, other.0);
 		mem::forget((self, other));
 
 		if a >= b {
-			SameOrOther::Same(Self::new(a - b))
+			Ok(Self::new(a - b))
 		} else {
-			SameOrOther::Other(NegativeImbalance::new(b - a))
+			Err(NegativeImbalance::new(b - a))
 		}
 	}
 	fn peek(&self) -> T::Balance {
@@ -136,14 +124,14 @@ impl<T: Config, GetCurrencyId: Get<T::CurrencyId>> Imbalance<T::Balance> for Neg
 		self.0 = self.0.saturating_add(other.0);
 		mem::forget(other);
 	}
-	fn offset(self, other: Self::Opposite) -> SameOrOther<Self, Self::Opposite> {
+	fn offset(self, other: Self::Opposite) -> result::Result<Self, Self::Opposite> {
 		let (a, b) = (self.0, other.0);
 		mem::forget((self, other));
 
 		if a >= b {
-			SameOrOther::Same(Self::new(a - b))
+			Ok(Self::new(a - b))
 		} else {
-			SameOrOther::Other(PositiveImbalance::new(b - a))
+			Err(PositiveImbalance::new(b - a))
 		}
 	}
 	fn peek(&self) -> T::Balance {

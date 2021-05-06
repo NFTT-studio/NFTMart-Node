@@ -38,7 +38,6 @@ pub struct ClassInfo<TokenId, AccountId, Data> {
 	/// Class metadata
 	pub metadata: Vec<u8>,
 	/// Total issuance for the class
-	#[codec(compact)]
 	pub total_issuance: TokenId,
 	/// Class owner
 	pub owner: AccountId,
@@ -48,51 +47,13 @@ pub struct ClassInfo<TokenId, AccountId, Data> {
 
 /// Token info
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct TokenInfo<TokenId, Data> {
+pub struct TokenInfo<AccountId, Data> {
 	/// Token metadata
 	pub metadata: Vec<u8>,
+	/// Token owner
+	pub owner: AccountId,
 	/// Token Properties
 	pub data: Data,
-	/// Token's number.
-	#[codec(compact)]
-	pub quantity: TokenId,
-}
-
-/// Account Token
-#[derive(Encode, Decode, Copy, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct AccountToken<TokenId> {
-	/// account token number.
-	#[codec(compact)]
-	pub quantity: TokenId,
-	/// account reserved token number.
-	#[codec(compact)]
-	pub reserved: TokenId,
-}
-
-impl<TokenId> Default for AccountToken<TokenId> where TokenId: AtLeast32BitUnsigned {
-	fn default() -> Self {
-		Self {
-			quantity: Zero::zero(),
-			reserved: Zero::zero(),
-		}
-	}
-}
-
-impl<TokenId> AccountToken<TokenId> where TokenId: AtLeast32BitUnsigned + Copy {
-	pub fn is_zero(&self) -> bool {
-		self.quantity.is_zero() && self.reserved.is_zero()
-	}
-
-	pub fn new(quantity: TokenId) -> Self {
-		Self{
-			quantity,
-			..Self::default()
-		}
-	}
-
-	pub fn total(&self) -> TokenId {
-		self.quantity.saturating_add(self.reserved)
-	}
 }
 
 pub use module::*;
@@ -115,7 +76,7 @@ pub mod module {
 
 	pub type ClassInfoOf<T> =
 		ClassInfo<<T as Config>::TokenId, <T as frame_system::Config>::AccountId, <T as Config>::ClassData>;
-	pub type TokenInfoOf<T> = TokenInfo<<T as Config>::TokenId, <T as Config>::TokenData>;
+	pub type TokenInfoOf<T> = TokenInfo<<T as frame_system::Config>::AccountId, <T as Config>::TokenData>;
 
 	pub type GenesisTokenData<T> = (
 		<T as frame_system::Config>::AccountId, // Token owner
@@ -175,12 +136,13 @@ pub mod module {
 		StorageDoubleMap<_, Twox64Concat, T::ClassId, Twox64Concat, T::TokenId, TokenInfoOf<T>>;
 
 	/// Token existence check by owner and class ID.
-	///         k1                k2               value
-	/// map: AccountId -> (classId, tokenId) -> token_count.
+	// TODO: pallet macro doesn't support conditional compiling. Always having `TokensByOwner` storage doesn't hurt but
+	// it could be removed once conditional compiling supported.
+	// #[cfg(not(feature = "disable-tokens-by-owner"))]
 	#[pallet::storage]
 	#[pallet::getter(fn tokens_by_owner)]
 	pub type TokensByOwner<T: Config> =
-		StorageDoubleMap<_, Twox64Concat, T::AccountId, Twox64Concat, (T::ClassId, T::TokenId), AccountToken<<T as Config>::TokenId>>;
+		StorageDoubleMap<_, Twox64Concat, T::AccountId, Twox64Concat, (T::ClassId, T::TokenId), (), ValueQuery>;
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
@@ -201,7 +163,7 @@ pub mod module {
 				let class_id = Pallet::<T>::create_class(&token_class.0, token_class.1.to_vec(), token_class.2.clone())
 					.expect("Create class cannot fail while building genesis");
 				for (account_id, token_metadata, token_data) in &token_class.3 {
-					Pallet::<T>::mint(&account_id, class_id, token_metadata.to_vec(), token_data.clone(), One::one())
+					Pallet::<T>::mint(&account_id, class_id, token_metadata.to_vec(), token_data.clone())
 						.expect("Token mint cannot fail during genesis");
 				}
 			})
@@ -233,7 +195,7 @@ impl<T: Config> Pallet<T> {
 
 		let info = ClassInfo {
 			metadata,
-			total_issuance: Zero::zero(),
+			total_issuance: Default::default(),
 			owner: owner.clone(),
 			data,
 		};
@@ -243,33 +205,24 @@ impl<T: Config> Pallet<T> {
 	}
 
 	/// Transfer NFT(non fungible token) from `from` account to `to` account
-	pub fn transfer(from: &T::AccountId, to: &T::AccountId, token: (T::ClassId, T::TokenId), quantity: T::TokenId) -> Result<bool, DispatchError> {
-		if from == to || quantity.is_zero() {
-			// no change needed
-			return Ok(false)
-		}
-		TokensByOwner::<T>::try_mutate_exists(from, token, |maybe_from_count| -> Result<bool, DispatchError> {
-			let mut from_count: AccountToken<T::TokenId> = maybe_from_count.unwrap_or_default();
-			from_count.quantity = from_count.quantity.checked_sub(&quantity).ok_or(Error::<T>::NumOverflow)?;
-
-			TokensByOwner::<T>::try_mutate_exists(to, token, |maybe_to_count| -> DispatchResult {
-				match maybe_to_count {
-					Some(to_count) => {
-						to_count.quantity = to_count.quantity.checked_add(&quantity).ok_or(Error::<T>::NumOverflow)?;
-					}
-					None => {
-						*maybe_to_count = Some(AccountToken::new(quantity));
-					}
-				}
-				Ok(())
-			})?;
-
-			if from_count.is_zero() {
-				*maybe_from_count = None;
-			} else {
-				*maybe_from_count = Some(from_count);
+	pub fn transfer(from: &T::AccountId, to: &T::AccountId, token: (T::ClassId, T::TokenId)) -> DispatchResult {
+		Tokens::<T>::try_mutate(token.0, token.1, |token_info| -> DispatchResult {
+			let mut info = token_info.as_mut().ok_or(Error::<T>::TokenNotFound)?;
+			ensure!(info.owner == *from, Error::<T>::NoPermission);
+			if from == to {
+				// no change needed
+				return Ok(());
 			}
-			Ok(true)
+
+			info.owner = to.clone();
+
+			#[cfg(not(feature = "disable-tokens-by-owner"))]
+			{
+				TokensByOwner::<T>::remove(from, token);
+				TokensByOwner::<T>::insert(to, token, ());
+			}
+
+			Ok(())
 		})
 	}
 
@@ -279,7 +232,6 @@ impl<T: Config> Pallet<T> {
 		class_id: T::ClassId,
 		metadata: Vec<u8>,
 		data: T::TokenData,
-		quantity: T::TokenId,
 	) -> Result<T::TokenId, DispatchError> {
 		NextTokenId::<T>::try_mutate(class_id, |id| -> Result<T::TokenId, DispatchError> {
 			let token_id = *id;
@@ -287,54 +239,45 @@ impl<T: Config> Pallet<T> {
 
 			Classes::<T>::try_mutate(class_id, |class_info| -> DispatchResult {
 				let info = class_info.as_mut().ok_or(Error::<T>::ClassNotFound)?;
-				info.total_issuance = info.total_issuance.checked_add(&quantity).ok_or(Error::<T>::NumOverflow)?;
+				info.total_issuance = info
+					.total_issuance
+					.checked_add(&One::one())
+					.ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 
 			let token_info = TokenInfo {
 				metadata,
+				owner: owner.clone(),
 				data,
-				quantity,
 			};
 			Tokens::<T>::insert(class_id, token_id, token_info);
-			TokensByOwner::<T>::insert(owner, (class_id, token_id), AccountToken::new(quantity));
+			#[cfg(not(feature = "disable-tokens-by-owner"))]
+			TokensByOwner::<T>::insert(owner, (class_id, token_id), ());
 
 			Ok(token_id)
 		})
 	}
 
 	/// Burn NFT(non fungible token) from `owner`
-	#[frame_support::transactional]
-	pub fn burn(owner: &T::AccountId, token: (T::ClassId, T::TokenId), quantity: T::TokenId) -> Result<Option<TokenInfoOf<T>>, DispatchError> {
-		if quantity.is_zero() {
-			// no change needed
-			return Ok(None)
-		}
-		TokensByOwner::<T>::try_mutate_exists(owner, token, |maybe_owner_count| -> Result<Option<TokenInfoOf<T>>, DispatchError> {
+	pub fn burn(owner: &T::AccountId, token: (T::ClassId, T::TokenId)) -> DispatchResult {
+		Tokens::<T>::try_mutate_exists(token.0, token.1, |token_info| -> DispatchResult {
+			let t = token_info.take().ok_or(Error::<T>::TokenNotFound)?;
+			ensure!(t.owner == *owner, Error::<T>::NoPermission);
+
 			Classes::<T>::try_mutate(token.0, |class_info| -> DispatchResult {
-				let class_info = class_info.as_mut().ok_or(Error::<T>::ClassNotFound)?;
-				class_info.total_issuance = class_info.total_issuance.checked_sub(&quantity).ok_or(Error::<T>::NumOverflow)?;
+				let info = class_info.as_mut().ok_or(Error::<T>::ClassNotFound)?;
+				info.total_issuance = info
+					.total_issuance
+					.checked_sub(&One::one())
+					.ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 
-			let c = Tokens::<T>::try_mutate_exists(token.0, token.1, |maybe_token_info| -> Result<Option<TokenInfoOf<T>>, DispatchError> {
-				let token_info = maybe_token_info.as_mut().ok_or(Error::<T>::TokenNotFound)?;
-				token_info.quantity = token_info.quantity.checked_sub(&quantity).ok_or(Error::<T>::NumOverflow)?;
-				let deep_copy = token_info.clone();
-				if token_info.quantity.is_zero() {
-					*maybe_token_info = None;
-				}
-				Ok(Some(deep_copy))
-			})?;
+			#[cfg(not(feature = "disable-tokens-by-owner"))]
+			TokensByOwner::<T>::remove(owner, token);
 
-			let mut owner_count = maybe_owner_count.unwrap_or_default();
-			owner_count.quantity = owner_count.quantity.checked_sub(&quantity).ok_or(Error::<T>::NumOverflow)?;
-			if owner_count.is_zero() {
-				*maybe_owner_count = None;
-			} else {
-				*maybe_owner_count = Some(owner_count);
-			}
-			Ok(c)
+			Ok(())
 		})
 	}
 
@@ -352,26 +295,10 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn is_owner(account: &T::AccountId, token: (T::ClassId, T::TokenId)) -> bool {
-		Self::tokens_by_owner(account, token).unwrap_or_default().total() >= One::one()
-	}
+		#[cfg(feature = "disable-tokens-by-owner")]
+		return Tokens::<T>::get(token.0, token.1).map_or(false, |token| token.owner == *account);
 
-	pub fn reserve(owner: &T::AccountId, token: (T::ClassId, T::TokenId), quantity: T::TokenId) -> DispatchResult {
-		TokensByOwner::<T>::try_mutate_exists(owner, token, |maybe_owner| -> DispatchResult {
-			let mut owner = maybe_owner.unwrap_or_default();
-			owner.quantity = owner.quantity.checked_sub(&quantity).ok_or(Error::<T>::NumOverflow)?;
-			owner.reserved = owner.reserved.checked_add(&quantity).ok_or(Error::<T>::NumOverflow)?;
-			*maybe_owner = Some(owner);
-			Ok(())
-		})
-	}
-
-	pub fn unreserve(owner: &T::AccountId, token: (T::ClassId, T::TokenId), quantity: T::TokenId) -> DispatchResult {
-		TokensByOwner::<T>::try_mutate_exists(owner, token, |maybe_owner| -> DispatchResult {
-			let mut owner = maybe_owner.unwrap_or_default();
-			owner.reserved = owner.reserved.checked_sub(&quantity).ok_or(Error::<T>::NumOverflow)?;
-			owner.quantity = owner.quantity.checked_add(&quantity).ok_or(Error::<T>::NumOverflow)?;
-			*maybe_owner = Some(owner);
-			Ok(())
-		})
+		#[cfg(not(feature = "disable-tokens-by-owner"))]
+		TokensByOwner::<T>::contains_key(account, token)
 	}
 }

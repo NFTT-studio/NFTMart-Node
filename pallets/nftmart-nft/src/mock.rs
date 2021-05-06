@@ -1,9 +1,9 @@
 #![cfg(test)]
 
 use super::*;
-use frame_support::{assert_ok};
+
 use orml_currencies::BasicCurrencyAdapter;
-use sp_core::constants_types::*;
+use nftmart_core::constants_types::*;
 use crate as nftmart_nft;
 use codec::{Decode, Encode};
 use frame_support::{
@@ -46,7 +46,6 @@ impl frame_system::Config for Runtime {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
-	type OnSetCode = ();
 }
 parameter_types! {
 	pub const ExistentialDeposit: Balance = 1;
@@ -56,7 +55,7 @@ impl pallet_balances::Config for Runtime {
 	type Event = Event;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = frame_system::Pallet<Runtime>;
+	type AccountStore = frame_system::Module<Runtime>;
 	type MaxLocks = ();
 	type WeightInfo = ();
 }
@@ -123,8 +122,8 @@ impl pallet_proxy::Config for Runtime {
 }
 
 orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: sp_core::constants_types::CurrencyId| -> Balance {
-		if currency_id == &sp_core::constants_types::NATIVE_CURRENCY_ID {
+	pub ExistentialDeposits: |currency_id: nftmart_core::constants_types::CurrencyId| -> Balance {
+		if currency_id == &nftmart_core::constants_types::NATIVE_CURRENCY_ID {
 			ExistentialDeposit::get()
 		} else  {
 			Default::default()
@@ -143,10 +142,10 @@ impl orml_tokens::Config for Runtime {
 }
 
 parameter_types! {
-	pub const GetNativeCurrencyId: sp_core::constants_types::CurrencyId = sp_core::constants_types::NATIVE_CURRENCY_ID;
+	pub const GetNativeCurrencyId: nftmart_core::constants_types::CurrencyId = nftmart_core::constants_types::NATIVE_CURRENCY_ID;
 }
 
-pub type AdaptedBasicCurrency = BasicCurrencyAdapter<Runtime, Balances, sp_core::constants_types::Amount, sp_core::constants_types::Moment>;
+pub type AdaptedBasicCurrency = BasicCurrencyAdapter<Runtime, Balances, nftmart_core::constants_types::Amount, nftmart_core::constants_types::Moment>;
 
 impl orml_currencies::Config for Runtime {
 	type Event = Event;
@@ -157,28 +156,28 @@ impl orml_currencies::Config for Runtime {
 }
 
 impl orml_nft::Config for Runtime {
-	type ClassId = sp_core::constants_types::ClassId;
-	type TokenId = sp_core::constants_types::TokenId;
+	type ClassId = nftmart_core::constants_types::ClassId;
+	type TokenId = nftmart_core::constants_types::TokenId;
 	type ClassData = nftmart_nft::ClassData<BlockNumberOf<Self>>;
-	type TokenData = nftmart_nft::TokenData<<Self as frame_system::Config>::AccountId, BlockNumberOf<Self>>;
+	type TokenData = nftmart_nft::TokenData<BlockNumberOf<Self>>;
 }
 
 parameter_types! {
 	pub const CreateClassDeposit: Balance = 50;
 	pub const CreateTokenDeposit: Balance = 10;
 	pub const MetaDataByteDeposit: Balance = 1;
-	pub const NftModuleId: PalletId = PalletId(*b"nftmart*");
+	pub const NftModuleId: ModuleId = ModuleId(*b"nftmart*");
 }
 
 impl nftmart_nft::Config for Runtime {
 	type Event = Event;
-	type ExtraConfig = NftmartConf;
 	type CreateClassDeposit = CreateClassDeposit;
 	type MetaDataByteDeposit = MetaDataByteDeposit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type ModuleId = NftModuleId;
 	type Currency = Balances;
 	type MultiCurrency = Currencies;
+	type CategoryId = nftmart_core::constants_types::CategoryId;
 }
 
 impl nftmart_config::Config for Runtime {
@@ -196,26 +195,26 @@ construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
-		Utility: pallet_utility::{Pallet, Call, Event},
-		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
-		Currencies: orml_currencies::{Pallet, Call, Event<T>},
-		OrmlNFT: orml_nft::{Pallet, Storage, Config<T>},
-		NftmartConf: nftmart_config::{Pallet, Call, Event<T>},
-		Nftmart: nftmart_nft::{Pallet, Call, Event<T>},
+		System: frame_system::{Module, Call, Config, Storage, Event<T>},
+		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
+		Proxy: pallet_proxy::{Module, Call, Storage, Event<T>},
+		Utility: pallet_utility::{Module, Call, Event},
+		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
+		Currencies: orml_currencies::{Module, Call, Event<T>},
+		OrmlNFT: orml_nft::{Module, Storage, Config<T>},
+		NftmartConfig: nftmart_config::{Module, Call, Event<T>},
+		Nftmart: nftmart_nft::{Module, Call, Event<T>},
 	}
 );
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const CLASS_ID: <Runtime as orml_nft::Config>::ClassId = 0;
+pub const CATEGORY_ID: <Runtime as Config>::CategoryId = 0;
+pub const CATEGORY_ID_NOT_EXIST: <Runtime as Config>::CategoryId = 100;
 pub const CLASS_ID_NOT_EXIST: <Runtime as orml_nft::Config>::ClassId = 1;
 pub const TOKEN_ID: <Runtime as orml_nft::Config>::TokenId = 0;
-pub const TOKEN_ID2: <Runtime as orml_nft::Config>::TokenId = 1;
-pub const TOKEN_ID_NOT_EXIST: <Runtime as orml_nft::Config>::TokenId = 100;
-pub const METADATA: &[u8] = b"A";
+pub const TOKEN_ID_NOT_EXIST: <Runtime as orml_nft::Config>::TokenId = 1;
 
 pub struct ExtBuilder;
 impl Default for ExtBuilder {
@@ -239,58 +238,16 @@ impl ExtBuilder {
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| {
 			System::set_block_number(1);
-			NftmartConf::add_whitelist(Origin::root(), ALICE).unwrap();
-			NftmartConf::add_whitelist(Origin::root(), BOB).unwrap();
+			NftmartConfig::add_whitelist(Origin::root(), ALICE).unwrap();
+			NftmartConfig::add_whitelist(Origin::root(), BOB).unwrap();
 		});
 		ext
 	}
 }
 
 pub fn last_event() -> Event {
-	frame_system::Pallet::<Runtime>::events()
+	frame_system::Module::<Runtime>::events()
 		.pop()
 		.expect("Event expected")
 		.event
-}
-
-pub fn free_balance(who: &AccountId) -> Balance {
-	<Runtime as Config>::Currency::free_balance(who)
-}
-
-pub fn reserved_balance(who: &AccountId) -> Balance {
-	<Runtime as Config>::Currency::reserved_balance(who)
-}
-
-pub fn class_id_account() -> AccountId {
-	<Runtime as Config>::ModuleId::get().into_sub_account(CLASS_ID)
-}
-
-pub fn add_category() {
-	assert_ok!(NftmartConf::create_category(Origin::root(), vec![1]));
-}
-
-pub fn ensure_bob_balances(amount: Balance) {
-	assert_ok!(Currencies::deposit(NATIVE_CURRENCY_ID, &BOB, amount));
-	assert_eq!(Currencies::free_balance(NATIVE_CURRENCY_ID, &BOB), amount);
-}
-
-pub fn add_class(who: AccountId) {
-	let metadata = vec![1];
-	assert_ok!(Nftmart::create_class(
-		Origin::signed(who),
-		metadata.clone(), vec![1], vec![1],
-		Properties(ClassProperty::Transferable | ClassProperty::Burnable)
-	));
-}
-
-pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<bool>) {
-	let deposit = Nftmart::mint_token_deposit(METADATA.len() as u32);
-	assert_eq!(Balances::deposit_into_existing(&class_id_account(), deposit).is_ok(), true);
-	assert_ok!(Nftmart::mint(
-			Origin::signed(class_id_account()),
-			who,
-			CLASS_ID,
-			METADATA.to_vec(),
-			quantity, charge_royalty,
-		));
 }

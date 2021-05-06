@@ -44,8 +44,17 @@ sp-session = { default-features = false, version = '3.0.0' }
 sp-std = { default-features = false, version = '3.0.0' }
 sp-transaction-pool = { default-features = false, version = '3.0.0' }
 sp-version = { default-features = false, version = '3.0.0' }
+pallet-proxy = { default-features = false, version = "3.0.0" }
 
 # local dependencies
+orml-currencies = { version = "0.4.1-dev", default-features = false, path = "../pallets/orml-currencies" }
+orml-tokens = { version = "0.4.1-dev", default-features = false, path = "../pallets/orml-tokens" }
+orml-traits = { path = "../pallets/orml-traits", default-features = false }
+orml-nft = { path = "../pallets/orml-nft", default-features = false }
+nftmart-nft = { path = "../pallets/nftmart-nft", default-features = false }
+nftmart-config = { path = "../pallets/nftmart-config", default-features = false }
+nftmart-core = { path = "../pallets/nftmart-core", default-features = false }
+nftmart-rpc-runtime-api = { default-features = false, path = "../pallets/nftmart-nft/rpc/runtime-api" }
 
 [features]
 default = ['std']
@@ -85,4 +94,12 @@ std = [
     'sp-std/std',
     'sp-transaction-pool/std',
     'sp-version/std',
+	"pallet-proxy/std",
+	"orml-currencies/std",
+	"orml-tokens/std",
+	"orml-traits/std",
+	"orml-nft/std",
+	"nftmart-nft/std",
+	"nftmart-config/std",
+	"nftmart-rpc-runtime-api/std",
 ]

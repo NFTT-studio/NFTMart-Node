@@ -54,7 +54,6 @@ impl frame_system::Config for Runtime {
 	type BaseCallFilter = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
-	type OnSetCode = ();
 }
 
 thread_local! {
@@ -69,6 +68,9 @@ thread_local! {
 
 pub struct TenToFourteen;
 impl Contains<AccountId> for TenToFourteen {
+	fn sorted_members() -> Vec<AccountId> {
+		TEN_TO_FOURTEEN.with(|v| v.borrow().clone())
+	}
 	#[cfg(feature = "runtime-benchmarks")]
 	fn add(new: &AccountId) {
 		TEN_TO_FOURTEEN.with(|v| {
@@ -76,10 +78,6 @@ impl Contains<AccountId> for TenToFourteen {
 			members.push(*new);
 			members.sort();
 		})
-	}
-
-	fn contains(t: &AccountId) -> bool {
-		TEN_TO_FOURTEEN.with(|v| v.borrow().contains(t))
 	}
 }
 
@@ -97,12 +95,12 @@ parameter_types! {
 	pub const ProposalBondMinimum: u64 = 1;
 	pub const SpendPeriod: u64 = 2;
 	pub const Burn: Permill = Permill::from_percent(50);
-	pub const TreasuryModuleId: PalletId = PalletId(*b"py/trsry");
+	pub const TreasuryModuleId: ModuleId = ModuleId(*b"py/trsry");
 	pub const GetTokenId: CurrencyId = DOT;
 }
 
 impl pallet_treasury::Config for Runtime {
-	type PalletId = TreasuryModuleId;
+	type ModuleId = TreasuryModuleId;
 	type Currency = CurrencyAdapter<Runtime, GetTokenId>;
 	type ApproveOrigin = frame_system::EnsureRoot<AccountId>;
 	type RejectOrigin = frame_system::EnsureRoot<AccountId>;
@@ -177,7 +175,7 @@ parameter_types! {
 }
 
 impl pallet_elections_phragmen::Config for Runtime {
-	type PalletId = ElectionsPhragmenModuleId;
+	type ModuleId = ElectionsPhragmenModuleId;
 	type Event = Event;
 	type Currency = CurrencyAdapter<Runtime, GetTokenId>;
 	type CurrencyToVote = SaturatingCurrencyToVote;
@@ -205,7 +203,7 @@ parameter_type_with_key! {
 }
 
 parameter_types! {
-	pub DustAccount: AccountId = PalletId(*b"orml/dst").into_account();
+	pub DustAccount: AccountId = ModuleId(*b"orml/dst").into_account();
 }
 
 impl Config for Runtime {
@@ -228,10 +226,10 @@ construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Pallet, Call, Storage, Config, Event<T>},
-		Tokens: tokens::{Pallet, Storage, Event<T>, Config<T>},
-		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
-		ElectionsPhragmen: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>},
+		System: frame_system::{Module, Call, Storage, Config, Event<T>},
+		Tokens: tokens::{Module, Storage, Event<T>, Config<T>},
+		Treasury: pallet_treasury::{Module, Call, Storage, Config, Event<T>},
+		ElectionsPhragmen: pallet_elections_phragmen::{Module, Call, Storage, Event<T>},
 	}
 );
 

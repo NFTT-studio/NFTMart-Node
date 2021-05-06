@@ -10,22 +10,22 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-sp-runtime = { version = "3.0.0", default-features = false  }
-sp-io = { version = "3.0.0", default-features = false  }
-sp-std = { version = "3.0.0", default-features = false  }
+sp-runtime = { version = "3.0.0", default-features = false }
+sp-io = { version = "3.0.0", default-features = false }
+sp-std = { version = "3.0.0", default-features = false }
 
-frame-support = { version = "3.0.0", default-features = false  }
+frame-support = { version = "3.0.0", default-features = false }
 frame-system = { version = "3.0.0", default-features = false }
 
-orml-traits = {     default-features = false ,path = "../orml-traits" }
-orml-utilities = {     default-features = false ,path = "../orml-utilities" }
+orml-traits = { path = "../orml-traits", version = "0.4.1-dev", default-features = false }
+orml-utilities = { path = "../orml-utilities", version = "0.4.1-dev", default-features = false }
 
 funty = { version = "=1.1.0", default-features = false } # https://github.com/bitvecto-rs/bitvec/issues/105
 
 [dev-dependencies]
 sp-core = { version = "3.0.0" }
 pallet-balances = { version = "3.0.0" }
-orml_tokens = {   package = "orml-tokens" ,path = "../orml-tokens" }
+orml_tokens = { version = "0.4.1-dev", package = "orml-tokens", path = "../orml-tokens" }
 
 [features]
 default = ["std"]

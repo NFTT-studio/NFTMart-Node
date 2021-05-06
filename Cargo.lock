@@ -3600,7 +3600,11 @@ version = "3.0.0"
 dependencies = [
  "frame-support",
  "frame-system",
- "nftmart-traits",
+ "nftmart-core",
+ "orml-currencies",
+ "orml-nft",
+ "orml-tokens",
+ "orml-traits",
  "pallet-balances",
  "pallet-proxy",
  "pallet-timestamp",
@@ -3612,65 +3616,43 @@ dependencies = [
  "sp-runtime",
  "sp-std",
 ]
+
+[[package]]
+name = "nftmart-core"
+version = "3.0.0"
 
 [[package]]
 name = "nftmart-nft"
 version = "3.0.0"
 dependencies = [
- "frame-support",
- "frame-system",
- "nftmart-config",
- "nftmart-nft",
- "nftmart-traits",
- "orml-currencies",
- "orml-nft",
- "orml-tokens",
- "orml-traits",
- "pallet-balances",
- "pallet-proxy",
- "pallet-timestamp",
- "pallet-utility",
- "parity-scale-codec",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "nftmart-order"
-version = "3.0.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "nftmart-config",
- "nftmart-nft",
- "nftmart-traits",
- "orml-currencies",
- "orml-nft",
- "orml-tokens",
- "orml-traits",
- "pallet-balances",
- "pallet-proxy",
- "pallet-timestamp",
- "pallet-utility",
- "parity-scale-codec",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "nftmart-traits"
-version = "3.0.0"
-dependencies = [
  "enumflags2",
  "frame-support",
+ "frame-system",
+ "nftmart-config",
+ "nftmart-core",
+ "orml-currencies",
+ "orml-nft",
+ "orml-tokens",
+ "orml-traits",
+ "pallet-balances",
+ "pallet-proxy",
+ "pallet-timestamp",
+ "pallet-utility",
  "parity-scale-codec",
  "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "nftmart-rpc-runtime-api"
+version = "3.0.0"
+dependencies = [
+ "nftmart-core",
+ "nftmart-nft",
+ "sp-api",
  "sp-core",
  "sp-std",
 ]
@@ -3682,6 +3664,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-benchmarking-cli",
  "jsonrpc-core",
+ "nftmart-core",
  "node-template-runtime",
  "pallet-transaction-payment-rpc",
  "sc-basic-authorship",
@@ -3723,9 +3706,18 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "hex-literal",
+ "nftmart-config",
+ "nftmart-core",
+ "nftmart-nft",
+ "nftmart-rpc-runtime-api",
+ "orml-currencies",
+ "orml-nft",
+ "orml-tokens",
+ "orml-traits",
  "pallet-aura",
  "pallet-balances",
  "pallet-grandpa",
+ "pallet-proxy",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",

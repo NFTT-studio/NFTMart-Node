@@ -153,5 +153,17 @@ fn testnet_genesis(
 			// Assign network admin rights.
 			key: root_key,
 		}),
+		orml_tokens: Some(node_template_runtime::TokensConfig {
+			endowed_accounts: endowed_accounts.iter()
+				.flat_map(|x|{
+					vec![
+						(x.clone(), 2, 100 * nftmart_core::constants_types::ACCURACY),
+						(x.clone(), 3, 100 * nftmart_core::constants_types::ACCURACY),
+						(x.clone(), 4, 100 * nftmart_core::constants_types::ACCURACY),
+					]
+				}).collect(),
+		}),
+		orml_nft: Some(node_template_runtime::OrmlNFTConfig { tokens: vec![] }),
+		nftmart_nft: Some(Default::default()),
 	}
 }
