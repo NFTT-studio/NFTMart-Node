@@ -1,12 +1,68 @@
 # Substrate Node Template
 
+## Metadata
+
+```json
+{
+  "Properties": "u8",
+  "NFTMetadata": "Vec<u8>",
+  "BlockNumber": "u32",
+  "BlockNumberOf": "BlockNumber",
+
+  "OrderData": {
+    "currencyId": "Compact<CurrencyIdOf>",
+    "price": "Compact<Balance>",
+    "deposit": "Compact<Balance>",
+    "deadline": "Compact<BlockNumberOf>",
+    "categoryId": "Compact<CategoryIdOf>"
+  },
+
+  "CategoryId": "u32",
+  "CategoryIdOf": "CategoryId",
+  "CategoryData": {
+    "metadata": "NFTMetadata",
+    "nftCount": "Compact<Balance>"
+  },
+
+  "CurrencyId": "u32",
+  "CurrencyIdOf": "CurrencyId",
+  "Amount": "i128",
+  "AmountOf": "Amount",
+
+  "ClassId": "u32",
+  "ClassIdOf": "ClassId",
+  "ClassInfoOf": {
+    "metadata": "NFTMetadata",
+    "totalIssuance": "TokenId",
+    "owner": "AccountId",
+    "data": "ClassData"
+  },
+  "ClassData": {
+    "deposit": "Compact<Balance>",
+    "properties": "Properties",
+    "name": "Vec<u8>",
+    "description": "Vec<u8>",
+    "createBlock": "Compact<BlockNumberOf>"
+  },
+
+  "TokenId": "u64",
+  "TokenIdOf": "TokenId",
+  "TokenInfoOf": {"metadata": "NFTMetadata", "owner": "AccountId", "data": "TokenData"},
+  "TokenData": {
+    "deposit": "Compact<Balance>",
+    "createBlock": "Compact<BlockNumberOf>"
+  }
+}
+```
+
+
 [![Try on playground](https://img.shields.io/badge/Playground-Node_Template-brightgreen?logo=Parity%20Substrate)](https://playground.substrate.dev/?deploy=node-template)
 
 A fresh FRAME-based [Substrate](https://www.substrate.io/) node, ready for hacking :rocket:
 
 ## Getting Started
 
-Follow the steps below to get started with the Node Template, or get it up and running right from your browser 
+Follow the steps below to get started with the Node Template, or get it up and running right from your browser
 in just a few clicks using [Playground](https://playground.substrate.dev/) :hammer_and_wrench:
 
 ### Using Nix
