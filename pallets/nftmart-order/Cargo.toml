@@ -1,0 +1,43 @@
+[package]
+name = "nftmart-order"
+version = "3.0.0"
+authors = ["NFTMart Developers"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0.111", optional = true }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
+sp-core = { version = "3.0.0", default-features = false  }
+sp-std = { version = "3.0.0", default-features = false }
+sp-runtime = { version = "3.0.0", default-features = false }
+frame-support = { version = "3.0.0", default-features = false  }
+frame-system = { version = "3.0.0", default-features = false }
+pallet-proxy = { version = "3.0.0", default-features = false  }
+pallet-timestamp = { version = "3.0.0", default-features = false }
+orml-traits = {   default-features = false, path = "../orml-traits" }
+nftmart-traits = { default-features = false, path = "../nftmart-traits" }
+
+[dev-dependencies]
+sp-io = { version = "3.0.0"  }
+pallet-balances = { version = "3.0.0"  }
+pallet-utility = { version = "3.0.0"  }
+orml-currencies = {   path = "../orml-currencies" }
+orml-tokens = {  path = "../orml-tokens" }
+orml-nft = { path = "../orml-nft" }
+nftmart-config = { path = "../nftmart-config" }
+nftmart-nft = { path = "../nftmart-nft" }
+
+[features]
+default = ["std"]
+std = [
+	"serde",
+	"codec/std",
+	"sp-std/std",
+	"sp-runtime/std",
+	"frame-support/std",
+	"frame-system/std",
+	"pallet-proxy/std",
+	"pallet-timestamp/std",
+	"nftmart-traits/std",
+	"orml-traits/std",
+]

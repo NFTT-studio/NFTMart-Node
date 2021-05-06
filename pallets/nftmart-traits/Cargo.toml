@@ -1,0 +1,28 @@
+[package]
+name = "nftmart-traits"
+version = "3.0.0"
+authors = ["NFTMart Developers"]
+edition = "2018"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+serde = { version = "1.0.111", optional = true }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
+sp-std = { version = "3.0.0", default-features = false }
+sp-core = { version = "3.0.0", default-features = false  }
+frame-support = { version = "3.0.0", default-features = false }
+enumflags2 = { version = "0.6.3" }
+
+[features]
+default = ['std']
+std = [
+	"serde",
+	"codec/std",
+	"sp-core/std",
+	'sp-std/std',
+    'frame-support/std',
+	"enumflags2/serde",
+]
+
