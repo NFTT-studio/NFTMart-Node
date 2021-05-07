@@ -247,3 +247,38 @@ by appending your own. A few useful ones are as follow.
 # Check whether the code is compilable
 ./scripts/docker_run.sh cargo check
 ```
+
+
+## Use Nodejs to access nftmart blockchain
+
+```shell
+git clone https://github.com/NFTT-studio/NFTMart-Node.git
+cd nftmart/nodejs-demo
+yarn install
+
+# Create a class(ID: 0) by Alice with local testing node.
+node nft-apis.mjs --ws ws://127.0.0.1:9944 create-class //Alice
+
+# Add a new class administrator to the class, ID: 0
+node nft-apis.mjs --ws ws://127.0.0.1:9944 add-class-admin //Bob
+
+# Create an another class(ID: 1) managed by Alice.
+node nft-apis.mjs --ws ws://127.0.0.1:9944 create-class //Alice
+
+# List all classes
+node nft-apis.mjs --ws ws://127.0.0.1:9944 show-class-info
+[
+  '{"metadata":"https://xx.com/aa.jpg","totalIssuance":0,"owner":"62qUEaQwPx7g4vDz88bdp1tmZkSpPtVRL4pS98P7VEbZnM9w","data":{"deposit":2280000000000,"properties":3,"name":"0x616161","description":"0x62626262","createBlock":489},"classID":1,"adminList":[[{"delegate":"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB","proxyType":"Any","delay":0}],261000000000000]}',
+  '{"metadata":"https://xx.com/aa.jpg","totalIssuance":0,"owner":"62qUEaQwPx7g4vDz88bN4zMBTFmcwLPYbPsvbBhH2QiqWhfB","data":{"deposit":2280000000000,"properties":3,"name":"0x616161","description":"0x62626262","createBlock":8},"classID":0,"adminList":[[{"delegate":"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw","proxyType":"Any","delay":0},{"delegate":"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB","proxyType":"Any","delay":0}],459000000000000]}'
+]
+
+# Mint three nft tokens to Bob in the class which ID is 0.
+node nft-apis.mjs --ws ws://127.0.0.1:9944 mint-nft //Bob 0
+
+# List all nfts in the class, `ID:0`
+node nft-apis.mjs --ws ws://127.0.0.1:9944 show-all-nfts 0
+{"metadata":"0x6161626263636464","owner":"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw","data":{"deposit":1080000000000,"createBlock":554}}
+{"metadata":"0x6161626263636464","owner":"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw","data":{"deposit":1080000000000,"createBlock":554}}
+{"metadata":"0x6161626263636464","owner":"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw","data":{"deposit":1080000000000,"createBlock":554}}
+
+```
