@@ -1,0 +1,19 @@
+{
+	"main": "index.mjs",
+	"dependencies": {
+		"@polkadot/api": "^4.0.4-11",
+		"@polkadot/util": "^6.0.5",
+		"@polkadot/util-crypto": "^6.0.5",
+		"commander": "^7.1.0",
+		"fs": "^0.0.1-security",
+		"rpc-websockets": "^7.4.8",
+		"yaml": "^1.10.2"
+	},
+	"devDependencies": {
+		"@vercel/ncc": "^0.28.3",
+		"ncc": "^0.3.6"
+	},
+	"scripts": {
+		"build": "ncc build index.mjs && git grep '^main()' | cut -d . -f 1 | while read cmd; do ncc build $cmd.mjs -o dist/$cmd; done"
+	}
+}

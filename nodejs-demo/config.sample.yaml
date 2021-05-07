@@ -1,0 +1,7 @@
+PROVIDER: ws://127.0.0.1:9944
+ROOT_ACCOUNT_MNEMONIC: bottom drive obey lake curtain smoke basket hold race lonely fit walk
+BOND_VALUE: 10000000000000
+REWARD_COMMISSION: 5
+WAIT_SECONDS: 15
+STASH_ACCOUNT_MNEMONIC: //change-me-5
+CONTROLLER_ACCOUNT_MNEMONIC: //change-me-too-5
