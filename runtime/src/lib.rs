@@ -574,6 +574,18 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl nftmart_rpc_runtime_api::NFTMartApi<Block> for Runtime {
+		fn mint_token_deposit(metadata_len: u32, quantity: u32) -> (Balance, Balance) {
+			Nftmart::mint_token_deposit(metadata_len, quantity)
+		}
+		fn add_class_admin_deposit(admin_count: u32) -> Balance {
+			Nftmart::add_class_admin_deposit(admin_count)
+		}
+		fn create_class_deposit(metadata_len: u32, name_len: u32, description_len: u32) -> (Balance, Balance) {
+			Nftmart::create_class_deposit(metadata_len, name_len, description_len)
+		}
+	}
+
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn dispatch_benchmark(

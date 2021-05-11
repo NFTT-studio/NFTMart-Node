@@ -3647,6 +3647,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "nftmart-rpc"
+version = "3.0.0"
+dependencies = [
+ "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
+ "nftmart-rpc-runtime-api",
+ "sp-api",
+ "sp-blockchain",
+ "sp-runtime",
+]
+
+[[package]]
 name = "nftmart-rpc-runtime-api"
 version = "3.0.0"
 dependencies = [
@@ -3665,6 +3678,7 @@ dependencies = [
  "frame-benchmarking-cli",
  "jsonrpc-core",
  "nftmart-core",
+ "nftmart-rpc",
  "node-template-runtime",
  "pallet-transaction-payment-rpc",
  "sc-basic-authorship",
