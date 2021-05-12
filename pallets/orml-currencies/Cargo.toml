@@ -18,7 +18,7 @@ frame-support = { version = "3.0.0", default-features = false }
 frame-system = { version = "3.0.0", default-features = false }
 
 orml-traits = { path = "../orml-traits", version = "0.4.1-dev", default-features = false }
-orml-utilities = { path = "../orml-utilities", version = "0.4.1-dev", default-features = false }
+orml-utilities = { version = "0.4.1-dev", default-features = false, git="https://github.com/open-web3-stack/open-runtime-module-library", rev="92db4586" }
 
 funty = { version = "=1.1.0", default-features = false } # https://github.com/bitvecto-rs/bitvec/issues/105
 
