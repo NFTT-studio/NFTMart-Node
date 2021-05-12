@@ -3972,13 +3972,12 @@ dependencies = [
 [[package]]
 name = "orml-utilities"
 version = "0.4.1-dev"
+source = "git+https://github.com/open-web3-stack/open-runtime-module-library?rev=92db4586#92db458616cae0da1cc55fa90962e2ed16d45279"
 dependencies = [
  "frame-support",
- "frame-system",
  "funty",
  "parity-scale-codec",
  "serde",
- "serde_json",
  "sp-io",
  "sp-runtime",
  "sp-std",
