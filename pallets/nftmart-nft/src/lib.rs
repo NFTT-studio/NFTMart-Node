@@ -3,7 +3,7 @@
 use enumflags2::BitFlags;
 use frame_support::{
 	pallet_prelude::*,
-	traits::{Currency, ReservableCurrency, ExistenceRequirement::KeepAlive},
+	traits::{Currency, ReservableCurrency, ExistenceRequirement::*},
 	transactional, dispatch::DispatchResult
 };
 use sp_std::vec::Vec;
@@ -714,7 +714,7 @@ pub mod module {
 			// `repatriate_reserved` will check `to` account exist and return `DeadAccount`.
 			// `transfer` not do this check.
 			<T as Config>::Currency::unreserve(&owner, data.deposit.saturated_into());
-			<T as Config>::Currency::transfer(&owner, &who, data.deposit.saturated_into(), KeepAlive)?;
+			<T as Config>::Currency::transfer(&owner, &who, data.deposit.saturated_into(), AllowDeath)?;
 
 			Self::deposit_event(Event::BurnedToken(who, class_id, token_id));
 			Ok(().into())
@@ -746,7 +746,7 @@ pub mod module {
 			// `transfer` not do this check.
 			<T as Config>::Currency::unreserve(&owner, data.deposit.saturated_into());
 			// At least there is one admin at this point.
-			<T as Config>::Currency::transfer(&owner, &dest, data.deposit.saturated_into(), KeepAlive)?;
+			<T as Config>::Currency::transfer(&owner, &dest, data.deposit.saturated_into(), AllowDeath)?;
 
 			// transfer all free from origin to dest
 			orml_nft::Module::<T>::destroy_class(&who, class_id)?;
