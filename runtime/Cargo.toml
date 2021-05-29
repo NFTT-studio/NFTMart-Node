@@ -53,7 +53,7 @@ orml-traits = { path = "../pallets/orml-traits", default-features = false }
 orml-nft = { path = "../pallets/orml-nft", default-features = false }
 nftmart-nft = { path = "../pallets/nftmart-nft", default-features = false }
 nftmart-config = { path = "../pallets/nftmart-config", default-features = false }
-nftmart-core = { path = "../pallets/nftmart-core", default-features = false }
+nftmart-core = { path = "../primitives/nftmart-core", default-features = false }
 nftmart-rpc-runtime-api = { default-features = false, path = "../pallets/nftmart-nft/rpc/runtime-api" }
 
 [features]

@@ -23,7 +23,7 @@ orml-currencies = { version = "0.4.1-dev", path = "../orml-currencies" }
 orml-tokens = { version = "0.4.1-dev", path = "../orml-tokens" }
 orml-traits = { version = "0.4.1-dev", path = "../orml-traits" }
 orml-nft = { version = "0.4.1-dev", path = "../orml-nft" }
-nftmart-core = { path = "../nftmart-core" }
+nftmart-core = { path = "../../primitives/nftmart-core" }
 
 [features]
 default = ["std"]

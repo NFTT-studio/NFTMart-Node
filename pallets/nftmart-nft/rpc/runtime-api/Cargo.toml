@@ -12,7 +12,7 @@ sp-api = { version = "3.0.0", default-features = false  }
 sp-std = { version = "3.0.0", default-features = false  }
 sp-core = { version = "3.0.0", default-features = false }
 nftmart-nft = { default-features = false, path = "../../../nftmart-nft" }
-nftmart-core = { default-features = false, path = "../../../nftmart-core" }
+nftmart-core = { default-features = false, path = "../../../../primitives/nftmart-core" }
 
 [features]
 default = ["std"]

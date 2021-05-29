@@ -54,7 +54,7 @@ nftmart-rpc = { version = "3.0.0", path = "../pallets/nftmart-nft/rpc/" }
 
 # local dependencies
 node-template-runtime = { path = '../runtime', version = '3.0.0' }
-nftmart-core = { path = '../pallets/nftmart-core' }
+nftmart-core = { path = '../primitives/nftmart-core' }
 
 [features]
 default = []
