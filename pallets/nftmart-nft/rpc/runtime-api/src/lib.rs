@@ -4,6 +4,7 @@ pub use nftmart_core::constants_types::Balance;
 pub use sp_std::vec::Vec;
 pub use nftmart_nft::NFTMetadata;
 
+#[allow(clippy::unnecessary_mut_passed)]
 sp_api::decl_runtime_apis! {
 	/// The helper API to calculate deposit.
 	pub trait NFTMartApi {

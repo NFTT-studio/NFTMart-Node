@@ -1,4 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::unused_unit)]
+#![allow(clippy::unnecessary_cast)]
 
 use enumflags2::BitFlags;
 use frame_support::{
@@ -402,6 +404,7 @@ pub mod module {
 		/// - `deposit`: The balances to create an order
 		/// - `deadline`: deadline
 		#[pallet::weight(100_000)]
+		#[allow(clippy::too_many_arguments)]
 		#[transactional]
 		pub fn submit_order(
 			origin: OriginFor<T>,
@@ -732,7 +735,9 @@ impl<T: Config> Pallet<T> {
 			}
 
 			Categories::<T>::try_mutate(order.category_id, |category| -> DispatchResult {
-				category.as_mut().map(|cate| cate.nft_count = cate.nft_count.saturating_sub(One::one()) );
+				if let Some(cate) = category.as_mut() {
+					cate.nft_count = cate.nft_count.saturating_sub(One::one())
+				}
 				Ok(())
 			})?;
 
