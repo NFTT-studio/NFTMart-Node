@@ -383,10 +383,6 @@ impl nftmart_nft::Config for Runtime {
 	type CategoryId = nftmart_core::constants_types::CategoryId;
 }
 
-impl nftmart_config::Config for Runtime {
-	type Event = Event;
-}
-
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -407,7 +403,6 @@ construct_runtime!(
 		Currencies: orml_currencies::{Module, Call, Event<T>},
 		OrmlNFT: orml_nft::{Module, Storage, Config<T>},
 		Nftmart: nftmart_nft::{Module, Call, Storage, Event<T>, Config<T>},
-		Config: nftmart_config::{Module, Call, Storage, Event<T>},
 	}
 );
 

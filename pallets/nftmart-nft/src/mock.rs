@@ -180,10 +180,6 @@ impl nftmart_nft::Config for Runtime {
 	type CategoryId = nftmart_core::constants_types::CategoryId;
 }
 
-impl nftmart_config::Config for Runtime {
-	type Event = Event;
-}
-
 use frame_system::Call as SystemCall;
 
 pub type Block = sp_runtime::generic::Block<Header, UncheckedExtrinsic>;
@@ -202,7 +198,6 @@ construct_runtime!(
 		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
 		Currencies: orml_currencies::{Module, Call, Event<T>},
 		OrmlNFT: orml_nft::{Module, Storage, Config<T>},
-		NftmartConfig: nftmart_config::{Module, Call, Event<T>},
 		Nftmart: nftmart_nft::{Module, Call, Event<T>},
 	}
 );
@@ -238,9 +233,18 @@ impl ExtBuilder {
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| {
 			System::set_block_number(1);
-			NftmartConfig::add_whitelist(Origin::root(), ALICE).unwrap();
-			NftmartConfig::add_whitelist(Origin::root(), BOB).unwrap();
+			Nftmart::add_whitelist(Origin::root(), ALICE).unwrap();
+			Nftmart::add_whitelist(Origin::root(), BOB).unwrap();
 		});
+		ext
+	}
+
+	pub fn build_for_whitelist(self) -> sp_io::TestExternalities {
+		let t = frame_system::GenesisConfig::default()
+			.build_storage::<Runtime>()
+			.unwrap();
+		let mut ext = sp_io::TestExternalities::new(t);
+		ext.execute_with(|| System::set_block_number(1));
 		ext
 	}
 }

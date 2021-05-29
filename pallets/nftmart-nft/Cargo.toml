@@ -17,7 +17,6 @@ pallet-proxy = { version = "3.0.0", default-features = false }
 pallet-timestamp = { version = "3.0.0", default-features = false }
 orml-traits = { version = "0.4.1-dev", default-features = false, path = "../orml-traits" }
 orml-nft = { version = "0.4.1-dev", default-features = false, path = "../orml-nft" }
-nftmart-config = { default-features = false, path = "../nftmart-config" }
 nftmart-core = { path = "../../primitives/nftmart-core" }
 
 [dev-dependencies]
@@ -39,7 +38,6 @@ std = [
 	"pallet-proxy/std",
 	"orml-traits/std",
 	"orml-nft/std",
-	"nftmart-config/std",
 	"pallet-timestamp/std",
 	"enumflags2/serde"
 ]

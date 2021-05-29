@@ -17,6 +17,26 @@ fn class_id_account() -> AccountId {
 }
 
 #[test]
+fn test_whitelist() {
+	ExtBuilder::default().build_for_whitelist().execute_with(|| {
+		assert_eq!(None, Nftmart::account_whitelist(ALICE));
+		assert_eq!(None, Nftmart::account_whitelist(BOB));
+		assert_ok!(Nftmart::add_whitelist(Origin::root(), ALICE));
+		assert_eq!(last_event(), Event::nftmart_nft(crate::Event::AddWhitelist(ALICE)));
+		assert_eq!(Some(()), Nftmart::account_whitelist(ALICE));
+		assert_noop!(
+			Nftmart::add_whitelist(Origin::signed(BOB), BOB),
+			DispatchError::BadOrigin,
+		);
+
+		assert_ok!(Nftmart::remove_whitelist(Origin::root(), ALICE));
+		assert_eq!(last_event(), Event::nftmart_nft(crate::Event::RemoveWhitelist(ALICE)));
+		assert_eq!(None, Nftmart::account_whitelist(ALICE));
+		assert_eq!(None, Nftmart::account_whitelist(BOB));
+	});
+}
+
+#[test]
 fn create_category_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		assert_eq!({ let id_expect: CategoryIdOf<Runtime> = Zero::zero(); id_expect }, Nftmart::next_category_id());

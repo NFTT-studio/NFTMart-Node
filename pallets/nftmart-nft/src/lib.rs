@@ -129,73 +129,6 @@ impl Default for Releases {
 	}
 }
 
-pub mod migrations {
-	use super::*;
-
-	#[derive(Decode)]
-	pub struct OldClassData {
-		#[codec(compact)]
-		pub deposit: Balance,
-		pub properties: Properties,
-		pub name: Vec<u8>,
-		pub description: Vec<u8>,
-	}
-
-	#[derive(Decode)]
-	pub struct OldTokenData {
-		#[codec(compact)]
-		pub deposit: Balance,
-	}
-
-	impl OldClassData {
-		fn upgraded<T>(self) -> ClassData<T> where T: AtLeast32BitUnsigned + Bounded + Copy + From<u32> {
-			let create_block: T = One::one();
-			ClassData {
-				create_block: create_block * 2u32.into(),
-				deposit: self.deposit,
-				properties: self.properties,
-				name: self.name,
-				description: self.description,
-			}
-		}
-	}
-
-	impl OldTokenData {
-		fn upgraded<T>(self) -> TokenData<T> where T: AtLeast32BitUnsigned + Bounded + Copy + From<u32> {
-			let create_block: T = One::one();
-			TokenData {
-				create_block: create_block * 3u32.into(),
-				deposit: self.deposit,
-			}
-		}
-	}
-
-	pub fn do_migrate<T: Config>() -> Weight {
-		type OldClass<T> = orml_nft::ClassInfo<TokenIdOf<T>, <T as frame_system::Config>::AccountId, OldClassData>;
-		type NewClass<T> = orml_nft::ClassInfo<TokenIdOf<T>, <T as frame_system::Config>::AccountId, ClassData<BlockNumberOf<T>>>;
-		orml_nft::Classes::<T>::translate::<OldClass<T>, _>(|_, p: OldClass<T>| {
-			let new_data: NewClass<T> = NewClass::<T> {
-				 metadata: p.metadata,
-				 total_issuance: p.total_issuance,
-				 owner: p.owner,
-				 data: p.data.upgraded::<BlockNumberOf<T>>(),
-			};
-			Some(new_data)
-		});
-		type OldToken<T> = orml_nft::TokenInfo<<T as frame_system::Config>::AccountId, OldTokenData>;
-		type NewToken<T> = orml_nft::TokenInfo<<T as frame_system::Config>::AccountId, TokenData<BlockNumberOf<T>>>;
-		orml_nft::Tokens::<T>::translate::<OldToken<T>, _>(|_, _, p: OldToken<T>| {
-			let new_data: NewToken<T> = NewToken::<T> {
-				metadata: p.metadata,
-				owner: p.owner,
-				data: p.data.upgraded::<BlockNumberOf<T>>(),
-			};
-			Some(new_data)
-		});
-		T::BlockWeights::get().max_block
-	}
-}
-
 #[frame_support::pallet]
 pub mod module {
 	use super::*;
@@ -204,8 +137,7 @@ pub mod module {
 	#[pallet::config]
 	pub trait Config: frame_system::Config +
 		orml_nft::Config<ClassData = ClassData<BlockNumberOf<Self>>, TokenData = TokenData<BlockNumberOf<Self>>> +
-		pallet_proxy::Config +
-		nftmart_config::Config
+		pallet_proxy::Config
 	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
@@ -311,6 +243,10 @@ pub mod module {
 		UpdatedOrderPrice(ClassIdOf<T>, TokenIdOf<T>, T::AccountId, Balance),
 		/// OrderMinDeposit updated \[old, new\]
 		UpdatedMinOrderDeposit(Balance, Balance),
+		/// AddWhitelist \[who\]
+		AddWhitelist(T::AccountId),
+		/// RemoveWhitelist \[who\]
+		RemoveWhitelist(T::AccountId),
 	}
 
 	#[pallet::pallet]
@@ -319,12 +255,7 @@ pub mod module {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {
 		fn on_runtime_upgrade() -> Weight {
-			if StorageVersion::<T>::get() == Releases::V1_0_0 {
-				StorageVersion::<T>::put(Releases::V2_0_0);
-				migrations::do_migrate::<T>()
-			} else {
-				0
-			}
+			0
 		}
 
 		fn integrity_test () {}
@@ -354,6 +285,11 @@ pub mod module {
 		}
 	}
 
+	/// Whitelist for class creation
+	#[pallet::storage]
+	#[pallet::getter(fn account_whitelist)]
+	pub type AccountWhitelist<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, ()>;
+
 	/// Storage version of the pallet.
 	#[pallet::storage]
 	pub(super) type StorageVersion<T: Config> = StorageValue<_, Releases, ValueQuery>;
@@ -380,6 +316,26 @@ pub mod module {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		/// add an account into whitelist
+		#[pallet::weight((100_000, DispatchClass::Operational))]
+		#[transactional]
+		pub fn add_whitelist(origin: OriginFor<T>, who: T::AccountId) -> DispatchResultWithPostInfo {
+			ensure_root(origin)?;
+			AccountWhitelist::<T>::insert(&who, ());
+			Self::deposit_event(Event::AddWhitelist(who));
+			Ok((None, Pays::No).into())
+		}
+
+		/// remove an account from whitelist
+		#[pallet::weight((100_000, DispatchClass::Operational))]
+		#[transactional]
+		pub fn remove_whitelist(origin: OriginFor<T>, who: T::AccountId) -> DispatchResultWithPostInfo {
+			ensure_root(origin)?;
+			AccountWhitelist::<T>::remove(&who);
+			Self::deposit_event(Event::RemoveWhitelist(who));
+			Ok((None, Pays::No).into())
+		}
+
 		/// Take an NFT order.
 		///
 		/// - `class_id`: class id
@@ -602,7 +558,7 @@ pub mod module {
 		#[transactional]
 		pub fn create_class(origin: OriginFor<T>, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, properties: Properties) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(nftmart_config::Pallet::<T>::account_whitelist(&who).is_some(), Error::<T>::AccountNotInWhitelist);
+			ensure!(Self::account_whitelist(&who).is_some(), Error::<T>::AccountNotInWhitelist);
 
 			// TODO: pass constants from runtime configuration.
 			ensure!(name.len() <= 20, Error::<T>::NameTooLong);
@@ -651,7 +607,7 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(to)?;
-			ensure!(nftmart_config::Pallet::<T>::account_whitelist(&to).is_some(), Error::<T>::AccountNotInWhitelist);
+			ensure!(Self::account_whitelist(&to).is_some(), Error::<T>::AccountNotInWhitelist);
 
 			ensure!(quantity >= 1, Error::<T>::InvalidQuantity);
 			let class_info = orml_nft::Module::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
