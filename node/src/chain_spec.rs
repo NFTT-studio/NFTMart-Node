@@ -40,12 +40,15 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 
 pub fn development_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+	let mut prop = sc_service::Properties::new();
+	prop.insert("tokenDecimals".to_string(), 12.into());
+	prop.insert("tokenSymbol".to_string(), "NMT".into()); // NFT Mart Token
 
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Development",
+		"Nftmart Testnet",
 		// ID
-		"dev",
+		"nftmart_testnet",
 		ChainType::Development,
 		move || testnet_genesis(
 			wasm_binary,
@@ -69,9 +72,9 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
-		None,
+		Some("nftmart"),
 		// Properties
-		None,
+		Some(prop),
 		// Extensions
 		None,
 	))
