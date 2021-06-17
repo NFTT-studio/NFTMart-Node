@@ -34,6 +34,7 @@ sp-session = { version = "3.0.0", default-features = false, git = 'https://githu
 sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
 sp-transaction-pool = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
 sp-version = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+pallet-utility = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
