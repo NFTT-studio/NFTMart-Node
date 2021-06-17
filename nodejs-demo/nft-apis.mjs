@@ -1,41 +1,17 @@
-import {getApi, getModules, waitTx, hexToUtf8} from "./utils.mjs";
+import {
+	waitTx, hexToUtf8, unit, ensureAddress,
+	Global_Api, Global_ModuleMetadata, initApi,
+	getRandomInt,
+} from "./utils.mjs";
 import {Keyring} from "@polkadot/api";
 import {bnToBn} from "@polkadot/util";
 import {Command} from "commander";
 
-const unit = bnToBn('1000000000000');
+const NativeCurrencyID = 0;
 
-async function showNft(api, classID, tokenID) {
-	let nft = await api.query.ormlNft.tokens(classID, tokenID);
-	if (nft.isSome) {
-		nft = nft.unwrap();
-		console.log(nft.toString());
-	}
-}
-
-async function nftDeposit(api, metadata, nft_quantity) {
+async function proxyDeposit(num_proxies) {
 	try {
-		let [_deposit, depositAll] = await api.ws.call('nftmart_mintTokenDeposit', [metadata.length, nft_quantity.toNumber()], 10000);
-		return bnToBn(depositAll);
-	} catch (e) {
-		console.log(e);
-		return null;
-	}
-}
-
-async function classDeposit(api, metadata, name, description) {
-	try {
-		let [_deposit, depositAll] = await api.ws.call('nftmart_createClassDeposit', [metadata.length, name.length, description.length], 10000);
-		return bnToBn(depositAll);
-	} catch (e) {
-		console.log(e);
-		return null;
-	}
-}
-
-async function proxyDeposit(api, num_proxies) {
-	try {
-		let deposit = await api.ws.call('nftmart_addClassAdminDeposit', [num_proxies], 10000);
+		let deposit = await Global_Api.ws.call('nftmart_addClassAdminDeposit', [num_proxies], 10000);
 		return bnToBn(deposit);
 	} catch (e) {
 		console.log(e);
@@ -43,72 +19,660 @@ async function proxyDeposit(api, num_proxies) {
 	}
 }
 
+async function nftDeposit(metadata) {
+	try {
+		let depositAll = await Global_Api.ws.call('nftmart_mintTokenDeposit', [metadata.length], 10000);
+		return bnToBn(depositAll);
+	} catch (e) {
+		console.log(e);
+		return null;
+	}
+}
+
+async function classDeposit(metadata, name, description) {
+	try {
+		let [_deposit, depositAll] = await Global_Api.ws.call('nftmart_createClassDeposit', [metadata.length, name.length, description.length], 10000);
+		return bnToBn(depositAll);
+	} catch (e) {
+		console.log(e);
+		return null;
+	}
+}
+
+function print_nft(classID, tokenID, nft, accountToken) {
+	if (nft.isSome) {
+		nft = nft.unwrap();
+		nft = nft.toJSON();
+		nft.metadata = hexToUtf8(nft.metadata.slice(2));
+		try{ nft.metadata = JSON.parse(nft.metadata); } catch(_e) {}
+		if (!!accountToken) {
+			console.log(`classID ${classID} tokenID ${tokenID} accountToken ${accountToken} tokenInfo ${JSON.stringify(nft)}`);
+		} else {
+			console.log(`classID ${classID} tokenID ${tokenID} tokenInfo ${JSON.stringify(nft)}`);
+		}
+	}
+}
+
+async function display_nft_by(classID, tokenID) {
+	let nft = await Global_Api.query.ormlNft.tokens(classID, tokenID);
+	print_nft(classID, tokenID, nft);
+}
+
 async function main() {
 	const ss58Format = 50;
 	const keyring = new Keyring({type: 'sr25519', ss58Format});
 	const program = new Command();
-	program.option('--ws <port>', 'node ws addr', 'ws://8.136.111.191:9944');
+	program.option('--ws <url>', 'node ws addr', 'ws://192.168.0.2:9944');
 
-	program.command('create-class <account>').action(async (account) => {
-		await demo_create_class(program.opts().ws, keyring, account);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' make_data
+	program.command('make_data').action(async () => {
+		const ws = program.opts().ws;
+		await create_class(ws, keyring, "//Alice");
+		await mint_nft(ws, keyring, "//Alice", 0, 20, true);
+		await mint_nft(ws, keyring, "//Alice", 0, 21, false);
+		await mint_nft(ws, keyring, "//Alice", 0, 22, false);
+		await create_category(ws, keyring, "//Alice", "my category");
+		await submit_order(ws, keyring, "//Alice", [
+			[0, 0, 2],
+			[0, 1, 2],
+			[0, 2, 2],
+		]);
+		await submit_order(ws, keyring, "//Alice", [
+			[0, 0, 3],
+			[0, 1, 3],
+			[0, 2, 3],
+		]);
+		await submit_offer(ws, keyring, "//Bob", [
+			[0, 0, 2],
+			[0, 1, 2],
+			[0, 2, 2],
+		]);
+		await submit_offer(ws, keyring, "//Bob", [
+			[0, 0, 3],
+			[0, 1, 3],
+			[0, 2, 3],
+		]);
 	});
-	program.command('show-class-info').action(async () => {
-		await demo_show_class_info(program.opts().ws);
+
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' create_class //Alice
+	program.command('create_class <signer>').action(async (signer) => {
+		await create_class(program.opts().ws, keyring, signer);
 	});
-	program.command('add-class-admin <account>').action(async (account) => {
-		await demo_add_class_admin(program.opts().ws, keyring, account);
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' add_class_admin //Alice 0 //Bob
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' add_class_admin //Alice 0 63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw
+	program.command('add_class_admin <admin> <classId> <newAdmin>').action(async (admin, classId, newAdmin) => {
+		await add_class_admin(program.opts().ws, keyring, admin, classId, newAdmin);
 	});
-	program.command('mint-nft <account> <classID>').action(async (account, classID) => {
-		await demo_mint_nft(program.opts().ws, keyring, account, classID);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_class
+	program.command('show_class').action(async () => {
+		await show_class(program.opts().ws);
 	});
-	program.command('show-all-nfts [classID]').action(async (classID) => {
-		await demo_show_all_nfts(program.opts().ws, classID);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_whitelist
+	program.command('show_whitelist').action(async () => {
+		await show_whitelist(program.opts().ws, keyring);
 	});
-	program.command('query-nft <account>').action(async (account) => {
-		await demo_query_nft(program.opts().ws, keyring, account);
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' add_whitelist //Alice //Bob
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' add_whitelist //Alice 63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw
+	program.command('add_whitelist <sudo> <account>').action(async (sudo, account) => {
+		await add_whitelist(program.opts().ws, keyring, sudo, account);
 	});
-	program.command('query-class <account>').action(async (account) => {
-		await demo_query_class(program.opts().ws, keyring, account);
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' mint_nft //Alice 0 30
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' mint_nft //Alice 0 30 true
+	// 3. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' mint_nft //Alice 0 30 false
+	// 4. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' mint_nft //Alice 0 30 false proxy
+	program.command('mint_nft <admin> <classID> <quantity> [needToChargeRoyalty] [proxy]').action(async (admin, classID, quantity, needToChargeRoyalty, proxy) => {
+		if (needToChargeRoyalty === undefined || needToChargeRoyalty === 'null') {
+			needToChargeRoyalty = null;
+		} else {
+			needToChargeRoyalty = needToChargeRoyalty === 'true';
+		}
+		if(!!proxy) {
+			await mint_nft_by_proxy(program.opts().ws, keyring, admin, classID, quantity, needToChargeRoyalty);
+		} else {
+			await mint_nft(program.opts().ws, keyring, admin, classID, quantity, needToChargeRoyalty);
+		}
 	});
-	program.command('transfer-nft <classID> <tokenID> <from> <to>').action(async (classID, tokenID, from, to) => {
-		await demo_transfer_nft(program.opts().ws, keyring, classID, tokenID, from, to);
+	// 1: node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_nft_by_class
+	// 2: node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_nft_by_class 0
+	program.command('show_nft_by_class [classID]').action(async (classID) => {
+		await show_nft_by_class(program.opts().ws, classID);
 	});
-	program.command('burn-nft <classID> <tokenID> <account>').action(async (classID, tokenID, account) => {
-		await demo_burn_nft(program.opts().ws, keyring, classID, tokenID, account);
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_nft_by_account //Alice
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_nft_by_account 65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB
+	program.command('show_nft_by_account <account>').action(async (account) => {
+		await show_nft_by_account(program.opts().ws, keyring, account);
 	});
-	program.command('destroy-class <classID> <account>').action(async (classID, account) => {
-		await demo_destroy_class(program.opts().ws, keyring, classID, account);
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_class_by_account //Alice
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_class_by_account 65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB
+	program.command('show_class_by_account <account>').action(async (account) => {
+		await show_class_by_account(program.opts().ws, keyring, account);
 	});
-	program.command('show-create-class-deposit <metadata> <name> <description>').action(async (metadata, name, description) => {
-		await demo_show_create_class_deposit(program.opts().ws, metadata, name, description);
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' transfer_nfts //Alice 65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB \
+	//		--classId 0 --tokenId 0 --quantity 1 \
+	//		--classId 0 --tokenId 1 --quantity 2 \
+	//		--classId 0 --tokenId 2 --quantity 3
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' transfer_nfts //Alice //Bob \
+	//		--classId 0 --tokenId 0 --quantity 1 \
+	//		--classId 0 --tokenId 1 --quantity 2 \
+	//		--classId 0 --tokenId 2 --quantity 3
+	program.command('transfer_nfts <from> <to>')
+		.requiredOption('-c, --classId <classIds...>')
+		.requiredOption('-t, --tokenId <tokenIds...>')
+		.requiredOption('-q, --quantity <quantities...>')
+		.action(async (from, to, {classId, tokenId, quantity}) => {
+			if(classId.length === tokenId.length && tokenId.length === quantity.length) {
+				const tokens = classId.map((e, i) => {
+					return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
+				});
+				await transfer_nfts(program.opts().ws, tokens, keyring, from, to);
+			} else {
+				console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
+			}
 	});
-	program.command('create-category <metadata> <account>').action(async (metadata, account) => {
-		await demo_create_category(program.opts().ws, keyring, metadata, account);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' burn_nft //Alice 0 0 20
+	program.command('burn_nft <signer> <classID> <tokenID> <quantity>').action(async (signer, classID, tokenID, quantity) => {
+		await burn_nft(program.opts().ws, keyring, signer, classID, tokenID, quantity);
 	});
-	program.command('show-categories').action(async () => {
-		await demo_show_categories(program.opts().ws);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' destroy_class //Alice 0
+	program.command('destroy_class <signer> <classID>').action(async (signer, classID) => {
+		await destroy_class(program.opts().ws, keyring, signer, classID);
 	});
-	program.command('show-orders').action(async () => {
-		await demo_show_orders(program.opts().ws, keyring);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' create_category //Alice 'my cate'
+	program.command('create_category <signer> <metadata>').action(async (signer, metadata) => {
+		await create_category(program.opts().ws, keyring, signer, metadata);
 	});
-	program.command('create-order <classID> <tokenID> <account>').action(async (classID, tokenID, account) => {
-		await demo_create_order(program.opts().ws, keyring, classID, tokenID, account);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_category
+	program.command('show_category').action(async () => {
+		await show_category(program.opts().ws);
 	});
-	program.command('take-order <classID> <tokenID> <orderOwner> <account>').action(async (classID, tokenID, orderOwner, account) => {
-		await demo_take_order(program.opts().ws, keyring, classID, tokenID, orderOwner, account);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_order //Alice
+	//		--classId 0 --tokenId 0 --quantity 1 \
+	//		--classId 0 --tokenId 1 --quantity 2 \
+	//		--classId 0 --tokenId 2 --quantity 3
+	program.command('submit_order <account>')
+		.requiredOption('--classId <classIds...>')
+		.requiredOption('--tokenId <tokenIds...>')
+		.requiredOption('--quantity <quantities...>')
+		.action(async (account, {classId, tokenId, quantity}) => {
+			if(classId.length === tokenId.length && tokenId.length === quantity.length) {
+				const tokens = classId.map((e, i) => {
+					return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
+				});
+				await submit_order(program.opts().ws, keyring, account, tokens);
+			} else {
+				console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
+			}
 	});
-	program.command('add-whitelist <sudo> <account>').action(async (sudo, account) => {
-		await demo_add_whitelist(program.opts().ws, keyring, sudo, account);
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_order
+	program.command('show_order').action(async () => {
+		await show_order(program.opts().ws, keyring);
 	});
-	program.command('show-whitelist').action(async () => {
-		await demo_show_whitelist(program.opts().ws, keyring);
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_order //Bob 1 //Alice
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_order //Bob 1 65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB
+	program.command('take_order <account> <orderId> <orderOwner>').action(async (account, orderId, orderOwner) => {
+		await take_order(program.opts().ws, keyring, account, orderId, orderOwner);
+	});
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' remove_order //Alice 1
+	program.command('remove_order <account> <orderId>').action(async (account, orderId) => {
+		await remove_order(program.opts().ws, keyring, account, orderId);
+	});
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_offer //Alice
+	//		--classId 0 --tokenId 0 --quantity 1 \
+	//		--classId 0 --tokenId 1 --quantity 2 \
+	//		--classId 0 --tokenId 2 --quantity 3
+	program.command('submit_offer <account>')
+		.requiredOption('--classId <classIds...>')
+		.requiredOption('--tokenId <tokenIds...>')
+		.requiredOption('--quantity <quantities...>')
+		.action(async (account, {classId, tokenId, quantity}) => {
+			if(classId.length === tokenId.length && tokenId.length === quantity.length) {
+				const tokens = classId.map((e, i) => {
+					return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
+				});
+				await submit_offer(program.opts().ws, keyring, account, tokens);
+			} else {
+				console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
+			}
+		});
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_offer
+	program.command('show_offer').action(async () => {
+		await show_offer(program.opts().ws, keyring);
+	});
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_offer //Alice 1 //Bob
+	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_offer //Alice 1 63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw
+	program.command('take_offer <account> <offerId> <offerOwner>').action(async (account, offerId, offerOwner) => {
+		await take_offer(program.opts().ws, keyring, account, offerId, offerOwner);
+	});
+	// node nft-apis.mjs --ws 'ws://81.70.132.13:9944' remove_offer //Alice 1
+	program.command('remove_offer <account> <offerId>').action(async (account, offerId) => {
+		await remove_offer(program.opts().ws, keyring, account, offerId);
 	});
 	await program.parseAsync(process.argv);
 }
 
-async function demo_show_whitelist(ws, keyring) {
-	let api = await getApi(ws);
-	const all = await api.query.config.accountWhitelist.entries();
+async function remove_offer(ws, keyring, account, offerId) {
+	await initApi(ws);
+	account = keyring.addFromUri(account);
+	const call =  Global_Api.tx.nftmartOrder.removeOffer(offerId);
+	const feeInfo = await call.paymentInfo(account);
+	console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(account, a);
+	await b();
+}
+
+async function take_offer(ws, keyring, account, offerId, offerOwner) {
+	await initApi(ws);
+	account = keyring.addFromUri(account);
+	offerOwner = ensureAddress(keyring, offerOwner);
+	const call =  Global_Api.tx.nftmartOrder.takeOffer(offerId, offerOwner);
+	const feeInfo = await call.paymentInfo(account);
+	console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(account, a);
+	await b();
+	console.log("assets of offer owner(%s):", offerOwner);
+	await show_nft_by_account(ws, keyring, offerOwner);
+	console.log("assets of signer(%s):", account.address);
+	await show_nft_by_account(ws, keyring, account.address);
+}
+
+async function show_offer(ws, keyring) {
+	await initApi(ws);
+	const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
+	let offerCount = 0;
+	const allOffers = await Global_Api.query.nftmartOrder.offers.entries();
+	for (let offer of allOffers) {
+		let key = offer[0];
+		let keyLen = key.length;
+
+		const offerId = Buffer.from(key.buffer.slice(keyLen - 8, keyLen)).readBigUInt64LE();
+		const offerOwner = keyring.encodeAddress(new Uint8Array(key.buffer.slice(keyLen - 8 - 8 - 32, keyLen - 8 - 8)));
+
+		let data = offer[1].toHuman();
+		data.offerOwner = offerOwner;
+		data.offerId = offerId.toString();
+
+		console.log("\n\noffer: %s", JSON.stringify(data));
+		for(const item of data.items) {
+			await display_nft_by(item.classId, item.tokenId);
+		}
+		offerCount++;
+	}
+	console.log(`offer count is ${offerCount}. current block is ${currentBlockNumber}`);
+}
+
+async function submit_offer(ws, keyring, account, tokens) {
+	await initApi(ws);
+	account = keyring.addFromUri(account);
+
+	const price = unit.mul(bnToBn('20'));
+	const categoryId = 0;
+	const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
+
+	const call = Global_Api.tx.nftmartOrder.submitOffer(
+		NativeCurrencyID,
+		categoryId,
+		price,
+		currentBlockNumber.add(bnToBn('300000')),
+		tokens,
+	);
+
+	const feeInfo = await call.paymentInfo(account);
+	console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(account, a);
+	await b();
+}
+
+async function remove_order(ws, keyring, account, orderId) {
+	await initApi(ws);
+	account = keyring.addFromUri(account);
+	const call =  Global_Api.tx.nftmartOrder.removeOrder(orderId);
+	const feeInfo = await call.paymentInfo(account);
+	console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(account, a);
+	await b();
+}
+
+async function take_order(ws, keyring, account, orderId, orderOwner) {
+	await initApi(ws);
+	account = keyring.addFromUri(account);
+	orderOwner = ensureAddress(keyring, orderOwner);
+	const call =  Global_Api.tx.nftmartOrder.takeOrder(orderId, orderOwner);
+	const feeInfo = await call.paymentInfo(account);
+	console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(account, a);
+	await b();
+	console.log("assets of order owner(%s):", orderOwner);
+	await show_nft_by_account(ws, keyring, orderOwner);
+	console.log("assets of signer(%s):", account.address);
+	await show_nft_by_account(ws, keyring, account.address);
+}
+
+async function show_order(ws, keyring) {
+	await initApi(ws);
+	const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
+	let orderCount = 0;
+	const allOrders = await Global_Api.query.nftmartOrder.orders.entries();
+	for (let order of allOrders) {
+		let key = order[0];
+		let keyLen = key.length;
+
+		const orderId = Buffer.from(key.buffer.slice(keyLen - 8, keyLen)).readBigUInt64LE();
+		const orderOwner = keyring.encodeAddress(new Uint8Array(key.buffer.slice(keyLen - 8 - 8 - 32, keyLen - 8 - 8)));
+
+		let data = order[1].toHuman();
+		data.orderOwner = orderOwner;
+		data.orderId = orderId.toString();
+
+		console.log("\n\norder %s", JSON.stringify(data));
+		for(const item of data.items) {
+			await display_nft_by(item.classId, item.tokenId);
+		}
+		orderCount++;
+	}
+	console.log(`order count is ${orderCount}. current block is ${currentBlockNumber}`);
+}
+
+async function submit_order(ws, keyring, account, tokens) {
+	await initApi(ws);
+	account = keyring.addFromUri(account);
+
+	const price = unit.mul(bnToBn('20'));
+	const deposit = unit.mul(bnToBn('5'));
+	const categoryId = 0;
+	const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
+
+	const call = Global_Api.tx.nftmartOrder.submitOrder(
+		NativeCurrencyID,
+		categoryId,
+		deposit,
+		price,
+		currentBlockNumber.add(bnToBn('300000')),
+		tokens,
+	);
+
+	const feeInfo = await call.paymentInfo(account);
+	console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(account, a);
+	await b();
+}
+
+async function show_category(ws) {
+	await initApi(ws);
+	let cateCount = 0;
+	const callCategories = await Global_Api.query.nftmartConf.categories.entries();
+	for (let category of callCategories) {
+		let key = category[0];
+		const data = category[1].unwrap();
+		const len = key.length;
+		const cateId = Buffer.from(key.buffer.slice(len - 8, len)).readBigUInt64LE();
+		console.log(cateId.toString(), data.toHuman());
+		cateCount++;
+	}
+	console.log(`cateCount is ${cateCount}.`);
+}
+
+async function create_category(ws, keyring, signer, metadata) {
+	await initApi(ws);
+	signer = keyring.addFromUri(signer);
+	const call = Global_Api.tx.sudo.sudo(Global_Api.tx.nftmartConf.createCategory(metadata));
+	const feeInfo = await call.paymentInfo(signer);
+	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(signer, a);
+	await b();
+}
+
+async function destroy_class(ws, keyring, signer, classID) {
+	await initApi(ws);
+	await show_class_by_account(ws, keyring, signer);
+	const sk = keyring.addFromUri(signer);
+	let classInfo = await Global_Api.query.ormlNft.classes(classID);
+	if (classInfo.isSome) {
+		classInfo = classInfo.unwrap();
+		const call = Global_Api.tx.proxy.proxy(classInfo.owner, null, Global_Api.tx.nftmart.destroyClass(classID, sk.address));
+		const feeInfo = await call.paymentInfo(sk);
+		console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
+		let [a, b] = waitTx(Global_ModuleMetadata);
+		await call.signAndSend(sk, a);
+		await b();
+	}
+	await show_class_by_account(ws, keyring, signer);
+}
+
+async function burn_nft(ws, keyring, signer, classID, tokenID, quantity) {
+	await initApi(ws);
+	await show_nft_by_account(ws, keyring, signer);
+	const sk = keyring.addFromUri(signer);
+
+	const call = Global_Api.tx.nftmart.burn(classID, tokenID, quantity);
+	const feeInfo = await call.paymentInfo(sk);
+	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(sk, a);
+	await b();
+
+	await show_nft_by_account(ws, keyring, signer);
+}
+
+async function transfer_nfts(ws, tokens, keyring, from_raw, to) {
+	await initApi(ws);
+	const from = keyring.addFromUri(from_raw);
+
+	const call = Global_Api.tx.nftmart.transfer(ensureAddress(keyring, to), tokens);
+	const feeInfo = await call.paymentInfo(from);
+	console.log("The fee of the call: %s NMT.", feeInfo.partialFee / unit);
+
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(from, a);
+	await b();
+
+	console.log("from %s", from_raw);
+	await show_nft_by_account(ws, keyring, from_raw);
+	console.log("to %s", to);
+	await show_nft_by_account(ws, keyring, to);
+}
+
+async function show_class_by_account(ws, keyring, account) {
+	await initApi(ws);
+	const address = ensureAddress(keyring, account);
+	const allClasses = await Global_Api.query.ormlNft.classes.entries();
+	for (const c of allClasses) {
+		let key = c[0];
+		const len = key.length;
+		key = key.buffer.slice(len - 4, len);
+		const classID = new Uint32Array(key)[0];
+		let clazz = c[1].toJSON();
+		clazz.metadata = hexToUtf8(clazz.metadata.slice(2));
+		try{ clazz.metadata = JSON.parse(clazz.metadata); } catch(_e) {}
+		clazz.classID = classID;
+		clazz.adminList = await Global_Api.query.proxy.proxies(clazz.owner); // (Vec<ProxyDefinition>,BalanceOf)
+		for (const a of clazz.adminList[0]) {
+			if (a.delegate.toString() === address) {
+				console.log("classInfo: %s", JSON.stringify(clazz));
+			}
+		}
+	}
+}
+
+async function show_nft_by_account(ws, keyring, account) {
+	await initApi(ws);
+	const nfts = await Global_Api.query.ormlNft.tokensByOwner.entries(ensureAddress(keyring, account));
+	for (let clzToken of nfts) {
+		const accountToken = clzToken[1];
+		clzToken = clzToken[0];
+		const len = clzToken.length;
+
+		const classID = new Uint32Array(clzToken.slice(len - 4 - 8, len - 8))[0];
+		const tokenID = Buffer.from(clzToken.slice(len - 8, len)).readBigUInt64LE();
+
+		let nft = await Global_Api.query.ormlNft.tokens(classID, tokenID);
+		print_nft(classID, tokenID, nft, accountToken);
+	}
+}
+
+async function display_nft(classID) {
+	let tokenCount = 0;
+	let classInfo = await Global_Api.query.ormlNft.classes(classID);
+	if (classInfo.isSome) {
+		const nextTokenId = await Global_Api.query.ormlNft.nextTokenId(classID);
+		console.log(`nextTokenId in classId ${classID} is ${nextTokenId}.`);
+		classInfo = classInfo.unwrap();
+		const accountInfo = await Global_Api.query.system.account(classInfo.owner);
+		console.log("classInfo: %s", classInfo.toString());
+		console.log("classOwner: %s", accountInfo.toString());
+		for (let i = 0; i < nextTokenId; i++) {
+			let nft = await Global_Api.query.ormlNft.tokens(classID, i);
+			if (nft.isSome) {
+				print_nft(classID, i, nft);
+				tokenCount++;
+			}
+		}
+	}
+	console.log(`The token count of class ${classID} is ${tokenCount}.`);
+}
+
+async function show_nft_by_class(ws, classID) {
+	await initApi(ws);
+	if (classID === undefined) { // find all nfts
+		const allClasses = await Global_Api.query.ormlNft.classes.entries();
+		for (const c of allClasses) {
+			let key = c[0];
+			const len = key.length;
+			key = key.buffer.slice(len - 4, len);
+			const classID = new Uint32Array(key)[0];
+			await display_nft(classID);
+		}
+	} else {
+		await display_nft(classID);
+	}
+}
+
+async function mint_nft_by_proxy(ws, keyring, admin, classID, quantity, needToChargeRoyalty) {
+	await initApi(ws);
+	admin = keyring.addFromUri(admin);
+	const nftMetadata = 'demo nft metadata';
+
+	const call = Global_Api.tx.nftmart.proxyMint(admin.address, classID,
+		nftMetadata, quantity, needToChargeRoyalty);
+
+	const feeInfo = await call.paymentInfo(admin);
+	console.log("The fee of the call: %s NMT.", feeInfo.partialFee / unit);
+
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(admin, a);
+	await b();
+}
+
+async function mint_nft(ws, keyring, admin, classID, quantity, needToChargeRoyalty) {
+	await initApi(ws);
+	admin = keyring.addFromUri(admin);
+	const classInfo = await Global_Api.query.ormlNft.classes(classID);
+	if (classInfo.isSome) {
+		const ownerOfClass = classInfo.unwrap().owner.toString();
+		const nftMetadata = 'demo nft metadata';
+		const balancesNeeded = await nftDeposit(nftMetadata);
+		if (balancesNeeded === null) {
+			return;
+		}
+		// needToChargeRoyalty = null; // follow the config in class.
+		// needToChargeRoyalty = true;
+		// needToChargeRoyalty = false;
+		console.log("needToChargeRoyalty: %s", needToChargeRoyalty);
+		const txs = [
+			// make sure `ownerOfClass` has sufficient balances to mint nft.
+			Global_Api.tx.balances.transfer(ownerOfClass, balancesNeeded),
+			// mint some nfts and transfer to admin.address.
+			Global_Api.tx.proxy.proxy(ownerOfClass, null, Global_Api.tx.nftmart.mint(admin.address, classID, nftMetadata, quantity, needToChargeRoyalty)),
+		];
+		const batchExtrinsic = Global_Api.tx.utility.batchAll(txs);
+		const feeInfo = await batchExtrinsic.paymentInfo(admin);
+		console.log("fee of batchExtrinsic: %s NMT", feeInfo.partialFee / unit);
+
+		let [a, b] = waitTx(Global_ModuleMetadata);
+		await batchExtrinsic.signAndSend(admin, a);
+		await b();
+	} else {
+		console.log("class %s not found.", classID);
+	}
+}
+
+async function add_class_admin(ws, keyring, admin, classId, newAdmin) {
+	await initApi(ws);
+	admin = keyring.addFromUri(admin);
+	newAdmin = ensureAddress(keyring, newAdmin);
+	let classInfo = await Global_Api.query.ormlNft.classes(classId);
+	if(classInfo.isSome) {
+		classInfo = classInfo.unwrap();
+		const ownerOfClass = classInfo.owner;
+		console.log(ownerOfClass.toString());
+		const balancesNeeded = await proxyDeposit(1);
+		if (balancesNeeded === null) {
+			return;
+		}
+		console.log("adding a class admin needs to reserve %s NMT", balancesNeeded / unit);
+		const txs = [
+			// make sure `ownerOfClass` has sufficient balances.
+			Global_Api.tx.balances.transfer(ownerOfClass, balancesNeeded),
+			// Add `newAdmin` as a new admin.
+			Global_Api.tx.proxy.proxy(ownerOfClass, null, Global_Api.tx.proxy.addProxy(newAdmin, 'Any', 0)),
+			// Global_Api.tx.proxy.proxy(ownerOfClass, null, Global_Api.tx.proxy.removeProxy(newAdmin, 'Any', 0)), to remove an admin
+		];
+		const batchExtrinsic = Global_Api.tx.utility.batchAll(txs);
+		const feeInfo = await batchExtrinsic.paymentInfo(admin);
+		console.log("fee of batchExtrinsic: %s NMT", feeInfo.partialFee / unit);
+
+		let [a, b] = waitTx(Global_ModuleMetadata);
+		await batchExtrinsic.signAndSend(admin, a);
+		await b();
+	}
+}
+
+async function show_class(ws) {
+	await initApi(ws);
+	let classCount = 0;
+	const allClasses = await Global_Api.query.ormlNft.classes.entries();
+	let all = [];
+	for (const c of allClasses) {
+		let key = c[0];
+		const len = key.length;
+		key = key.buffer.slice(len - 4, len);
+		const classID = new Uint32Array(key)[0];
+		let clazz = c[1].toJSON();
+		clazz.metadata = hexToUtf8(clazz.metadata.slice(2));
+		try{ clazz.metadata = JSON.parse(clazz.metadata); } catch(_e) {}
+		clazz.classID = classID;
+		clazz.adminList = await Global_Api.query.proxy.proxies(clazz.owner);
+		all.push(JSON.stringify(clazz));
+		classCount++;
+	}
+	console.log("%s", all);
+	console.log("class count: %s", classCount);
+	console.log("nextClassId: %s", await Global_Api.query.ormlNft.nextClassId());
+}
+
+async function add_whitelist(ws, keyring, sudo, account) {
+	// usage: node nft-apis.mjs add-whitelist //Alice 63dHdZZMdgFeHs544yboqnVvrnAaTRdPWPC1u2aZjpC5HTqx
+	await initApi(ws);
+	sudo = keyring.addFromUri(sudo);
+	account = ensureAddress(keyring, account);
+	// const call = Global_Api.tx.sudo.sudo(Global_Api.tx.config.removeWhitelist(account.address)); to remove account from whitelist
+	const call = Global_Api.tx.sudo.sudo(Global_Api.tx.nftmartConf.addWhitelist(account));
+	const feeInfo = await call.paymentInfo(sudo.address);
+	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await call.signAndSend(sudo, a);
+	await b();
+}
+
+async function show_whitelist(ws, keyring) {
+	await initApi(ws);
+	const all = await Global_Api.query.nftmartConf.accountWhitelist.entries();
 	for (const account of all) {
 		let key = account[0];
 		const len = key.length;
@@ -118,392 +682,28 @@ async function demo_show_whitelist(ws, keyring) {
 	}
 }
 
-async function demo_add_whitelist(ws, keyring, sudo, account) {
-	// usage: node nft-apis.mjs add-whitelist //Alice 63dHdZZMdgFeHs544yboqnVvrnAaTRdPWPC1u2aZjpC5HTqx
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	sudo = keyring.addFromUri(sudo);
-	if(account.length !== '62qUEaQwPx7g4vDz88cT36XXuEUQmYo3Y5dxnxScsiDkb8wy'.length){
-		account = keyring.addFromUri(account);
-		account = account.address;
-	}
-	// const call = api.tx.sudo.sudo(api.tx.config.removeWhitelist(account.address));
-	const call = api.tx.sudo.sudo(api.tx.config.addWhitelist(account));
-	const feeInfo = await call.paymentInfo(sudo.address);
-	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
-	let [a, b] = waitTx(moduleMetadata);
-	await call.signAndSend(sudo, a);
-	await b();
-}
+async function create_class(ws, keyring, signer) {
+	await initApi(ws);
+	signer = keyring.addFromUri(signer);
 
-async function demo_take_order(ws, keyring, classID, tokenID, orderOwner, account) {
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	account = keyring.addFromUri(account);
-	orderOwner = keyring.addFromUri(orderOwner).address;
-	let order = await api.query.nftmart.orders([classID, tokenID], orderOwner);
-	if(order.isSome){
-		order = order.unwrap();
-		const call =  api.tx.nftmart.takeOrder(classID, tokenID, order.price, orderOwner);
-		const feeInfo = await call.paymentInfo(account);
-		console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
-		let [a, b] = waitTx(moduleMetadata);
-		await call.signAndSend(account, a);
-		await b();
-	}
-	process.exit();
-}
+	const name = 'demo class name';
+	const description = 'demo class description';
+	const metadata = 'demo class metadata';
 
-const NativeCurrencyID = 0;
+	const deposit = await classDeposit(metadata, name, description);
+	console.log("create class deposit %s", deposit);
 
-async function demo_create_order(ws, keyring, classID, tokenID, account) {
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	account = keyring.addFromUri(account);
-	const price = unit.mul(bnToBn('20'));
-	const deposit = unit.mul(bnToBn('5'));
-	const categoryId = 0;
-	const currentBlockNumber = bnToBn(await api.query.system.number());
-
-	const call = api.tx.nftmart.submitOrder(
-		NativeCurrencyID,
-		price,
-		categoryId,
-		classID, tokenID,
-		deposit,
-		currentBlockNumber.add(bnToBn('1000')),
-	);
-	const feeInfo = await call.paymentInfo(account);
-	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
-	let [a, b] = waitTx(moduleMetadata);
-	await call.signAndSend(account, a);
-	await b();
-	process.exit();
-}
-
-async function demo_show_orders(ws, keyring) {
-	let api = await getApi(ws);
-	let orderCount = 0;
-	const allOrders = await api.query.nftmart.orders.entries();
-	for (let order of allOrders) {
-		let key = order[0];
-		let keyLen = key.length;
-		const orderOwner = keyring.encodeAddress(new Uint8Array(key.buffer.slice(keyLen - 32, keyLen)));
-
-		const classID = new Uint32Array(key.slice(keyLen - 4 - 8 - 32 - 16, keyLen - 8 - 32 - 16))[0];
-		const tokenIDRaw = new Uint32Array(key.slice(keyLen - 8 - 32 - 16, keyLen - 32 - 16));
-
-		const tokenIDLow32 = tokenIDRaw[0];
-		const tokenIDHigh32 = tokenIDRaw[1];
-		const tokenID = u32ToU64(tokenIDLow32, tokenIDHigh32);
-
-		let nft = await api.query.ormlNft.tokens(classID, tokenID);
-		if (nft.isSome) {
-			nft = nft.unwrap();
-		}
-
-		let data = order[1].toHuman();
-		data.orderOwner = orderOwner;
-		data.classID = classID;
-		data.tokenID = tokenID;
-		data.nft = nft;
-		console.log("%s", JSON.stringify(data));
-		orderCount++;
-	}
-	console.log(`orderCount is ${orderCount}.`);
-	process.exit();
-}
-
-async function demo_show_categories(ws) {
-	let api = await getApi(ws);
-	let cateCount = 0;
-	const callCategories = await api.query.nftmart.categories.entries();
-	for (let category of callCategories) {
-		let key = category[0];
-		const data = category[1].unwrap();
-		const len = key.length;
-		key = key.buffer.slice(len - 4, len);
-		const cateId = new Uint32Array(key)[0];
-		console.log(cateId, data.toHuman());
-		cateCount++;
-	}
-	const nextCategoryId = await api.query.nftmart.nextCategoryId();
-	console.log(`nextCategoryId is ${nextCategoryId}.`);
-	console.log(`cateCount is ${cateCount}.`);
-	process.exit();
-}
-
-async function demo_create_category(ws, keyring, metadata, account) {
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	account = keyring.addFromUri(account);
-	const call = api.tx.sudo.sudo(api.tx.nftmart.createCategory(metadata));
-	const feeInfo = await call.paymentInfo(account);
-	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
-	let [a, b] = waitTx(moduleMetadata);
-	await call.signAndSend(account, a);
-	await b();
-	process.exit();
-}
-
-async function demo_show_create_class_deposit(ws, metadata, name, description) {
-	let api = await getApi(ws);
-	const deposit = await classDeposit(api, metadata, name, description);
-	console.log(deposit.toString());
-	process.exit(0);
-}
-
-async function demo_destroy_class(ws, keyring, classID, account) {
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	account = keyring.addFromUri(account);
-	let classInfo = await api.query.ormlNft.classes(classID);
-	if (classInfo.isSome) {
-		classInfo = classInfo.unwrap();
-		const call = api.tx.proxy.proxy(classInfo.owner, null, api.tx.nftmart.destroyClass(classID, account.address));
-		const feeInfo = await call.paymentInfo(account);
-		console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
-		let [a, b] = waitTx(moduleMetadata);
-		await call.signAndSend(account, a);
-		await b();
-	}
-	process.exit();
-}
-
-async function demo_burn_nft(ws, keyring, classID, tokenID, account) {
-	let api = await getApi(ws);
-	await showNft(api, classID, tokenID);
-
-	let moduleMetadata = await getModules(api);
-	account = keyring.addFromUri(account);
-
-	const call = api.tx.nftmart.burn(classID, tokenID);
-	const feeInfo = await call.paymentInfo(account);
-	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
-	let [a, b] = waitTx(moduleMetadata);
-	await call.signAndSend(account, a);
-	await b();
-
-	await showNft(api, classID, tokenID);
-	process.exit();
-}
-
-async function demo_transfer_nft(ws, keyring, classID, tokenID, from, to) {
-	let api = await getApi(ws);
-	await showNft(api, classID, tokenID);
-
-	let moduleMetadata = await getModules(api);
-	from = keyring.addFromUri(from);
-	to = keyring.addFromUri(to).address;
-
-	const call = api.tx.nftmart.transfer(to, classID, tokenID);
-	const feeInfo = await call.paymentInfo(from);
-	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
-
-	let [a, b] = waitTx(moduleMetadata);
-	await call.signAndSend(from, a);
-	await b();
-
-	await showNft(api, classID, tokenID);
-	process.exit();
-}
-
-async function demo_query_class(ws, keyring, account) {
-	let api = await getApi(ws);
-	const address = keyring.addFromUri(account).address;
-	const allClasses = await api.query.ormlNft.classes.entries();
-	for (const c of allClasses) {
-		let key = c[0];
-		const len = key.length;
-		key = key.buffer.slice(len - 4, len);
-		const classID = new Uint32Array(key)[0];
-		let clazz = c[1].toJSON();
-		clazz.metadata = hexToUtf8(clazz.metadata.slice(2));
-		clazz.classID = classID;
-		clazz.adminList = await api.query.proxy.proxies(clazz.owner);
-		for (const a of clazz.adminList[0]) {
-			if (a.delegate.toString() === address) {
-				console.log("%s", JSON.stringify(clazz));
-			}
-		}
-	}
-	process.exit();
-}
-
-function u32ToU64(tokenIDLow32, tokenIDHigh32) {
-	// TODO: convert [tokenIDLow32, tokenIDHigh32] into Uint64.
-	return tokenIDLow32;
-}
-
-async function demo_query_nft(ws, keyring, account) {
-	let api = await getApi(ws);
-	const address = keyring.addFromUri(account).address;
-	const nfts = await api.query.ormlNft.tokensByOwner.entries(address);
-	for (let clzToken of nfts) {
-		clzToken = clzToken[0];
-		const len = clzToken.length;
-
-		const classID = new Uint32Array(clzToken.slice(len - 4 - 8, len - 8))[0];
-		const tokenIDRaw = new Uint32Array(clzToken.slice(len - 8, len));
-
-		const tokenIDLow32 = tokenIDRaw[0];
-		const tokenIDHigh32 = tokenIDRaw[1];
-		const tokenID = u32ToU64(tokenIDLow32, tokenIDHigh32);
-
-		let nft = await api.query.ormlNft.tokens(classID, tokenID);
-		if (nft.isSome) {
-			nft = nft.unwrap();
-			console.log(`${classID} ${tokenID} ${nft.toString()}`);
-		}
-	}
-	process.exit();
-}
-
-async function show_all_nfts(api, classID) {
-	const nextTokenId = await api.query.ormlNft.nextTokenId(classID);
-	console.log(`nextTokenId is ${nextTokenId}.`);
-	let tokenCount = 0;
-	let classInfo = await api.query.ormlNft.classes(classID);
-	if (classInfo.isSome) {
-		classInfo = classInfo.unwrap();
-		const accountInfo = await api.query.system.account(classInfo.owner);
-		console.log(classInfo.toString());
-		console.log(accountInfo.toString());
-		for (let i = 0; i < nextTokenId; i++) {
-			let nft = await api.query.ormlNft.tokens(classID, i);
-			if (nft.isSome) {
-				nft = nft.unwrap();
-				nft = nft.toJSON();
-				nft.metadata = hexToUtf8(nft.metadata.slice(2));
-				nft.metadata = JSON.parse(nft.metadata);
-				console.log(classID, i, JSON.stringify(nft));
-				tokenCount++;
-			}
-		}
-	}
-	console.log(`The token count of class ${classID} is ${tokenCount}.`);
-}
-
-async function demo_show_all_nfts(ws, classID) {
-	let api = await getApi(ws);
-	if (classID === undefined) {
-		const allClasses = await api.query.ormlNft.classes.entries();
-		for (const c of allClasses) {
-			let key = c[0];
-			const len = key.length;
-			key = key.buffer.slice(len - 4, len);
-			const classID = new Uint32Array(key)[0];
-			await show_all_nfts(api, classID);
-		}
-	} else {
-		await show_all_nfts(api, classID);
-	}
-	process.exit();
-}
-
-async function demo_mint_nft(ws, keyring, account, classID) {
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	account = keyring.addFromUri(account);
-	const classInfo = await api.query.ormlNft.classes(classID);
-	if (classInfo.isSome) {
-		const ownerOfClass = classInfo.unwrap().owner.toString();
-		const nftMetadata = 'aabbccdd';
-		const quantity = 3;
-		const balancesNeeded = await nftDeposit(api, nftMetadata, bnToBn(quantity));
-		if (balancesNeeded === null) {
-			return;
-		}
-		const txs = [
-			// make sure `ownerOfClass0` has sufficient balances to mint nft.
-			api.tx.balances.transfer(ownerOfClass, balancesNeeded),
-			// mint nft.
-			api.tx.proxy.proxy(ownerOfClass, null, api.tx.nftmart.mint(account.address, classID, nftMetadata, quantity)),
-		];
-		const batchExtrinsic = api.tx.utility.batchAll(txs);
-		const feeInfo = await batchExtrinsic.paymentInfo(account);
-		console.log("fee of batchExtrinsic: %s", feeInfo.partialFee / unit);
-
-		let [a, b] = waitTx(moduleMetadata);
-		await batchExtrinsic.signAndSend(account, a);
-		await b();
-	}
-	process.exit();
-}
-
-async function demo_add_class_admin(ws, keyring, account) {
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	const alice = keyring.addFromUri("//Alice");
-	const bob = keyring.addFromUri(account);
-	const classCount = bnToBn((await api.query.ormlNft.nextClassId()).toString());
-
-	const ownerOfClass0 = '62qUEaQwPx7g4vDz88bN4zMBTFmcwLPYbPsvbBhH2QiqWhfB'
-	const balancesNeeded = await proxyDeposit(api, 1);
-	if (balancesNeeded === null) {
-		return;
-	}
-	console.log("adding a class admin needs to reserve %s", balancesNeeded);
-	const txs = [
-		// make sure `ownerOfClass0` has sufficient balances.
-		api.tx.balances.transfer(ownerOfClass0, balancesNeeded),
-		// Add Bob as a new admin.
-		api.tx.proxy.proxy(ownerOfClass0, null, api.tx.proxy.addProxy(bob.address, 'Any', 0)),
-	];
-	const batchExtrinsic = api.tx.utility.batchAll(txs);
-	const feeInfo = await batchExtrinsic.paymentInfo(alice);
-	console.log("fee of batchExtrinsic: %s", feeInfo.partialFee / unit);
-
-	let [a, b] = waitTx(moduleMetadata);
-	await batchExtrinsic.signAndSend(alice, a);
-	await b();
-
-	process.exit();
-}
-
-async function demo_show_class_info(ws) {
-	let api = await getApi(ws);
-	let classCount = 0;
-
-	const allClasses = await api.query.ormlNft.classes.entries();
-	let all = [];
-	for (const c of allClasses) {
-		let key = c[0];
-		const len = key.length;
-		key = key.buffer.slice(len - 4, len);
-		const classID = new Uint32Array(key)[0];
-		let clazz = c[1].toJSON();
-		clazz.metadata = hexToUtf8(clazz.metadata.slice(2));
-		clazz.classID = classID;
-		clazz.adminList = await api.query.proxy.proxies(clazz.owner);
-		all.push(JSON.stringify(clazz));
-		classCount++;
-	}
-	console.log("%s", all);
-	console.log("class count: %s", classCount);
-	console.log("nextClassId: %s", await api.query.ormlNft.nextClassId());
-	process.exit();
-}
-
-async function demo_create_class(ws, keyring, account) {
-	let api = await getApi(ws);
-	let moduleMetadata = await getModules(api);
-	account = keyring.addFromUri(account);
-	let [a, b] = waitTx(moduleMetadata);
-	// pub enum ClassProperty {
-	// 	/// Token can be transferred
 	// 	Transferable = 0b00000001,
-	// 	/// Token can be burned
 	// 	Burnable = 0b00000010,
-	// }
-	await api.tx.nftmart.createClass("https://xx.com/aa.jpg", "aaa", "bbbb", 1 | 2).signAndSend(account, a);
+	// 	RoyaltiesChargeable = 0b00000100,
+	let [a, b] = waitTx(Global_ModuleMetadata);
+	await Global_Api.tx.nftmart.createClass(metadata, name, description, 1 | 2 | 4).signAndSend(signer, a);
 	await b();
-	process.exit();
 }
 
 main().then(r => {
-	console.log("ok");
 	process.exit();
 }).catch(err => {
 	console.log(err);
+	process.exit();
 });

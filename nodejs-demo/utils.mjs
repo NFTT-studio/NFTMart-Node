@@ -1,12 +1,27 @@
 import {ApiPromise, WsProvider} from '@polkadot/api';
 import {Client as WebSocket} from 'rpc-websockets';
+import {bnToBn} from "@polkadot/util";
 
 export const convert = (from, to) => str => Buffer.from(str, from).toString(to)
 export const utf8ToHex = convert('utf8', 'hex')
 export const hexToUtf8 = convert('hex', 'utf8')
+export const unit = bnToBn('1000000000000');
 
 export function sleep(milliseconds) {
 	return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+export let Global_Api = null;
+export let Global_ModuleMetadata = null;
+export async function initApi(ws) {
+	if (Global_Api === null || Global_ModuleMetadata === null) {
+		Global_Api = await getApi(ws);
+		Global_ModuleMetadata = await getModules(Global_Api);
+	}
+}
+
+export function getRandomInt(max) {
+	return Math.floor(Math.random() * max);
 }
 
 export function waitTx(moduleMetadata) {
@@ -38,9 +53,9 @@ export function waitTx(moduleMetadata) {
 						// console.log(data.toString());
 						for (let d of data) {
 							d = d.toJSON();
-							if (d.Err && d.Err.Module && d.Err.Module.index && d.Err.Module.error) {
-								let module = moduleMetadata[d.Err.Module.index];
-								console.log("proxy.ProxyExecuted: %s.%s", module.name, module.errors[d.Err.Module.error].name);
+							if (d.err && d.err.module && d.err.module.index && d.err.module.error) {
+								let module = moduleMetadata[d.err.module.index];
+								console.log("proxy.ProxyExecuted: %s.%s", module.name, module.errors[d.err.module.error].name);
 							} else {
 								console.log("event: " + phase.toString() + ' ' + section + '.' + method + ' ' + data.toString());
 							}
@@ -78,35 +93,26 @@ export async function getApi(dest) {
 		NFTMetadata: 'Vec<u8>',
 		BlockNumber: 'u32',
 		BlockNumberOf: 'BlockNumber',
-
-		OrderData: {
-			currencyId: 'Compact<CurrencyIdOf>',
-			price: 'Compact<Balance>',
-			deposit: 'Compact<Balance>',
-			deadline: 'Compact<BlockNumberOf>',
-			categoryId: 'Compact<CategoryIdOf>'
-		},
-
-		CategoryId: 'u32',
-		CategoryIdOf: 'CategoryId',
-		CategoryData: {
-			metadata: 'NFTMetadata',
-			nftCount: 'Compact<Balance>'
-		},
-
+		BlockNumberFor: 'BlockNumber',
+		GlobalId: 'u64',
 		CurrencyId: 'u32',
 		CurrencyIdOf: 'CurrencyId',
 		Amount: 'i128',
 		AmountOf: 'Amount',
-
+		CategoryId: 'u32',
+		CategoryIdOf: 'CategoryId',
 		ClassId: 'u32',
 		ClassIdOf: 'ClassId',
+		TokenId: 'u64',
+		TokenIdOf: 'TokenId',
+
 		ClassInfoOf: {
 			metadata: 'NFTMetadata',
-			totalIssuance: 'TokenId',
+			totalIssuance: 'Compact<TokenId>',
 			owner: 'AccountId',
 			data: 'ClassData'
 		},
+
 		ClassData: {
 			deposit: 'Compact<Balance>',
 			properties: 'Properties',
@@ -115,13 +121,52 @@ export async function getApi(dest) {
 			createBlock: 'Compact<BlockNumberOf>'
 		},
 
-		TokenId: 'u64',
-		TokenIdOf: 'TokenId',
-		TokenInfoOf: {metadata: 'NFTMetadata', owner: 'AccountId', data: 'TokenData'},
+		TokenInfoOf: {
+			metadata: 'NFTMetadata',
+			data: 'TokenData',
+			quantity: 'Compact<TokenId>',
+		},
+
 		TokenData: {
 			deposit: 'Compact<Balance>',
-			createBlock: 'Compact<BlockNumberOf>'
-		}
+			createBlock: 'Compact<BlockNumberOf>',
+			royalty: 'bool',
+			creator: 'AccountId',
+			royalty_beneficiary: 'AccountId',
+		},
+
+		AccountToken: {
+			quantity: 'Compact<TokenId>',
+			reserved: 'Compact<TokenId>',
+		},
+
+		CategoryData: {
+			metadata: 'NFTMetadata',
+			nftCount: 'Compact<Balance>'
+		},
+
+		OrderItem: {
+			classId: 'Compact<ClassId>',
+			tokenId: 'Compact<TokenId>',
+			quantity: 'Compact<TokenId>',
+		},
+
+		OrderOf: {
+			currencyId: 'Compact<CurrencyId>',
+			deposit: 'Compact<Balance>',
+			price: 'Compact<Balance>',
+			deadline: 'Compact<BlockNumberOf>',
+			categoryId: 'Compact<CategoryId>',
+			items: 'Vec<OrderItem>',
+		},
+
+		OfferOf: {
+			currencyId: 'Compact<CurrencyId>',
+			price: 'Compact<Balance>',
+			deadline: 'Compact<BlockNumberOf>',
+			categoryId: 'Compact<CategoryId>',
+			items: 'Vec<OrderItem>',
+		},
 	};
 
 	const api = await ApiPromise.create({provider, types});
@@ -137,6 +182,14 @@ export async function getApi(dest) {
 	}
 	console.log("ws client has connected to %s", dest);
 	return api;
+}
+
+export function ensureAddress(keyring, account) {
+	if(account.length !== '62qUEaQwPx7g4vDz88cT36XXuEUQmYo3Y5dxnxScsiDkb8wy'.length){
+		account = keyring.addFromUri(account);
+		account = account.address;
+	}
+	return account;
 }
 
 export function secondsToString(seconds) {
