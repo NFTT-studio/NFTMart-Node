@@ -47,7 +47,7 @@ async function main() {
 	const ss58Format = 50;
 	const keyring = new Keyring({type: 'sr25519', ss58Format});
 	const program = new Command();
-	program.option('--ws <port>', 'node ws addr', 'ws://8.136.111.191:9944');
+	program.option('--ws <port>', 'node ws addr', 'ws://tmp-chain.bcdata.top');
 
 	program.command('create-class <account>').action(async (account) => {
 		await demo_create_class(program.opts().ws, keyring, account);
@@ -108,7 +108,7 @@ async function main() {
 
 async function demo_show_whitelist(ws, keyring) {
 	let api = await getApi(ws);
-	const all = await api.query.config.accountWhitelist.entries();
+	const all = await api.query.nftmart.accountWhitelist.entries();
 	for (const account of all) {
 		let key = account[0];
 		const len = key.length;
@@ -127,8 +127,8 @@ async function demo_add_whitelist(ws, keyring, sudo, account) {
 		account = keyring.addFromUri(account);
 		account = account.address;
 	}
-	// const call = api.tx.sudo.sudo(api.tx.config.removeWhitelist(account.address));
-	const call = api.tx.sudo.sudo(api.tx.config.addWhitelist(account));
+	// const call = api.tx.sudo.sudo(api.tx.nftmart.removeWhitelist(account.address));
+	const call = api.tx.sudo.sudo(api.tx.nftmart.addWhitelist(account));
 	const feeInfo = await call.paymentInfo(sudo.address);
 	console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
 	let [a, b] = waitTx(moduleMetadata);

@@ -23,7 +23,7 @@ function main() {
 }
 
 async function demo_show(keyring, account) {
-	let api = await getApi();
+  let api = await getApi('ws://tmp-chain.bcdata.top');
 	let addr = '';
 	if (account.length === '62qUEaQwPx7g4vDz88cT36XXuEUQmYo3Y5dxnxScsiDkb8wy'.length) {
 		addr = account;
@@ -36,7 +36,7 @@ async function demo_show(keyring, account) {
 }
 
 async function demo_show_all(keyring) {
-	let api = await getApi();
+	let api = await getApi('ws://tmp-chain.bcdata.top');
 	const all = await api.query.system.account.entries();
 	for (const account of all) {
 		let key = account[0];
@@ -51,7 +51,7 @@ async function demo_show_all(keyring) {
 }
 
 async function demo_transfer(keyring, from, to) {
-	let api = await getApi();
+  let api = await getApi('ws://tmp-chain.bcdata.top');
 	let moduleMetadata = await getModules(api);
 	from = keyring.addFromUri(from);
 	to = keyring.addFromUri(to).address;
