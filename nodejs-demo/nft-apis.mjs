@@ -142,6 +142,10 @@ async function main() {
 	program.command('show_nft_by_account <account>').action(async (account) => {
 		await show_nft_by_account(program.opts().ws, keyring, account);
 	});
+	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_account_by_nft 0 0
+	program.command('show_account_by_nft <classId> <tokenId>').action(async (classId, tokenId) => {
+		await show_account_by_nft(program.opts().ws, keyring, classId, tokenId);
+	});
 	// 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_class_by_account //Alice
 	// 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_class_by_account 65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB
 	program.command('show_class_by_account <account>').action(async (account) => {
@@ -497,6 +501,20 @@ async function show_class_by_account(ws, keyring, account) {
 				console.log("classInfo: %s", JSON.stringify(clazz));
 			}
 		}
+	}
+}
+
+async function show_account_by_nft(ws, keyring, classId, tokenId) {
+	await initApi(ws);
+	const owners = await Global_Api.query.ormlNft.ownersByToken.entries([classId, tokenId]);
+	for (let key of owners) {
+		key = key[0];
+		const len = key.length;
+		key = key.buffer.slice(len - 32, len);
+		const addr = keyring.encodeAddress(new Uint8Array(key));
+
+		const accountInfo = await Global_Api.query.ormlNft.tokensByOwner(addr, [classId, tokenId]);
+		console.log([classId, tokenId], addr.toString(), accountInfo.toString());
 	}
 }
 
