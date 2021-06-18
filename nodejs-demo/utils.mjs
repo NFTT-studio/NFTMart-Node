@@ -10,58 +10,61 @@ export function sleep(milliseconds) {
 }
 
 export function waitTx(moduleMetadata) {
-	let signal = false;
-	return [
-		({events = [], status}) => {
-			// console.log(JSON.stringify(status));
-			// if (status.isFinalized) {
-			if (status.isInBlock) {
-				// console.log('%s BlockHash(%s)', status.type, status.asFinalized.toHex());
-				console.log('%s BlockHash(%s)', status.type, status.asInBlock.toHex());
-				events.forEach(({phase, event: {data, method, section}}) => {
-					if ("system.ExtrinsicFailed" === section + '.' + method) {
-						let processed = false;
-						for (let d of data) {
-							if (d.isModule) {
-								let mErr = d.asModule;
-								let module = moduleMetadata[mErr.index];
-								console.log("error: %s.%s", module.name, module.errors[mErr.error].name);
-								processed = true;
-							}
-						}
-						if (!processed) {
-							console.log("event: " + phase.toString() + ' ' + section + '.' + method + ' ' + data.toString());
-						}
-					} else if ("system.ExtrinsicSuccess" === section + '.' + method) {
-						// ignore
-					} else if ("proxy.ProxyExecuted" === section + '.' + method) {
-						// console.log(data.toString());
-						for (let d of data) {
-							d = d.toJSON();
-							if (d.Err && d.Err.Module && d.Err.Module.index && d.Err.Module.error) {
-								let module = moduleMetadata[d.Err.Module.index];
-								console.log("proxy.ProxyExecuted: %s.%s", module.name, module.errors[d.Err.Module.error].name);
-							} else {
-								console.log("event: " + phase.toString() + ' ' + section + '.' + method + ' ' + data.toString());
-							}
-						}
-					} else {
-						console.log("event: " + phase.toString() + ' ' + section + '.' + method + ' ' + data.toString());
-					}
-				});
-				signal = true;
-			}
-		},
-		async function () {
-			for (; ;) {
-				await sleep(100);
-				if (signal) break;
-			}
-		}
-	];
+  let signal = false;
+  return [
+    ({events = [], status}) => {
+      // console.log(JSON.stringify(status));
+      // if (status.isFinalized) {
+      if (status.isInBlock) {
+        // console.log('%s BlockHash(%s)', status.type, status.asFinalized.toHex());
+        console.log('%s BlockHash(%s)', status.type, status.asInBlock.toHex());
+        events.forEach(({phase, event: {data, method, section}}) => {
+          if ("system.ExtrinsicFailed" === section + '.' + method) {
+            let processed = false;
+            for (let d of data) {
+              if (d.isModule) {
+                let mErr = d.asModule;
+                let module = moduleMetadata[mErr.index];
+                console.log("error: %s.%s", module.name, module.errors[mErr.error].name);
+                processed = true;
+              }
+            }
+            if (!processed) {
+              console.log("event: " + phase.toString() + ' ' + section + '.' + method + ' ' + data.toString());
+            }
+          } else if ("system.ExtrinsicSuccess" === section + '.' + method) {
+            // ignore
+          } else if ("proxy.ProxyExecuted" === section + '.' + method) {
+            // console.log(data.toString());
+            for (let d of data) {
+              d = d.toJSON();
+              if (d.err && d.err.module && d.err.module.index && d.err.module.error) {
+                let module = moduleMetadata[d.err.module.index];
+                console.log("proxy.ProxyExecuted: %s.%s", module.name, module.errors[d.err.module.error].name);
+              } else {
+                console.log("event: " + phase.toString() + ' ' + section + '.' + method + ' ' + data.toString());
+              }
+            }
+          } else {
+            console.log("event: " + phase.toString() + ' ' + section + '.' + method + ' ' + data.toString());
+          }
+        });
+        signal = true;
+      }
+    },
+    async function () {
+      for (; ;) {
+        await sleep(100);
+        if (signal) break;
+      }
+    }
+  ];
 }
 
+let gApi = null;
+
 export async function getApi(dest) {
+  if(!!gApi) return gApi;
 	// https://github.com/elpheria/rpc-websockets/blob/master/API.md#new-websocketaddress-options---client
 	const ws = new WebSocket(dest, {max_reconnects: 0});
 	let connected = false;
@@ -136,6 +139,7 @@ export async function getApi(dest) {
 		await sleep(300);
 	}
 	console.log("ws client has connected to %s", dest);
+  gApi = api
 	return api;
 }
 
@@ -148,7 +152,10 @@ export function secondsToString(seconds) {
 	return numyears + " years " + numdays + " days " + numhours + " hours " + numminutes + " minutes " + Math.round(numseconds) + " seconds";
 }
 
+let gModules = null;
+
 export async function getModules(api) {
+  if (!!gModules) return gModules;
 	let metadata = await api.rpc.state.getMetadata();
 	metadata = metadata.asLatest.modules;
 	metadata.index = {};
@@ -156,6 +163,7 @@ export async function getModules(api) {
 		metadata.index[a.index] = a;
 		// console.log(a.index.toString());
 	}
+  gModules = metadata;
 	return metadata;
 }
 

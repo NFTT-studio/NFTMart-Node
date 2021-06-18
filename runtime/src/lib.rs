@@ -94,8 +94,8 @@ pub mod opaque {
 // To learn more about runtime versioning and what each of the following value means:
 //   https://substrate.dev/docs/en/knowledgebase/runtime/upgrades#runtime-versioning
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("node-template"),
-	impl_name: create_runtime_str!("node-template"),
+	spec_name: create_runtime_str!("nftmart"),
+	impl_name: create_runtime_str!("nftmart"),
 	authoring_version: 1,
 	// The version of the runtime specification. A full node will not attempt to use its native
 	//   runtime in substitute for the on-chain Wasm runtime unless all of `spec_name`,
@@ -383,6 +383,12 @@ impl nftmart_nft::Config for Runtime {
 	type CategoryId = nftmart_core::constants_types::CategoryId;
 }
 
+impl pallet_utility::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -391,6 +397,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		System: frame_system::{Module, Call, Config, Storage, Event<T>},
+		Utility: pallet_utility::{Module, Call, Event},
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
 		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
 		Aura: pallet_aura::{Module, Config<T>},
