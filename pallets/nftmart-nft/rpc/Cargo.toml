@@ -1,0 +1,17 @@
+[package]
+name = "nftmart-rpc"
+version = "3.0.0"
+authors = ["NFTMart Developers"]
+edition = "2018"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+jsonrpc-core = "15.1.0"
+jsonrpc-core-client = "15.1.0"
+jsonrpc-derive = "15.1.0"
+sp-runtime = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+sp-api = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+sp-blockchain = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+nftmart-rpc-runtime-api = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
