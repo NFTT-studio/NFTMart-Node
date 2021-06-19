@@ -7,20 +7,20 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-sp-core = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-frame-support = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-frame-system = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-pallet-proxy = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-pallet-timestamp = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+sp-core = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+frame-support = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+frame-system = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+pallet-proxy = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+pallet-timestamp = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
 nftmart-traits = { default-features = false, path = "../nftmart-traits" }
-max-encoded-len = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1', features = [ "derive" ] }
+max-encoded-len = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7', features = [ "derive" ] }
 
 [dev-dependencies]
-sp-io = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-pallet-balances = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-pallet-utility = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+sp-io = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+pallet-balances = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+pallet-utility = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
 
 [features]
 default = ["std"]

@@ -10,9 +10,9 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-sp-std = { default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-sp-core = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
-frame-support = { default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+sp-std = { default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+sp-core = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
+frame-support = { default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
 enumflags2 = { version = "0.6.3" }
 orml-traits = { default-features = false, path = "../orml-traits" }
 
