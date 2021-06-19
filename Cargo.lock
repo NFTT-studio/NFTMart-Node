@@ -3800,6 +3800,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "nftmart-rpc"
+version = "3.0.0"
+dependencies = [
+ "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
+ "nftmart-rpc-runtime-api",
+ "sp-api",
+ "sp-blockchain",
+ "sp-runtime",
+]
+
+[[package]]
+name = "nftmart-rpc-runtime-api"
+version = "3.0.0"
+dependencies = [
+ "nftmart-nft",
+ "nftmart-traits",
+ "sp-api",
+ "sp-core",
+ "sp-std",
+]
+
+[[package]]
 name = "nftmart-traits"
 version = "3.0.0"
 dependencies = [
@@ -3819,6 +3843,8 @@ dependencies = [
  "frame-benchmarking",
  "frame-benchmarking-cli",
  "jsonrpc-core",
+ "nftmart-rpc",
+ "nftmart-traits",
  "node-template-runtime",
  "pallet-transaction-payment-rpc",
  "sc-basic-authorship",
@@ -3843,6 +3869,7 @@ dependencies = [
  "sp-finality-grandpa",
  "sp-inherents",
  "sp-runtime",
+ "sp-std",
  "sp-timestamp",
  "sp-transaction-pool",
  "structopt",
@@ -3861,9 +3888,20 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "hex-literal",
+ "max-encoded-len",
+ "nftmart-config",
+ "nftmart-nft",
+ "nftmart-order",
+ "nftmart-rpc-runtime-api",
+ "nftmart-traits",
+ "orml-currencies",
+ "orml-nft",
+ "orml-tokens",
+ "orml-traits",
  "pallet-aura",
  "pallet-balances",
  "pallet-grandpa",
+ "pallet-proxy",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-template",

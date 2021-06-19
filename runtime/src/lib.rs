@@ -22,6 +22,9 @@ use pallet_grandpa::fg_primitives;
 use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
+use frame_support::{traits::{InstanceFilter, MaxEncodedLen}, PalletId, RuntimeDebug};
+use nftmart_traits::constants_types::ACCURACY;
+use codec::{Encode, Decode};
 
 // A few exports that help ease life for downstream crates.
 #[cfg(any(feature = "std", test))]
@@ -126,6 +129,9 @@ pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
+
+pub const MILLICENTS: Balance = ACCURACY / 1000;
+pub const CENTS: Balance = ACCURACY;    // assume this is worth about a cent.
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -285,6 +291,137 @@ impl pallet_template::Config for Runtime {
 	type Event = Event;
 }
 
+const fn deposit(items: u32, bytes: u32) -> Balance {
+	items as Balance * 15 * CENTS + (bytes as Balance) * 6 * CENTS
+}
+
+parameter_types! {
+	// One storage item; key size 32, value size 8; .
+	pub const ProxyDepositBase: Balance = deposit(1, 8);
+	// Additional storage item size of 33 bytes.
+	pub const ProxyDepositFactor: Balance = deposit(0, 33);
+	pub const MaxProxies: u16 = 32;
+	pub const AnnouncementDepositBase: Balance = deposit(1, 8);
+	pub const AnnouncementDepositFactor: Balance = deposit(0, 66);
+	pub const MaxPending: u16 = 32;
+}
+
+/// The type used to represent the kinds of proxying allowed.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen)]
+pub enum ProxyType {
+	Any,
+	NonTransfer,
+}
+impl Default for ProxyType { fn default() -> Self { Self::Any } }
+impl InstanceFilter<Call> for ProxyType {
+	fn filter(&self, c: &Call) -> bool {
+		match self {
+			ProxyType::Any => true,
+			ProxyType::NonTransfer => !matches!(
+				c,
+				Call::Balances(..)
+			),
+		}
+	}
+	fn is_superset(&self, o: &Self) -> bool {
+		match (self, o) {
+			(x, y) if x == y => true,
+			(ProxyType::Any, _) => true,
+			(_, ProxyType::Any) => false,
+			(ProxyType::NonTransfer, _) => true,
+			// _ => false,
+		}
+	}
+}
+
+impl pallet_proxy::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type Currency = Balances;
+	type ProxyType = ProxyType;
+	type ProxyDepositBase = ProxyDepositBase;
+	type ProxyDepositFactor = ProxyDepositFactor;
+	type MaxProxies = MaxProxies;
+	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
+	type MaxPending = MaxPending;
+	type CallHasher = BlakeTwo256;
+	type AnnouncementDepositBase = AnnouncementDepositBase;
+	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+}
+
+orml_traits::parameter_type_with_key! {
+	pub ExistentialDeposits: |currency_id: nftmart_traits::constants_types::CurrencyId| -> Balance {
+		if currency_id == &nftmart_traits::constants_types::NATIVE_CURRENCY_ID {
+			ExistentialDeposit::get()
+		} else  {
+			Default::default()
+		}
+	};
+}
+
+impl orml_tokens::Config for Runtime {
+	type Event = Event;
+	type Balance = Balance;
+	type Amount = nftmart_traits::constants_types::Amount;
+	type CurrencyId = nftmart_traits::constants_types::CurrencyId;
+	type WeightInfo = ();
+	type ExistentialDeposits = ExistentialDeposits;
+	type OnDust = ();
+}
+
+parameter_types! {
+	pub const GetNativeCurrencyId: nftmart_traits::constants_types::CurrencyId = nftmart_traits::constants_types::NATIVE_CURRENCY_ID;
+}
+
+pub type AdaptedBasicCurrency = orml_currencies::BasicCurrencyAdapter<Runtime, Balances, nftmart_traits::constants_types::Amount, nftmart_traits::constants_types::Moment>;
+
+impl orml_currencies::Config for Runtime {
+	type Event = Event;
+	type MultiCurrency = Tokens;
+	type NativeCurrency = AdaptedBasicCurrency;
+	type GetNativeCurrencyId = GetNativeCurrencyId;
+	type WeightInfo = ();
+}
+
+impl orml_nft::Config for Runtime {
+	type ClassId = nftmart_traits::constants_types::ClassId;
+	type TokenId = nftmart_traits::constants_types::TokenId;
+	type ClassData = nftmart_nft::ClassData<BlockNumber>;
+	type TokenData = nftmart_nft::TokenData<AccountId, BlockNumber>;
+}
+
+parameter_types! {
+	pub const CreateClassDeposit: Balance = 2 * CENTS;
+	pub const CreateTokenDeposit: Balance = 1 * CENTS;
+	pub const MetaDataByteDeposit: Balance = 10 * MILLICENTS;
+	pub const NftModuleId: PalletId = PalletId(*b"nftmart*");
+}
+
+impl nftmart_nft::Config for Runtime {
+	type Event = Event;
+	type ExtraConfig = NftmartConf;
+	type CreateClassDeposit = CreateClassDeposit;
+	type MetaDataByteDeposit = MetaDataByteDeposit;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type ModuleId = NftModuleId;
+	type Currency = Balances;
+	type MultiCurrency = Currencies;
+}
+
+impl nftmart_config::Config for Runtime {
+	type Event = Event;
+}
+
+impl nftmart_order::Config for Runtime {
+	type Event = Event;
+	type MultiCurrency = Currencies;
+	type Currency = Balances;
+	type ClassId = nftmart_traits::constants_types::ClassId;
+	type TokenId = nftmart_traits::constants_types::TokenId;
+	type NFT = Nftmart;
+	type ExtraConfig = NftmartConf;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -301,9 +438,16 @@ construct_runtime!(
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
 
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template::{Pallet, Call, Storage, Event<T>},
+		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
+		Currencies: orml_currencies::{Pallet, Call, Event<T>},
+		OrmlNFT: orml_nft::{Pallet, Storage, Config<T>},
+		NftmartConf: nftmart_config::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Nftmart: nftmart_nft::{Pallet, Call, Storage, Event<T>, Config<T>},
+		NftmartOrder: nftmart_order::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
@@ -463,6 +607,18 @@ impl_runtime_apis! {
 			len: u32,
 		) -> pallet_transaction_payment::FeeDetails<Balance> {
 			TransactionPayment::query_fee_details(uxt, len)
+		}
+	}
+
+	impl nftmart_rpc_runtime_api::NFTMartApi<Block> for Runtime {
+		fn mint_token_deposit(metadata_len: u32) -> Balance {
+			Nftmart::mint_token_deposit(metadata_len)
+		}
+		fn add_class_admin_deposit(admin_count: u32) -> Balance {
+			Nftmart::add_class_admin_deposit(admin_count)
+		}
+		fn create_class_deposit(metadata_len: u32, name_len: u32, description_len: u32) -> (Balance, Balance) {
+			Nftmart::create_class_deposit(metadata_len, name_len, description_len)
 		}
 	}
 

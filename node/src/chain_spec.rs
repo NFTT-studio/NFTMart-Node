@@ -7,6 +7,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{Verify, IdentifyAccount};
 use sc_service::ChainType;
+use sp_std::vec::Vec;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -155,6 +156,23 @@ fn testnet_genesis(
 		sudo: SudoConfig {
 			// Assign network admin rights.
 			key: root_key,
+		},
+		tokens: node_template_runtime::TokensConfig {
+			endowed_accounts: endowed_accounts.iter()
+				.flat_map(|x|{
+					vec![
+						(x.clone(), 2, 100 * nftmart_traits::constants_types::ACCURACY),
+						(x.clone(), 3, 100 * nftmart_traits::constants_types::ACCURACY),
+						(x.clone(), 4, 100 * nftmart_traits::constants_types::ACCURACY),
+					]
+				}).collect(),
+		},
+		orml_nft: node_template_runtime::OrmlNFTConfig { tokens: vec![] },
+		nftmart: Default::default(),
+		nftmart_order: Default::default(),
+		nftmart_conf: node_template_runtime::NftmartConfConfig {
+			white_list: endowed_accounts,
+			..Default::default()
 		},
 	}
 }

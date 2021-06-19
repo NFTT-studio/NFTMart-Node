@@ -35,6 +35,8 @@ sp-std = { version = "3.0.0", default-features = false, git = 'https://github.co
 sp-transaction-pool = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
 sp-version = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
 pallet-utility = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+pallet-proxy = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
+max-encoded-len = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1', features = [ "derive" ]}
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
@@ -45,7 +47,17 @@ frame-benchmarking = { version = "3.1.0", default-features = false, git = 'https
 frame-system-benchmarking = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1', optional = true }
 hex-literal = { version = "0.3.1", optional = true }
 
+# pallets dependencies
 pallet-template = { version = "3.0.0", default-features = false, path = "../pallets/template" }
+orml-currencies = { version = "0.4.1-dev", default-features = false, path = "../pallets/orml-currencies" }
+orml-tokens = { version = "0.4.1-dev", default-features = false, path = "../pallets/orml-tokens" }
+orml-traits = { path = "../pallets/orml-traits", default-features = false }
+orml-nft = { path = "../pallets/orml-nft", default-features = false }
+nftmart-traits = { path = "../pallets/nftmart-traits", default-features = false }
+nftmart-nft = { path = "../pallets/nftmart-nft", default-features = false }
+nftmart-order = { path = "../pallets/nftmart-order", default-features = false }
+nftmart-config = { path = "../pallets/nftmart-config", default-features = false }
+nftmart-rpc-runtime-api = { default-features = false, path = "../pallets/nftmart-nft/rpc/runtime-api" }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "4.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'c3e9fcf1' }
@@ -63,7 +75,6 @@ std = [
 	"pallet-grandpa/std",
 	"pallet-randomness-collective-flip/std",
 	"pallet-sudo/std",
-	"pallet-template/std",
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
@@ -78,6 +89,18 @@ std = [
 	"sp-std/std",
 	"sp-transaction-pool/std",
 	"sp-version/std",
+	"pallet-proxy/std",
+	"max-encoded-len/std",
+	"pallet-template/std",
+	"orml-currencies/std",
+	"orml-tokens/std",
+	"orml-traits/std",
+	"orml-nft/std",
+	"nftmart-traits/std",
+	"nftmart-nft/std",
+	"nftmart-order/std",
+	"nftmart-config/std",
+	"nftmart-rpc-runtime-api/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",
