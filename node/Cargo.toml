@@ -1,5 +1,5 @@
 [package]
-name = "node-template"
+name = "nftmart-node"
 version = "3.0.0"
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
 description = "A fresh FRAME-based Substrate node, ready for hacking."
@@ -13,7 +13,7 @@ repository = "https://github.com/substrate-developer-hub/substrate-node-template
 targets = ["x86_64-unknown-linux-gnu"]
 
 [[bin]]
-name = "node-template"
+name = "nftmart-node"
 
 [dependencies]
 structopt = "0.3.8"
@@ -55,7 +55,7 @@ frame-benchmarking = { version = "3.1.0", git = 'https://github.com/paritytech/s
 frame-benchmarking-cli = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
 
 # local dependencies
-node-template-runtime = { version = "3.0.0", path = "../runtime" }
+node-template-runtime = { package = "nftmart-node-runtime", version = "3.0.0", path = "../runtime" }
 nftmart-traits = { path = "../pallets/nftmart-traits", default-features = false }
 nftmart-rpc = { path = "../pallets/nftmart-nft/rpc" }
 
