@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+
+# example usage:
+#
+#   ./nftmart-keygen 1 2
+#
+#   ./nftmart-keygen 1 2 3 4
+
+# TODO: ensure dependencies are installed: bash, jq, bat, grep, sed, docker, terminal-to-html
+# 
+# github.com/buildkite/terminal-to-html/v3/cmd/terminal-to-html
+
+. "$(dirname "$(realpath $0)")/common/nftmart"
+
+declare -gA root=()
+declare -gA session=()
+declare -gA stash=()
+declare -gA controller=()
+declare -gA grandpa=()
+declare -gA babe=()
+
+# DEBUG=1
+DEBUG=
+
+gen_root_and_session_keys(){
+  info "generating root key (root.json)"
+  nftmart-key generate --network nftmart --output-type Json --scheme Sr25519 | jq . > root.json
+  debug_json root.json
+  while read k v; do root["$k"]="$v"; done < <(cat root.json | jq -r 'to_entries[]|"\(.key) \(.value)"')
+
+  info "generating session key (session.json)"
+  nftmart-key generate --network nftmart --output-type Json --scheme Sr25519 | jq . > session.json
+  debug_json session.json
+  while read k v; do session["$k"]="$v"; done < <(cat session.json | jq -r 'to_entries[]|"\(.key) \(.value)"')
+}
+
+gen_stash_and_controller_keys(){
+  for i in $@; do
+    info "generating stash key for genesis node $i (stash$i.json)"
+    nftmart-key inspect-key --network nftmart "${root[secretPhrase]}//nftmart/stash/$i" --output-type Json --scheme Sr25519 | jq . > "stash$i.json"
+  # debug "nftmart-key inspect-key --network nftmart "${root["secretPhrase"]}"//nftmart/"$x"/"$i" --output-type Json"
+    debug_json "stash$i.json"
+    while read k v; do stash["$i$k"]="$v"; done < <(cat stash$i.json | jq -r 'to_entries[]|"\(.key) \(.value)"')
+
+    info "generating controller key for genesis node $i (controller$i.json)"
+    nftmart-key inspect-key --network nftmart "${root[secretPhrase]}//nftmart/controller/$i" --output-type Json --scheme Sr25519 | jq . > "controller$i.json"
+  # debug "nftmart-key inspect-key --network nftmart "${root["secretPhrase"]}"//nftmart/"$x"/"$i" --output-type Json"
+    debug_json "controller$i.json"
+    while read k v; do controller["$i$k"]="$v"; done < <(cat controller$i.json | jq -r 'to_entries[]|"\(.key) \(.value)"')
+  done
+}
+
+gen_inject_grandpa_and_babe_keys(){
+# debug "session[\"secretPhrase\"] = ${session["secretPhrase"]}"
+  for i in $@; do
+    info "generating inject grandpa key for node ${i} (grandpa${i}.json)"
+    nftmart-key inspect-key --scheme Ed25519 --network nftmart "${session["secretPhrase"]}"//nftmart//grandpa//${i} --output-type Json | jq . > grandpa${i}.json
+    debug_json grandpa${i}.json
+    while read k v; do grandpa["$i$k"]="$v"; done < <(cat grandpa$i.json | jq -r 'to_entries[]|"\(.key) \(.value)"')
+
+    info "generating inject babe key for node ${i} (babe${i}.json)"
+    nftmart-key inspect-key --scheme Sr25519 --network nftmart "${session["secretPhrase"]}"//nftmart//babe//"${i}"  --output-type Json | jq . > babe${i}.json
+    debug_json babe${i}.json
+    while read k v; do babe["$i$k"]="$v"; done < <(cat babe$i.json | jq -r 'to_entries[]|"\(.key) \(.value)"')
+  done
+}
+
+gen_inject_scripts(){
+  for i in $@; do
+
+    info "generating inject script for node $i (inject${i}.sh)"
+    cat <<EOF > inject${i}.sh
+#!/usr/bin/env bash
+post(){ curl -X POST --header "Content-Type:application/json;charset=utf-8" --data "\$1" http://127.0.0.1:\$RPC_PORT ; }
+post '$(author_insertKey_template gran "${session["secretPhrase"]}//nftmart//grandpa//${i}" "${grandpa[${i}publicKey]}")'
+post '$(author_insertKey_template babe "${session["secretPhrase"]}//nftmart//babe//${i}"    "${babe[${i}publicKey]}")'
+post '$(author_insertKey_template imon "${session["secretPhrase"]}//nftmart//babe//${i}"    "${babe[${i}publicKey]}")'
+post '$(author_insertKey_template audi "${session["secretPhrase"]}//nftmart//babe//${i}"    "${babe[${i}publicKey]}")'
+EOF
+  done
+}
+
+gen_node_key(){
+  for i in $@; do
+    info "generating node key for p2p node$i: (node${i}_p2p_key, node${i}_p2p_peer_id)"
+    # echo p2p node$i:
+    nftmart-key generate-node-key 1> "node${i}_p2p_key" 2> "node${i}_p2p_peer_id"
+    secret "node${i}_p2p_key: $(cat node${i}_p2p_key)"
+    public "node${i}_p2p_peer_id: $(cat node${i}_p2p_peer_id)"
+  done
+}
+
+gen_rust(){
+  info "generating rust chain_spec.rs genesis config code snippet (chain_spec.rs)"
+  {
+  echo "  let root_key: AccountId = hex![\"${root[publicKey]#0x}\"].into(); // ${root[ss58Address]}"
+  echo '  let initial_authorities: Vec<(AccountId, AccountId, GrandpaId, BabeId, ImOnlineId, AuthorityDiscoveryId)> = vec!['
+  for i in $@; do
+    cat <<EOF
+    (
+      hex!["${stash[${i}publicKey]#0x}"].into(),              // ${stash[${i}ss58Address]}
+      hex!["${controller[${i}publicKey]#0x}"].into(),              // ${controller[${i}ss58Address]}
+      hex!["${grandpa[${i}publicKey]#0x}"].unchecked_into(),    // ${grandpa[${i}ss58Address]}
+      hex!["${babe[${i}publicKey]#0x}"].unchecked_into(),    // ${babe[${i}ss58Address]}
+      hex!["${babe[${i}publicKey]#0x}"].unchecked_into(),    // ${babe[${i}ss58Address]}
+      hex!["${babe[${i}publicKey]#0x}"].unchecked_into(),    // ${babe[${i}ss58Address]}
+    ),
+EOF
+  done
+  echo '  ];'
+  } > chain_spec.rs
+}
+
+intro(){
+  info "white"
+  warn "red"
+
+  debug "yellow"
+  secret "grey"
+  public "green"
+  br
+}
+
+author_insertKey_template(){
+  arg1="$1"
+  arg2="$2"
+  arg3="$3"
+
+# arg1="gran"
+# arg2="//nftmart//grandpa//1"
+# arg3="0xc91e1d6f8a3caefcc4b4e958a3b0b127bc48e120fff6a3e4dfc47010ceeb5e02"
+
+cat <<EOF | jq -c .
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "author_insertKey",
+  "params": [
+    "${arg1}",
+    "${arg2}",
+    "${arg3}"
+  ]
+}
+EOF
+}
+
+gen_summary(){
+  info "generating summary (summary.txt, summary.html)"
+  bat --decorations always * > summary.txt
+  bat --decorations always * --color=always | terminal-to-html --preview > summary.html
+}
+
+main(){
+# intro
+  
+  cd $(mktemp -d)
+  info "cd $(pwd)"
+
+  br
+  gen_root_and_session_keys
+
+  br
+  gen_stash_and_controller_keys "$@"
+
+  br
+  gen_inject_grandpa_and_babe_keys "$@"
+
+  br
+  gen_inject_scripts "$@"
+
+  br
+  gen_node_key "$@"
+
+  br
+  gen_rust "$@"
+
+  br
+  gen_summary
+
+# br
+# gen_spec
+}
+
+gen_spec(){
+  nftmart-build-spec --disable-default-bootnode --chain staging > staging_spec.json
+  # cat staging_spec.json | nftmart-build-spec --disable-default-bootnode --chain=/dev/stdin --raw > staging_spec_raw.json
+  #  nftmart-build-spec --disable-default-bootnode --chain staging --raw > staging_spec_raw.json
+  ../target/release/substrate build-spec --disable-default-bootnode --chain staging_spec.json --raw > staging_spec_raw.json
+}
+
+main "$@"

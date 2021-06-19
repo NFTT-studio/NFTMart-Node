@@ -1,0 +1,121 @@
+# Docker compose file to start a multi node local test network.
+#
+# # Nodes
+#
+# - Validator node A (node1)
+# - Validator node B (node2)
+# - Light client C   (node3)
+#
+# # Auxiliary nodes
+#
+# - Prometheus monitoring each node.
+# - Grafana pointed at the Prometheus node, configured with all dashboards.
+#
+# # Usage
+#
+# 1. Build `target/release/substrate` binary: `cargo build --release`
+# 2. Start networks and containers:
+#    `sudo docker-compose -f .maintain/sentry-node/docker-compose.yml up`
+# 3. Connect to nodes:
+#   - node1: localhost:9944
+#   - node2: localhost:9945
+#   - node3: localhost:9946
+#   - via polkadot.js/apps: https://polkadot.js.org/apps/?rpc=ws%3A%2F%2Flocalhost%3A<NODE_PORT>#/explorer
+#   - grafana: localhost:3000
+#   - prometheus: localhost:9090
+
+
+version: "3.7"
+services:
+
+  node1:
+    restart: always
+    env_file: .env
+    image: btwiuse/nftmart:beta
+    volumes:
+    - ./entrypoint.rc:/entrypoint.rc
+    - ./state/node1:/data/state/node1
+    ports:
+    - "${PORT1}:${PORT1}"
+    entrypoint: [ "bash", "-c" ]
+    command:
+    - source /entrypoint.rc && node1
+
+  node2:
+    restart: always
+    env_file: .env
+    image: btwiuse/nftmart:beta
+    volumes:
+    - ./entrypoint.rc:/entrypoint.rc
+    - ./state/node2:/data/state/node2
+    ports:
+    - "${PORT2}:${PORT2}"
+    entrypoint: [ "bash", "-c" ]
+    command:
+    - source /entrypoint.rc && node2
+
+  node3:
+    restart: always
+    env_file: .env
+    image: btwiuse/nftmart:beta
+    volumes:
+    - ./entrypoint.rc:/entrypoint.rc
+    - ./state/node3:/data/state/node3
+    ports:
+    - "${PORT3}:${PORT3}"
+    - "${RPC_PORT3}:${RPC_PORT3}"
+    - "${WS_PORT3}:${WS_PORT3}"
+    entrypoint: [ "bash", "-c" ]
+    command:
+    - source /entrypoint.rc && node3
+
+  node4:
+    restart: always
+    env_file: .env
+    image: btwiuse/nftmart:beta
+    volumes:
+    - ./entrypoint.rc:/entrypoint.rc
+    - ./state/node4:/data/state/node4
+    ports:
+    - "${PORT4}:${PORT4}"
+    - "${RPC_PORT4}:${RPC_PORT4}"
+    - "${WS_PORT4}:${WS_PORT4}"
+    entrypoint: [ "bash", "-c" ]
+    command:
+    - source /entrypoint.rc && node4
+
+  node5:
+    restart: always
+    env_file: .env
+    image: btwiuse/nftmart:beta
+    volumes:
+    - ./entrypoint.rc:/entrypoint.rc
+    - ./state/node5:/data/state/node5
+    ports:
+    - "${PORT5}:${PORT5}"
+    - "${RPC_PORT5}:${RPC_PORT5}"
+    - "${WS_PORT5}:${WS_PORT5}"
+    entrypoint: [ "bash", "-c" ]
+    command:
+    - source /entrypoint.rc && node5
+
+  prometheus:
+    restart: always
+    image: prom/prometheus
+    user: root
+    volumes:
+    - ./prometheus/:/etc/prometheus/
+    - ./state/prometheus/:/prometheus/
+    ports:
+    - 9090:9090
+
+  grafana:
+    restart: always
+    image: grafana/grafana
+    user: root
+    volumes:
+    - ./grafana/:/etc/grafana/
+    - ./state/grafana/:/var/lib/grafana/
+    ports:
+    - 3000:3000
+

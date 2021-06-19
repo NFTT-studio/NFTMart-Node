@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+
+# generated functions
+
+node1(){
+  insertkey1 &
+  exec_nftmart \
+    --base-path /data/state/node1 \
+    --validator \
+    --node-key ${NODE_KEY1} \
+    --bootnodes /dns/${IP2}/tcp/${PORT2}/p2p/${NODE_PEER_ID2} \
+    --prometheus-port "${PROM_PORT1}" \
+    --port "${PORT1}" \
+    --ws-port "${WS_PORT1}" \
+    --rpc-port "${RPC_PORT1}"
+}
+
+node2(){
+  insertkey2 &
+  exec_nftmart \
+    --base-path /data/state/node2 \
+    --validator \
+    --node-key ${NODE_KEY2} \
+    --bootnodes /dns/${IP1}/tcp/${PORT1}/p2p/${NODE_PEER_ID1} \
+    --prometheus-port "${PROM_PORT2}" \
+    --port "${PORT2}" \
+    --ws-port "${WS_PORT2}" \
+    --rpc-port "${RPC_PORT2}"
+}
+
+node3(){
+  exec_nftmart \
+    --base-path /data/state/node3 \
+    --no-telemetry \
+    --light \
+    --node-key ${NODE_KEY3} \
+    --bootnodes /dns/${IP1}/tcp/${PORT1}/p2p/${NODE_PEER_ID1} \
+    --bootnodes /dns/${IP2}/tcp/${PORT2}/p2p/${NODE_PEER_ID2} \
+    --prometheus-port "${PROM_PORT3}" \
+    --port "${PORT3}" \
+    --ws-port "${WS_PORT3}" \
+    --rpc-port "${RPC_PORT3}"
+}
+
+node4(){
+  exec_nftmart \
+    --base-path /data/state/node4 \
+    --node-key ${NODE_KEY4} \
+    --bootnodes /dns/${IP1}/tcp/${PORT1}/p2p/${NODE_PEER_ID1} \
+    --bootnodes /dns/${IP2}/tcp/${PORT2}/p2p/${NODE_PEER_ID2} \
+    --prometheus-port "${PROM_PORT4}" \
+    --port "${PORT4}" \
+    --ws-port "${WS_PORT4}" \
+    --rpc-port "${RPC_PORT4}"
+}
+
+node5(){
+  exec_nftmart \
+    --base-path /data/state/node5 \
+    --validator \
+    --bootnodes /dns/${IP1}/tcp/${PORT1}/p2p/${NODE_PEER_ID1} \
+    --bootnodes /dns/${IP2}/tcp/${PORT2}/p2p/${NODE_PEER_ID2} \
+    --prometheus-port "${PROM_PORT5}" \
+    --port "${PORT5}" \
+    --ws-port "${WS_PORT5}" \
+    --rpc-port "${RPC_PORT5}"
+}
+
+haskey1(){
+  local URL="http://127.0.0.1:$RPC_PORT1"
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0x184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f","gran"]}'
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60","babe"]}'
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60","imon"]}'
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60","audi"]}'
+}
+
+haskey2(){
+  local URL="http://127.0.0.1:$RPC_PORT2"
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0xb46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e","gran"]}'
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773","babe"]}'
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773","imon"]}'
+  post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_hasKey","params":["0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773","audi"]}'
+}
+
+insertkey1(){
+  local URL="http://127.0.0.1:$RPC_PORT1"
+  local RELOAD_KEYS=
+
+  wait_for "$URL"
+
+  until [[ $(haskey1 | grep -c true) == "4" ]]; do
+    RELOAD_KEYS=1
+    echo "[INFO] inserting keys to node1 ($URL)."
+    echo "The node will restart shortly after the keys are inserted"
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["gran","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//grandpa//1","0x184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f"]}'
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["babe","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//1","0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]}'
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["imon","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//1","0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]}'
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["audi","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//1","0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]}'
+  done
+
+  if [[ -n "${RELOAD_KEYS}" ]]; then shutdown_node_to_reload_inserted_keys; fi
+}
+
+insertkey2(){
+  local URL="http://127.0.0.1:$RPC_PORT2"
+  local RELOAD_KEYS=
+
+  wait_for "$URL"
+
+  until [[ $(haskey2 | grep -c true) == "4" ]]; do
+    RELOAD_KEYS=1
+    echo "[INFO] inserting keys to node2 ($URL)"
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["gran","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//grandpa//2","0xb46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e"]}'
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["babe","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//2","0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]}'
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["imon","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//2","0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]}'
+    post "$URL" '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["audi","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//2","0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]}'
+  done
+
+  if [[ -n "${RELOAD_KEYS}" ]]; then shutdown_node_to_reload_inserted_keys; fi
+}
+
+# util funcs
+
+exec_nftmart(){
+  exec nftmart \
+    --telemetry-url="wss://telemetry.polkadot.io/submit/ 0" \
+    --name="${FUNCNAME[1]}" \
+    --log=runtime=debug \
+    --execution=NativeElseWasm \
+    --rpc-cors=all \
+    --rpc-methods=Unsafe \
+    --prometheus-external \
+    --unsafe-ws-external \
+    --chain=staging_spec_raw.json \
+    --wasm-execution=Interpreted \
+    --ws-max-connections=10000 \
+    "$@"
+}
+
+shutdown_node_to_reload_inserted_keys(){
+    echo "[INFO] node will shutdown shortly to reload inserted keys."
+    sleep 3
+    kill 1
+}
+
+post(){ curl -s -f -m 1 "$1" -X POST --header "Content-Type:application/json;charset=utf-8" --data "$2"; }
+
+is_healthy(){
+  post "$1" --data '{"jsonrpc":"2.0","id":2,"method":"system_health","params":[]}' &>/dev/null || {
+    sleep 1 && false
+  }
+}
+
+wait_for(){
+  until is_healthy "$1"; do :; done
+}
+

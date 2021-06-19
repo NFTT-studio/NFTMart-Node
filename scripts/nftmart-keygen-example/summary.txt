@@ -1,0 +1,173 @@
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: babe1.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60",
+   3   │   "publicKey": "0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60",
+   4   │   "secretKeyUri": "include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//1",
+   5   │   "secretSeed": "0x9c0410b97d127039b613406466983b160e765d05750d7a139b6bf23fe2039d7c",
+   6   │   "ss58Address": "6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: babe2.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773",
+   3   │   "publicKey": "0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773",
+   4   │   "secretKeyUri": "include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//2",
+   5   │   "secretSeed": "0xd22c7244e0e96b537c34c0f6bab1c9829766755ce175632896d8cf8ebcd5663c",
+   6   │   "ss58Address": "5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: chain_spec.rs
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │   let root_key: AccountId = hex!["12970155d02df21b7e39e289593065d0bbb67d5d38f36dd1b9d617614a006d00"].into(); // 5znMeMdGsDrENMFg9wvLMveuYdCSVCCGdaXE6HAU4UwTksei
+   2   │   let initial_authorities: Vec<(AccountId, AccountId, GrandpaId, BabeId, ImOnlineId, AuthorityDiscoveryId)> = vec![
+   3   │     (
+   4   │       hex!["d0a9b0c9ac0a3dc0432cb66f288c1ffc9bd159ca52739d994f789003b08b6630"].into(),              // 655aHzD3sX1QpZVxStEHPV4TVCqKVcfwfxrsX8spZndPfabe
+   5   │       hex!["c43b6cda18d09359fe32ea27014601c6d723e17e2cc8ca14496f210595f95a26"].into(),              // 64oGxqAX2AW26AWQDx9vNNb7aTF741QMTn1n35qFRty6FaLc
+   6   │       hex!["184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f"].unchecked_into(),    // 5zureDa91LCdspDmqxkPUnGg9WLHPJQLs1XZ9uqmkUEcK3Ca
+   7   │       hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"].unchecked_into(),    // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
+   8   │       hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"].unchecked_into(),    // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
+   9   │       hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"].unchecked_into(),    // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
+  10   │     ),
+  11   │     (
+  12   │       hex!["5e7704ab35a8a08fda1ca9ddca87013849daf02744e81cc5fb03d7395030744c"].into(),              // 62VqnJu5Xwc5qaNsQoeS8UAEA8rFFf8U6UeyeKgYQGfi23us
+  13   │       hex!["c23b0e2abab64d27c630028830d5a3afc4785f0dd02ce069af8b3f2118bc682c"].into(),              // 64kekuPLYqkAHwwbeYjVUDkPFoc27VNGib3ezJrXCTY2qWSm
+  14   │       hex!["b46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e"].unchecked_into(),    // 64SYg4L1MbtsREC8Qcrd42bMidA8bXq9jmNBYDwAg1fcuBm4
+  15   │       hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"].unchecked_into(),    // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
+  16   │       hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"].unchecked_into(),    // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
+  17   │       hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"].unchecked_into(),    // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
+  18   │     ),
+  19   │   ];
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: controller1.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0xc43b6cda18d09359fe32ea27014601c6d723e17e2cc8ca14496f210595f95a26",
+   3   │   "publicKey": "0xc43b6cda18d09359fe32ea27014601c6d723e17e2cc8ca14496f210595f95a26",
+   4   │   "secretKeyUri": "short unveil someone innocent loop ocean interest hole term path horse memory//nftmart/controller/1",
+   5   │   "secretSeed": "n/a",
+   6   │   "ss58Address": "64oGxqAX2AW26AWQDx9vNNb7aTF741QMTn1n35qFRty6FaLc"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: controller2.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0xc23b0e2abab64d27c630028830d5a3afc4785f0dd02ce069af8b3f2118bc682c",
+   3   │   "publicKey": "0xc23b0e2abab64d27c630028830d5a3afc4785f0dd02ce069af8b3f2118bc682c",
+   4   │   "secretKeyUri": "short unveil someone innocent loop ocean interest hole term path horse memory//nftmart/controller/2",
+   5   │   "secretSeed": "n/a",
+   6   │   "ss58Address": "64kekuPLYqkAHwwbeYjVUDkPFoc27VNGib3ezJrXCTY2qWSm"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: grandpa1.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0x184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f",
+   3   │   "publicKey": "0x184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f",
+   4   │   "secretKeyUri": "include holiday snap brave almost drift grain list short dust hollow poet//nftmart//grandpa//1",
+   5   │   "secretSeed": "0x925b82ff0ef7fc5ec6fdf74f38894c4781145f5456edb18a699ea9f0e0c900e2",
+   6   │   "ss58Address": "5zureDa91LCdspDmqxkPUnGg9WLHPJQLs1XZ9uqmkUEcK3Ca"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: grandpa2.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0xb46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e",
+   3   │   "publicKey": "0xb46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e",
+   4   │   "secretKeyUri": "include holiday snap brave almost drift grain list short dust hollow poet//nftmart//grandpa//2",
+   5   │   "secretSeed": "0xdd3a03b95733408b0adc5d359b3ef98392ea6f699c075281a1824b8e4cebac49",
+   6   │   "ss58Address": "64SYg4L1MbtsREC8Qcrd42bMidA8bXq9jmNBYDwAg1fcuBm4"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: inject1.sh
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ #!/usr/bin/env bash
+   2   │ post(){ curl -X POST --header "Content-Type:application/json;charset=utf-8" --data "$1" http://127.0.0.1:$RPC_PORT ; }
+   3   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["gran","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//grandpa//1","0x184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f"]}'
+   4   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["babe","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//1","0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]}'
+   5   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["imon","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//1","0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]}'
+   6   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["audi","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//1","0x2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]}'
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: inject2.sh
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ #!/usr/bin/env bash
+   2   │ post(){ curl -X POST --header "Content-Type:application/json;charset=utf-8" --data "$1" http://127.0.0.1:$RPC_PORT ; }
+   3   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["gran","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//grandpa//2","0xb46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e"]}'
+   4   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["babe","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//2","0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]}'
+   5   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["imon","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//2","0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]}'
+   6   │ post '{"jsonrpc":"2.0","id":1,"method":"author_insertKey","params":["audi","include holiday snap brave almost drift grain list short dust hollow poet//nftmart//babe//2","0x0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]}'
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: node1_p2p_key
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ d1383db85a2175fcd7edd04a36dbf3f2522f15cdd6992508d36ac80b31fde4e5
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: node1_p2p_peer_id
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ 12D3KooWP44EhEGK9pp33nr19p3xKqUbnRWawgapeJ8Bbq3y4QmX
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: node2_p2p_key
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ e44deb139bcd180f2010ee3afc0678f765a3cf9ff26862330d12c5e4fb65ed2e
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: node2_p2p_peer_id
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ 12D3KooWM5QknCEcvJGJDKAE7uuBgbAcCXdFpiZHH9KLcw5oSUN5
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: root.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0x12970155d02df21b7e39e289593065d0bbb67d5d38f36dd1b9d617614a006d00",
+   3   │   "publicKey": "0x12970155d02df21b7e39e289593065d0bbb67d5d38f36dd1b9d617614a006d00",
+   4   │   "secretPhrase": "short unveil someone innocent loop ocean interest hole term path horse memory",
+   5   │   "secretSeed": "0xa9cc67d7093be70ff650b2594185aae5c501a423ca1d431cb4606994ef1b040c",
+   6   │   "ss58Address": "5znMeMdGsDrENMFg9wvLMveuYdCSVCCGdaXE6HAU4UwTksei"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: session.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0xf842c456122eb5a8237a12d809fcc8f628f6132e92050b98ac8e29af034f315e",
+   3   │   "publicKey": "0xf842c456122eb5a8237a12d809fcc8f628f6132e92050b98ac8e29af034f315e",
+   4   │   "secretPhrase": "include holiday snap brave almost drift grain list short dust hollow poet",
+   5   │   "secretSeed": "0xca4118c3b4b13d39638bf015c1ac64328e7ee955488bec25eb6d7d23efc069e2",
+   6   │   "ss58Address": "65yVdkG1ahV9DNdGuD45VNVT1Tfyg6EEzVoUdAJwqmsmWV1M"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: stash1.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0xd0a9b0c9ac0a3dc0432cb66f288c1ffc9bd159ca52739d994f789003b08b6630",
+   3   │   "publicKey": "0xd0a9b0c9ac0a3dc0432cb66f288c1ffc9bd159ca52739d994f789003b08b6630",
+   4   │   "secretKeyUri": "short unveil someone innocent loop ocean interest hole term path horse memory//nftmart/stash/1",
+   5   │   "secretSeed": "n/a",
+   6   │   "ss58Address": "655aHzD3sX1QpZVxStEHPV4TVCqKVcfwfxrsX8spZndPfabe"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
+───────┬────────────────────────────────────────────────────────────────────────
+       │ File: stash2.json
+───────┼────────────────────────────────────────────────────────────────────────
+   1   │ {
+   2   │   "accountId": "0x5e7704ab35a8a08fda1ca9ddca87013849daf02744e81cc5fb03d7395030744c",
+   3   │   "publicKey": "0x5e7704ab35a8a08fda1ca9ddca87013849daf02744e81cc5fb03d7395030744c",
+   4   │   "secretKeyUri": "short unveil someone innocent loop ocean interest hole term path horse memory//nftmart/stash/2",
+   5   │   "secretSeed": "n/a",
+   6   │   "ss58Address": "62VqnJu5Xwc5qaNsQoeS8UAEA8rFFf8U6UeyeKgYQGfi23us"
+   7   │ }
+───────┴────────────────────────────────────────────────────────────────────────
