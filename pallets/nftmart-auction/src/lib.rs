@@ -207,6 +207,7 @@ pub mod module {
 		/// - `items`: Nft list.
 		#[pallet::weight(100_000)]
 		#[transactional]
+		#[allow(clippy::too_many_arguments)]
 		pub fn submit_british_auction(
 			origin: OriginFor<T>,
 			#[pallet::compact] currency_id: CurrencyIdOf<T>,
@@ -361,7 +362,7 @@ pub mod module {
 			for item in &auction.items {
 				T::NFT::transfer(&auction_owner, &purchaser, item.class_id, item.token_id, item.quantity)?;
 			}
-			Self::deposit_event(Event::RedeemedBritishAuction(purchaser.clone(), auction_id));
+			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id));
 			Ok(().into())
 		}
 

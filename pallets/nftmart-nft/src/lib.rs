@@ -445,6 +445,7 @@ pub mod module {
 impl<T: Config> Pallet<T> {
 
 	#[transactional]
+	#[allow(clippy::type_complexity)]
 	pub fn do_proxy_mint(
 		delegate: &T::AccountId, to: &T::AccountId, class_id: ClassIdOf<T>,
 		metadata: NFTMetadata, quantity: TokenIdOf<T>, charge_royalty: Option<bool>,
@@ -458,6 +459,7 @@ impl<T: Config> Pallet<T> {
 		Self::do_mint(&class_info.owner, to, &class_info, class_id, metadata, quantity, charge_royalty)
 	}
 
+	#[allow(clippy::type_complexity)]
 	fn do_mint(who: &T::AccountId, to: &T::AccountId,
 				   class_info: &ClassInfoOf<T>, class_id: ClassIdOf<T>,
 				   metadata: NFTMetadata, quantity: TokenIdOf<T>,
@@ -478,10 +480,10 @@ impl<T: Config> Pallet<T> {
 			royalty_beneficiary: to.clone(),
 		};
 
-		let token_id: TokenIdOf<T> = orml_nft::Pallet::<T>::mint(&to, class_id, metadata.clone(), data.clone(), quantity)?;
+		let token_id: TokenIdOf<T> = orml_nft::Pallet::<T>::mint(&to, class_id, metadata, data, quantity)?;
 
 		Self::deposit_event(Event::MintedToken(who.clone(), to.clone(), class_id, token_id, quantity));
-		Ok((who.clone(), to.clone(), class_id, token_id, quantity).into())
+		Ok((who.clone(), to.clone(), class_id, token_id, quantity))
 	}
 
 	#[transactional]

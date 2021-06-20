@@ -1,4 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::unnecessary_cast)]
 
 use frame_support::pallet_prelude::*;
 use sp_std::vec::Vec;
