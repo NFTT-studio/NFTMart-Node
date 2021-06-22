@@ -108,7 +108,6 @@ try-runtime-cli = { version = "0.9.0", optional = true, git = 'https://github.co
 # WASM-specific dependencies
 wasm-bindgen = { version = "0.2.73", optional = true }
 wasm-bindgen-futures = { version = "0.4.18", optional = true }
-browser-utils = { package = "substrate-browser-utils", git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7', optional = true, version = "0.9.0"}
 libp2p-wasm-ext = { version = "0.28", features = ["websocket"], optional = true }
 
 [target.'cfg(target_arch="x86_64")'.dependencies]
@@ -140,22 +139,10 @@ frame-benchmarking-cli = { version = "3.0.0", optional = true, git = 'https://gi
 substrate-build-script-utils = { version = "3.0.0", optional = true, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
 substrate-frame-cli = { version = "3.0.0", optional = true, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
 try-runtime-cli = { version = "0.9.0", optional = true, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
-
-[build-dependencies.sc-cli]
-version = "0.9.0"
-package = "sc-cli"
-optional = true
-git = 'https://github.com/paritytech/substrate.git'
-rev = 'df1165d7'
+sc-cli = { version = "0.9.0", optional = true, git = 'https://github.com/paritytech/substrate.git', rev = 'df1165d7' }
 
 [features]
 default = [ "cli" ]
-browser = [
-	"browser-utils",
-	"wasm-bindgen",
-	"wasm-bindgen-futures",
-	"libp2p-wasm-ext",
-]
 cli = [
 	"node-executor/wasmi-errno",
 	"node-inspect",
