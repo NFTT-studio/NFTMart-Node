@@ -10,6 +10,7 @@ export const unit = bnToBn('1000000000000');
 export function sleep(milliseconds) {
 	return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
+export const NativeCurrencyID = 0;
 
 export let Global_Api = null;
 export let Global_ModuleMetadata = null;
@@ -105,6 +106,17 @@ export async function getApi(dest) {
 		ClassIdOf: 'ClassId',
 		TokenId: 'u64',
 		TokenIdOf: 'TokenId',
+
+    OrmlAccountData: {
+      free: 'Balance',
+      reserved: 'Balance',
+      frozen: 'Balance',
+    },
+
+    OrmlBalanceLock: {
+      amount: 'Balance',
+      id: 'LockIdentifier'
+    },
 
 		ClassInfoOf: {
 			metadata: 'NFTMetadata',

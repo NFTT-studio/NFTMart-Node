@@ -100,7 +100,7 @@ impl<T: Config> OnDust<T::AccountId, T::CurrencyId, T::Balance> for BurnDust<T> 
 /// A single lock on a balance. There can be many of these on an account and
 /// they "overlap", so the same balance is frozen by multiple locks.
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
-pub struct BalanceLock<Balance> {
+pub struct OrmlBalanceLock<Balance> {
 	/// An identifier for this lock. Only one lock may be in existence for
 	/// each identifier.
 	pub id: LockIdentifier,
@@ -111,7 +111,7 @@ pub struct BalanceLock<Balance> {
 
 /// balance information for an account.
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Default, RuntimeDebug)]
-pub struct AccountData<Balance> {
+pub struct OrmlAccountData<Balance> {
 	/// Non-reserved part of the balance. There may still be restrictions on
 	/// this, but it is the total pool what may in principle be transferred,
 	/// reserved.
@@ -131,7 +131,7 @@ pub struct AccountData<Balance> {
 	pub frozen: Balance,
 }
 
-impl<Balance: Saturating + Copy + Ord> AccountData<Balance> {
+impl<Balance: Saturating + Copy + Ord> OrmlAccountData<Balance> {
 	/// The amount that this account's free balance may not be reduced
 	/// beyond.
 	pub(crate) fn frozen(&self) -> Balance {
@@ -228,7 +228,7 @@ pub mod module {
 		T::AccountId,
 		Twox64Concat,
 		T::CurrencyId,
-		Vec<BalanceLock<T::Balance>>,
+		Vec<OrmlBalanceLock<T::Balance>>,
 		ValueQuery,
 	>;
 
@@ -246,7 +246,7 @@ pub mod module {
 		T::AccountId,
 		Twox64Concat,
 		T::CurrencyId,
-		AccountData<T::Balance>,
+		OrmlAccountData<T::Balance>,
 		ValueQuery,
 	>;
 
@@ -354,7 +354,7 @@ impl<T: Config> Pallet<T> {
 	pub(crate) fn try_mutate_account<R, E>(
 		who: &T::AccountId,
 		currency_id: T::CurrencyId,
-		f: impl FnOnce(&mut AccountData<T::Balance>, bool) -> sp_std::result::Result<R, E>,
+		f: impl FnOnce(&mut OrmlAccountData<T::Balance>, bool) -> sp_std::result::Result<R, E>,
 	) -> sp_std::result::Result<R, E> {
 		Accounts::<T>::try_mutate_exists(who, currency_id, |maybe_account| {
 			let existed = maybe_account.is_some();
@@ -401,7 +401,7 @@ impl<T: Config> Pallet<T> {
 	pub(crate) fn mutate_account<R>(
 		who: &T::AccountId,
 		currency_id: T::CurrencyId,
-		f: impl FnOnce(&mut AccountData<T::Balance>, bool) -> R,
+		f: impl FnOnce(&mut OrmlAccountData<T::Balance>, bool) -> R,
 	) -> R {
 		Self::try_mutate_account(who, currency_id, |account, existed| -> Result<R, Infallible> {
 			Ok(f(account, existed))
@@ -431,7 +431,7 @@ impl<T: Config> Pallet<T> {
 
 	/// Update the account entry for `who` under `currency_id`, given the
 	/// locks.
-	pub(crate) fn update_locks(currency_id: T::CurrencyId, who: &T::AccountId, locks: &[BalanceLock<T::Balance>]) {
+	pub(crate) fn update_locks(currency_id: T::CurrencyId, who: &T::AccountId, locks: &[OrmlBalanceLock<T::Balance>]) {
 		// update account data
 		Self::mutate_account(who, currency_id, |account, _| {
 			account.frozen = Zero::zero();
@@ -648,7 +648,7 @@ impl<T: Config> MultiLockableCurrency<T::AccountId> for Pallet<T> {
 		if amount.is_zero() {
 			return Ok(());
 		}
-		let mut new_lock = Some(BalanceLock { id: lock_id, amount });
+		let mut new_lock = Some(OrmlBalanceLock { id: lock_id, amount });
 		let mut locks = Self::locks(who, currency_id)
 			.into_iter()
 			.filter_map(|lock| {
@@ -677,12 +677,12 @@ impl<T: Config> MultiLockableCurrency<T::AccountId> for Pallet<T> {
 		if amount.is_zero() {
 			return Ok(());
 		}
-		let mut new_lock = Some(BalanceLock { id: lock_id, amount });
+		let mut new_lock = Some(OrmlBalanceLock { id: lock_id, amount });
 		let mut locks = Self::locks(who, currency_id)
 			.into_iter()
 			.filter_map(|lock| {
 				if lock.id == lock_id {
-					new_lock.take().map(|nl| BalanceLock {
+					new_lock.take().map(|nl| OrmlBalanceLock {
 						id: lock.id,
 						amount: lock.amount.max(nl.amount),
 					})

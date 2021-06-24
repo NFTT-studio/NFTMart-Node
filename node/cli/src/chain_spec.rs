@@ -282,11 +282,12 @@ pub fn testnet_genesis(
 		treasury: Default::default(),
 		tokens: TokensConfig {
 			endowed_accounts: endowed_accounts.iter()
-				.flat_map(|x|{
+				.flat_map(|_x|{
 					vec![
-						(x.clone(), 2, 100 * nftmart_traits::constants_types::ACCURACY),
-						(x.clone(), 3, 100 * nftmart_traits::constants_types::ACCURACY),
-						(x.clone(), 4, 100 * nftmart_traits::constants_types::ACCURACY),
+						// (x.clone(), 1, 100 * nftmart_traits::constants_types::ACCURACY),
+						// (x.clone(), 2, 100 * nftmart_traits::constants_types::ACCURACY),
+						// (x.clone(), 3, 100 * nftmart_traits::constants_types::ACCURACY),
+						// (x.clone(), 4, 100 * nftmart_traits::constants_types::ACCURACY),
 					]
 				}).collect(),
 		},

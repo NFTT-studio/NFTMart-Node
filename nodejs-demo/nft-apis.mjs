@@ -1,13 +1,11 @@
 import {
   waitTx, hexToUtf8, unit, ensureAddress,
   Global_Api, Global_ModuleMetadata, initApi,
-  getRandomInt,
+  getRandomInt, NativeCurrencyID,
 } from "./utils.mjs";
 import {Keyring} from "@polkadot/api";
 import {bnToBn} from "@polkadot/util";
 import {Command} from "commander";
-
-const NativeCurrencyID = 0;
 
 async function proxyDeposit(num_proxies) {
   try {
