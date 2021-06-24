@@ -24,7 +24,7 @@ use serde::{Serialize, Deserialize};
 use node_runtime::{
 	AuthorityDiscoveryConfig, BabeConfig, BalancesConfig, CouncilConfig,
 	DemocracyConfig, GrandpaConfig, ImOnlineConfig, SessionConfig, SessionKeys, StakerStatus,
-	StakingConfig, ElectionsConfig, IndicesConfig, SocietyConfig, SudoConfig, SystemConfig,
+	StakingConfig, ElectionsConfig, IndicesConfig, SudoConfig, SystemConfig,
 	TechnicalCommitteeConfig, wasm_binary_unwrap, MAX_NOMINATIONS,
 	TokensConfig, OrmlNFTConfig,
 };
@@ -280,17 +280,6 @@ pub fn testnet_genesis(
 		},
 		technical_membership: Default::default(),
 		treasury: Default::default(),
-		society: SocietyConfig {
-			members: endowed_accounts.iter()
-						.take((num_endowed_accounts + 1) / 2)
-						.cloned()
-						.collect(),
-			pot: 0,
-			max_members: 999,
-		},
-		vesting: Default::default(),
-		gilt: Default::default(),
-		transaction_storage: Default::default(),
 		tokens: TokensConfig {
 			endowed_accounts: endowed_accounts.iter()
 				.flat_map(|x|{

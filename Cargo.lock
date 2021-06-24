@@ -840,15 +840,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ckb-merkle-mountain-range"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e486fe53bb9f2ca0f58cb60e8679a5354fd6687a839942ef0a75967250289ca6"
-dependencies = [
- "cfg-if 0.1.10",
-]
-
-[[package]]
 name = "clang-sys"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4278,7 +4269,6 @@ dependencies = [
  "nftmart-rpc",
  "node-primitives 2.0.0",
  "pallet-contracts-rpc",
- "pallet-mmr-rpc",
  "pallet-transaction-payment-rpc",
  "sc-chain-spec",
  "sc-client-api",
@@ -4327,12 +4317,10 @@ dependencies = [
  "orml-nft",
  "orml-tokens",
  "orml-traits",
- "pallet-assets",
  "pallet-authority-discovery",
  "pallet-authorship",
  "pallet-babe",
  "pallet-balances",
- "pallet-bounties",
  "pallet-collective",
  "pallet-contracts",
  "pallet-contracts-primitives",
@@ -4340,14 +4328,11 @@ dependencies = [
  "pallet-democracy",
  "pallet-election-provider-multi-phase",
  "pallet-elections-phragmen",
- "pallet-gilt",
  "pallet-grandpa",
  "pallet-identity",
  "pallet-im-online",
  "pallet-indices",
- "pallet-lottery",
  "pallet-membership",
- "pallet-mmr",
  "pallet-multisig",
  "pallet-offences",
  "pallet-offences-benchmarking",
@@ -4357,19 +4342,14 @@ dependencies = [
  "pallet-scheduler",
  "pallet-session",
  "pallet-session-benchmarking",
- "pallet-society",
  "pallet-staking",
  "pallet-staking-reward-curve",
  "pallet-sudo",
  "pallet-timestamp",
- "pallet-tips",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
- "pallet-transaction-storage",
  "pallet-treasury",
- "pallet-uniques",
  "pallet-utility",
- "pallet-vesting",
  "parity-scale-codec",
  "sp-api",
  "sp-authority-discovery",
@@ -4643,20 +4623,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-assets"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "max-encoded-len",
- "parity-scale-codec",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-authority-discovery"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
@@ -4718,20 +4684,6 @@ dependencies = [
  "frame-system",
  "log",
  "max-encoded-len",
- "parity-scale-codec",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-bounties"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-treasury",
  "parity-scale-codec",
  "sp-runtime",
  "sp-std",
@@ -4887,20 +4839,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-gilt"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "sp-arithmetic",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-grandpa"
 version = "3.1.0"
 source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
@@ -4973,19 +4911,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-lottery"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-membership"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
@@ -4998,57 +4923,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-mmr"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "ckb-merkle-mountain-range",
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-mmr-primitives",
- "parity-scale-codec",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-mmr-primitives"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "parity-scale-codec",
- "serde",
- "sp-api",
- "sp-core",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-mmr-rpc"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "jsonrpc-core",
- "jsonrpc-core-client",
- "jsonrpc-derive",
- "pallet-mmr-primitives",
- "parity-scale-codec",
- "serde",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-rpc",
- "sp-runtime",
 ]
 
 [[package]]
@@ -5199,19 +5073,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-society"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "rand_chacha 0.2.2",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-staking"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
@@ -5292,21 +5153,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-tips"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-treasury",
- "parity-scale-codec",
- "serde",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-transaction-payment"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
@@ -5351,25 +5197,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-transaction-storage"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "hex-literal",
- "pallet-balances",
- "parity-scale-codec",
- "serde",
- "sp-inherents",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-transaction-storage-proof",
-]
-
-[[package]]
 name = "pallet-treasury"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
@@ -5386,20 +5213,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-uniques"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "sp-core",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-utility"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
@@ -5410,20 +5223,6 @@ dependencies = [
  "parity-scale-codec",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-vesting"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=df1165d7#df1165d7b47d43f7b5032512ad41ac8ab2ead117"
-dependencies = [
- "enumflags2",
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
  "sp-runtime",
  "sp-std",
 ]
