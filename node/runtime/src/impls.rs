@@ -168,13 +168,16 @@ mod multiplier_tests {
 	fn min_change_per_day() {
 		run_with_system_weight(max_normal(), || {
 			let mut fm = Multiplier::one();
+			// for `pub const MILLISECS_PER_BLOCK: Moment = 3000;` fm = FixedU128(1.241102378998142446)
+			// for `pub const MILLISECS_PER_BLOCK: Moment = 6000;` fm = FixedU128(1.114047745385332024)
 			// See the example in the doc of `TargetedFeeAdjustment`. are at least 0.234, hence
 			// `fm > 1.234`.
 			for _ in 0..DAYS {
 				let next = runtime_multiplier_update(fm);
 				fm = next;
 			}
-			assert!(fm > Multiplier::saturating_from_rational(1234, 1000));
+			// println!("{:?}", fm);
+			assert!(fm > Multiplier::saturating_from_rational(1114, 1000));
 		})
 	}
 

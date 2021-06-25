@@ -1904,6 +1904,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs_extra"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2022715d62ab30faffd124d40b76f4134a550a87792276512b18d63272333394"
+
+[[package]]
 name = "fuchsia-cprng"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4194,6 +4200,7 @@ dependencies = [
  "futures 0.3.15",
  "node-primitives 2.0.0",
  "node-runtime",
+ "node-testing",
  "pallet-balances",
  "pallet-contracts",
  "pallet-grandpa",
@@ -4369,6 +4376,50 @@ dependencies = [
  "sp-version",
  "static_assertions",
  "substrate-wasm-builder",
+]
+
+[[package]]
+name = "node-testing"
+version = "2.0.0"
+dependencies = [
+ "criterion",
+ "frame-support",
+ "frame-system",
+ "fs_extra",
+ "futures 0.3.15",
+ "log",
+ "node-executor",
+ "node-primitives 2.0.0",
+ "node-runtime",
+ "pallet-balances",
+ "pallet-contracts",
+ "pallet-grandpa",
+ "pallet-indices",
+ "pallet-session",
+ "pallet-society",
+ "pallet-staking",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-treasury",
+ "parity-scale-codec",
+ "sc-block-builder",
+ "sc-cli",
+ "sc-client-api",
+ "sc-client-db",
+ "sc-executor",
+ "sc-service",
+ "sp-api",
+ "sp-block-builder",
+ "sp-blockchain",
+ "sp-consensus",
+ "sp-core",
+ "sp-inherents",
+ "sp-io",
+ "sp-keyring",
+ "sp-runtime",
+ "sp-timestamp",
+ "substrate-test-client",
+ "tempfile",
 ]
 
 [[package]]
@@ -5069,6 +5120,19 @@ dependencies = [
  "rand 0.7.3",
  "sp-runtime",
  "sp-session",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-society"
+version = "3.0.0"
+source = "git+https://github.com/paritytech/substrate.git?rev=df501229#df5012292cea6f5a747ff0e32d2e3c25b73001d9"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "rand_chacha 0.2.2",
+ "sp-runtime",
  "sp-std",
 ]
 

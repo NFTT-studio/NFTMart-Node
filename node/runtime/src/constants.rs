@@ -22,9 +22,9 @@ pub mod currency {
 	use node_primitives::Balance;
 	use nftmart_traits::constants_types::ACCURACY;
 
-	pub const MILLICENTS: Balance = ACCURACY / 1000;
-	pub const CENTS: Balance = ACCURACY;    // assume this is worth about a cent.
-	pub const DOLLARS: Balance = 100 * CENTS;
+	pub const MILLICENTS: Balance = CENTS / 1000;
+	pub const CENTS: Balance = DOLLARS / 100;    // assume this is worth about a cent.
+	pub const DOLLARS: Balance = ACCURACY;
 
 	pub const fn deposit(items: u32, bytes: u32) -> Balance {
 		items as Balance * 15 * CENTS + (bytes as Balance) * 6 * CENTS

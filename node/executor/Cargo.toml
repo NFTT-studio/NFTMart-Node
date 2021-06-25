@@ -28,6 +28,7 @@ frame-benchmarking = { version = "3.1.0", git = 'https://github.com/paritytech/s
 criterion = "0.3.0"
 frame-support = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df501229' }
 frame-system = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df501229' }
+node-testing = { version = "2.0.0", path = "../testing" }
 pallet-balances = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df501229' }
 pallet-contracts = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df501229' }
 pallet-grandpa = { version = "3.1.0", git = 'https://github.com/paritytech/substrate.git', rev = 'df501229' }

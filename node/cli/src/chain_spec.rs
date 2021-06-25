@@ -75,6 +75,13 @@ fn session_keys(
 	SessionKeys { grandpa, babe, im_online, authority_discovery }
 }
 
+fn get_properties() -> sc_service::Properties {
+	let mut prop = sc_service::Properties::new();
+	prop.insert("tokenDecimals".to_string(), 12.into());
+	prop.insert("tokenSymbol".to_string(), "NMT".into()); // NFT Mart Token
+	prop
+}
+
 fn staging_testnet_config_genesis() -> GenesisConfig {
   let root_key: AccountId = hex!["12970155d02df21b7e39e289593065d0bbb67d5d38f36dd1b9d617614a006d00"].into(); // 5znMeMdGsDrENMFg9wvLMveuYdCSVCCGdaXE6HAU4UwTksei
   let initial_authorities: Vec<(AccountId, AccountId, GrandpaId, BabeId, ImOnlineId, AuthorityDiscoveryId)> = vec![
@@ -103,20 +110,16 @@ fn staging_testnet_config_genesis() -> GenesisConfig {
 
 /// Staging testnet config.
 pub fn staging_testnet_config() -> ChainSpec {
-	let mut prop = sc_service::Properties::new();
-	prop.insert("tokenDecimals".to_string(), 12.into());
-	prop.insert("tokenSymbol".to_string(), "NMT".into()); // NFT Mart Token
-	let boot_nodes = vec![];
 	ChainSpec::from_genesis(
 		"Nftmart Staging",
 		"nftmart_staging",
 		ChainType::Live,
 		staging_testnet_config_genesis,
-		boot_nodes,
+		vec![],
 		Some(TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])
 			.expect("Staging telemetry url is valid; qed")),
 		Some("nftmart"),
-		Some(prop),
+		Some(get_properties()),
 		Default::default(),
 	)
 }
@@ -282,12 +285,12 @@ pub fn testnet_genesis(
 		treasury: Default::default(),
 		tokens: TokensConfig {
 			endowed_accounts: endowed_accounts.iter()
-				.flat_map(|_x|{
+				.flat_map(|x|{
 					vec![
-						// (x.clone(), 1, 100 * nftmart_traits::constants_types::ACCURACY),
-						// (x.clone(), 2, 100 * nftmart_traits::constants_types::ACCURACY),
-						// (x.clone(), 3, 100 * nftmart_traits::constants_types::ACCURACY),
-						// (x.clone(), 4, 100 * nftmart_traits::constants_types::ACCURACY),
+						(x.clone(), 1, 100 * nftmart_traits::constants_types::ACCURACY),
+						(x.clone(), 2, 100 * nftmart_traits::constants_types::ACCURACY),
+						(x.clone(), 3, 100 * nftmart_traits::constants_types::ACCURACY),
+						(x.clone(), 4, 100 * nftmart_traits::constants_types::ACCURACY),
 					]
 				}).collect(),
 		},
@@ -314,9 +317,6 @@ fn development_config_genesis() -> GenesisConfig {
 
 /// Development config (single validator Alice)
 pub fn development_config() -> ChainSpec {
-	let mut prop = sc_service::Properties::new();
-	prop.insert("tokenDecimals".to_string(), 12.into());
-	prop.insert("tokenSymbol".to_string(), "NMT".into()); // NFT Mart Token
 	ChainSpec::from_genesis(
 		"Nftmart Testnet",
 		"nftmart_testnet",
@@ -325,7 +325,7 @@ pub fn development_config() -> ChainSpec {
 		vec![],
 		None,
 		Some("nftmart"),
-		Some(prop),
+		Some(get_properties()),
 		Default::default(),
 	)
 }
@@ -344,9 +344,6 @@ fn local_testnet_genesis() -> GenesisConfig {
 
 /// Local testnet config (multivalidator Alice + Bob)
 pub fn local_testnet_config() -> ChainSpec {
-	let mut prop = sc_service::Properties::new();
-	prop.insert("tokenDecimals".to_string(), 12.into());
-	prop.insert("tokenSymbol".to_string(), "NMT".into()); // NFT Mart Token
 	ChainSpec::from_genesis(
 		"Nftmart Testnet",
 		"nftmart_testnet",
@@ -356,7 +353,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		Some(TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])
 			.expect("Local Testnet telemetry url is valid; qed")),
 		Some("nftmart"),
-		Some(prop),
+		Some(get_properties()),
 		Default::default(),
 	)
 }
