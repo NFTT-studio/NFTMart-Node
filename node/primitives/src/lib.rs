@@ -22,27 +22,27 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_runtime::{
-	generic, traits::{Verify, BlakeTwo256, IdentifyAccount}, OpaqueExtrinsic, MultiSignature
+	generic, traits::{Verify, BlakeTwo256}, OpaqueExtrinsic
 };
 
 /// An index to a block.
-pub type BlockNumber = u32;
+pub type BlockNumber = nftmart_traits::BlockNumber;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = MultiSignature;
+pub type Signature = nftmart_traits::Signature;
 
 /// Some way of identifying an account on the chain. We intentionally make it equivalent
 /// to the public key of our transaction signing scheme.
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+pub type AccountId = nftmart_traits::AccountId;
 
 /// The type for looking up accounts. We don't expect more than 4 billion of them.
 pub type AccountIndex = u32;
 
 /// Balance of an account.
-pub type Balance = nftmart_traits::constants_types::Balance;
+pub type Balance = nftmart_traits::Balance;
 
 /// Type used for expressing timestamp.
-pub type Moment = nftmart_traits::constants_types::Moment;
+pub type Moment = nftmart_traits::Moment;
 
 /// Index of a transaction in the chain.
 pub type Index = u32;

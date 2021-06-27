@@ -3,7 +3,7 @@
 
 use frame_support::pallet_prelude::*;
 use sp_std::vec::Vec;
-use crate::constants_types::{Balance, GlobalId};
+pub use crate::constants_types::*;
 #[cfg(feature = "std")]
 use serde::{Serialize, Deserialize};
 pub use enumflags2::BitFlags;
@@ -27,8 +27,6 @@ pub trait NftmartNft<AccountId, ClassId, TokenId> {
 	fn unreserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
 	fn token_charged_royalty(class_id: ClassId, token_id: TokenId) -> Result<bool, DispatchError>;
 }
-
-pub type NFTMetadata = Vec<u8>;
 
 #[repr(u8)]
 #[derive(Encode, Decode, Clone, Copy, BitFlags, RuntimeDebug, PartialEq, Eq)]
@@ -114,4 +112,20 @@ pub struct OrderItem<ClassId, TokenId> {
 	/// quantity
 	#[codec(compact)]
 	pub quantity: TokenId,
+}
+
+#[derive(Debug, PartialEq, Encode)]
+pub struct ContractTokenInfo<AccountId> {
+	pub metadata: NFTMetadata,
+	pub data: ContractTokenData<AccountId>,
+	pub quantity: Quantity,
+}
+
+#[derive(Debug, PartialEq, Encode)]
+pub struct ContractTokenData<AccountId> {
+	pub deposit: Balance,
+	pub create_block: BlockNumber,
+	pub royalty: bool,
+	pub creator: AccountId,
+	pub royalty_beneficiary: AccountId,
 }

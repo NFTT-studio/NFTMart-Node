@@ -24,6 +24,7 @@ use orml_nft::{ClassInfoOf, TokenInfoOf};
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
 pub type ClassIdOf<T> = <T as orml_nft::Config>::ClassId;
+pub type AccountTokenOf<T> = AccountToken<TokenIdOf<T>>;
 pub type BalanceOf<T> = <<T as module::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrency<<T as frame_system::Config>::AccountId>>::CurrencyId;
 pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
@@ -519,18 +520,6 @@ impl<T: Config> Pallet<T> {
 		Ok((owner, next_id))
 	}
 
-	fn is_burnable(class_id: ClassIdOf<T>) -> Result<bool, DispatchError> {
-		let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
-		let data = class_info.data;
-		Ok(data.properties.0.contains(ClassProperty::Burnable))
-	}
-
-	fn is_transferable(class_id: ClassIdOf<T>) -> Result<bool, DispatchError> {
-		let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
-		let data = class_info.data;
-		Ok(data.properties.0.contains(ClassProperty::Transferable))
-	}
-
 	#[transactional]
 	pub fn do_transfer(from: &T::AccountId, to: &T::AccountId, class_id: ClassIdOf<T>, token_id: TokenIdOf<T>, quantity: TokenIdOf<T>) -> DispatchResult {
 		ensure!(Self::is_transferable(class_id)?, Error::<T>::NonTransferable);
@@ -539,6 +528,57 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::TransferredToken(from.clone(), to.clone(), class_id, token_id, quantity));
 		Ok(())
+	}
+
+	// ################## read only ##################
+
+	pub fn contract_tokens(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Option<nftmart_traits::ContractTokenInfo<T::AccountId>> {
+		orml_nft::Pallet::<T>::tokens(class_id, token_id).map(|t: TokenInfoOf<T>| {
+			nftmart_traits::ContractTokenInfo {
+				metadata: t.metadata,
+				quantity: t.quantity.saturated_into(),
+				data: nftmart_traits::ContractTokenData {
+					deposit: t.data.deposit.saturated_into(),
+					create_block: t.data.create_block.saturated_into(),
+					royalty: t.data.royalty,
+					creator: t.data.creator,
+					royalty_beneficiary: t.data.royalty_beneficiary,
+				}
+			}
+		})
+	}
+
+	pub fn classes(class_id: ClassIdOf<T>) -> Option<ClassInfoOf<T>> {
+		orml_nft::Pallet::<T>::classes(class_id)
+	}
+
+	pub fn tokens_by_owner(account_id: T::AccountId, page: u32, page_size: u32) -> Vec<(ClassIdOf<T>, TokenIdOf<T>, AccountTokenOf<T>)> {
+		orml_nft::TokensByOwner::<T>::iter_prefix(account_id)
+			.map(|((c, t), a)|(c, t, a))
+			.skip(page.saturating_mul(page_size) as usize).take(page_size as usize).collect()
+	}
+
+	pub fn owners_by_token(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>, page: u32, page_size: u32) -> Vec<(T::AccountId, AccountTokenOf<T>)> {
+		orml_nft::OwnersByToken::<T>::iter_prefix((class_id, token_id))
+			.map(|(account_id, _): (T::AccountId, ())|account_id)
+			.skip(page.saturating_mul(page_size) as usize).take(page_size as usize)
+			.map(|account_id| {
+				let at = orml_nft::TokensByOwner::<T>::get(&account_id, (class_id, token_id)).unwrap_or_default();
+				(account_id, at)
+			})
+			.collect()
+	}
+
+	fn is_transferable(class_id: ClassIdOf<T>) -> Result<bool, DispatchError> {
+		let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+		let data = class_info.data;
+		Ok(data.properties.0.contains(ClassProperty::Transferable))
+	}
+
+	fn is_burnable(class_id: ClassIdOf<T>) -> Result<bool, DispatchError> {
+		let class_info = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+		let data = class_info.data;
+		Ok(data.properties.0.contains(ClassProperty::Burnable))
 	}
 
 	pub fn add_class_admin_deposit(admin_count: u32) -> Balance {
