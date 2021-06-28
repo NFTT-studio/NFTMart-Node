@@ -890,6 +890,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
+name = "contract-types"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4085,6 +4092,7 @@ dependencies = [
 name = "nftmart-traits"
 version = "3.0.0"
 dependencies = [
+ "contract-types",
  "enumflags2",
  "frame-support",
  "orml-traits",

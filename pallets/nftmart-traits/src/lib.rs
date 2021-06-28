@@ -3,13 +3,14 @@
 
 use frame_support::pallet_prelude::*;
 use sp_std::vec::Vec;
-pub use crate::constants_types::*;
 #[cfg(feature = "std")]
 use serde::{Serialize, Deserialize};
 pub use enumflags2::BitFlags;
 pub use orml_traits::nft::{TokenInfo, ClassInfo, AccountToken};
 
 pub mod constants_types;
+pub use crate::constants_types::*;
+pub use contract_types::*;
 
 pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn auction_delay() -> BlockNumber;
@@ -112,20 +113,4 @@ pub struct OrderItem<ClassId, TokenId> {
 	/// quantity
 	#[codec(compact)]
 	pub quantity: TokenId,
-}
-
-#[derive(Debug, PartialEq, Encode)]
-pub struct ContractTokenInfo<AccountId> {
-	pub metadata: NFTMetadata,
-	pub data: ContractTokenData<AccountId>,
-	pub quantity: Quantity,
-}
-
-#[derive(Debug, PartialEq, Encode)]
-pub struct ContractTokenData<AccountId> {
-	pub deposit: Balance,
-	pub create_block: BlockNumber,
-	pub royalty: bool,
-	pub creator: AccountId,
-	pub royalty_beneficiary: AccountId,
 }

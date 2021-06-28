@@ -16,6 +16,7 @@ frame-support = { default-features = false, git = 'https://github.com/paritytech
 enumflags2 = { version = "0.6.3" }
 orml-traits = { default-features = false, path = "../orml-traits" }
 sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'df501229' }
+contract-types = { path = "contract-types", default-features = false }
 
 [features]
 default = ['std']
@@ -28,5 +29,6 @@ std = [
 	"enumflags2/serde",
 	"orml-traits/std",
 	"sp-runtime/std",
+	"contract-types/std",
 ]
 

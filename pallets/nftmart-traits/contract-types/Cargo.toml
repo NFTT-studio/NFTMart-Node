@@ -1,0 +1,18 @@
+[package]
+name = "contract-types"
+version = "0.1.0"
+authors = ["NFTMart Developers"]
+edition = "2018"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
+
+[features]
+default = ['std']
+std = [
+	"codec/std",
+]
+

@@ -8,19 +8,17 @@ use frame_support::{
 use sp_std::vec::Vec;
 use frame_system::pallet_prelude::*;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
-pub use nftmart_traits::constants_types::{Balance, ACCURACY, NATIVE_CURRENCY_ID};
 use sp_runtime::{
 	traits::{Bounded, AccountIdConversion, StaticLookup, Zero, One, AtLeast32BitUnsigned},
 	RuntimeDebug, SaturatedConversion,
 };
-pub use nftmart_traits::{NftmartConfig, ClassData, ClassProperty, Properties,
-						 TokenData, NFTMetadata, AccountToken};
 
 mod mock;
 mod tests;
 
 pub use module::*;
 use orml_nft::{ClassInfoOf, TokenInfoOf};
+pub use nftmart_traits::*;
 
 pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
 pub type ClassIdOf<T> = <T as orml_nft::Config>::ClassId;
@@ -532,7 +530,9 @@ impl<T: Config> Pallet<T> {
 
 	// ################## read only ##################
 
-	pub fn contract_tokens(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Option<nftmart_traits::ContractTokenInfo<T::AccountId>> {
+	pub fn contract_tokens(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Option<nftmart_traits::ContractTokenInfo<
+		NFTMetadata, Quantity, Balance, BlockNumber, T::AccountId,
+	>> {
 		orml_nft::Pallet::<T>::tokens(class_id, token_id).map(|t: TokenInfoOf<T>| {
 			nftmart_traits::ContractTokenInfo {
 				metadata: t.metadata,
