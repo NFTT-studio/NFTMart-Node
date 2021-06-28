@@ -4,14 +4,14 @@
 if [ ! -f ./shell.nix ]; then
 	exit 1
 fi
-if [ ! -f ./ss58-registry.json ]; then
+if [ ! -f ./Cargo.toml ]; then
 	exit 1
 fi
 
 local NFTMARTROOT=$(pwd)
 cd $NFTMARTROOT/target/release
 rm -f staging_spec_raw.json
-cp $NFTMARTROOT/bin/node/cli/res/staging_spec_raw.json .
+cp $NFTMARTROOT/node/cli/res/staging_spec_raw.json .
 cd $NFTMARTROOT
 
 #p2p node1:
@@ -21,7 +21,7 @@ cd $NFTMARTROOT
 #12D3KooWRxU9AmmTUCRYTzNXx1V6mvbhL2aERPRvoE2QTG4KsVwj
 #8608245741558c0a41c3b1704aedbf7385cf900fc34f561113f15bc1341b875e
 rm -rf target/release/node1
-target/release/substrate \
+target/release/nftmart-node \
  -d target/release/node1 \
  -lruntime=debug \
  --node-key 66aff6b1ad5902bc77b120ad8cf47d7e04a23d6504d97cbbceabfcedc8deaa7c \

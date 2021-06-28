@@ -25,8 +25,7 @@ use node_runtime::{
 	AuthorityDiscoveryConfig, BabeConfig, BalancesConfig, CouncilConfig,
 	DemocracyConfig, GrandpaConfig, ImOnlineConfig, SessionConfig, SessionKeys, StakerStatus,
 	StakingConfig, ElectionsConfig, IndicesConfig, SudoConfig, SystemConfig,
-	TechnicalCommitteeConfig, wasm_binary_unwrap, MAX_NOMINATIONS,
-	TokensConfig, OrmlNFTConfig,
+	TechnicalCommitteeConfig, wasm_binary_unwrap, MAX_NOMINATIONS, TokensConfig,
 };
 use node_runtime::Block;
 use node_runtime::constants::currency::*;
@@ -294,7 +293,7 @@ pub fn testnet_genesis(
 					]
 				}).collect(),
 		},
-		orml_nft: OrmlNFTConfig { tokens: vec![] },
+		orml_nft: Default::default(),
 		nftmart: Default::default(),
 		nftmart_order: Default::default(),
 		nftmart_conf: node_runtime::NftmartConfConfig {

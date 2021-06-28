@@ -4,7 +4,7 @@
 if [ ! -f ./shell.nix ]; then
 	exit 1
 fi
-if [ ! -f ./ss58-registry.json ]; then
+if [ ! -f ./Cargo.toml ]; then
 	exit 1
 fi
 
@@ -18,7 +18,7 @@ cp $NFTMARTROOT/bin/node/cli/res/staging_spec_raw.json .
 tee Dockerfile <<-'EOF'
 FROM ubuntu:20.04
 WORKDIR /data
-ADD substrate /usr/bin/substrate
+ADD nftmart-node /usr/bin/nftmart-node
 ADD staging_spec_raw.json /root
 EXPOSE 9944/tcp
 EXPOSE 30333/tcp

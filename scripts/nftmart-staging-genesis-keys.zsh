@@ -4,15 +4,15 @@
 if [ ! -f ./shell.nix ]; then
 	exit 1
 fi
-if [ ! -f ./ss58-registry.json ]; then
+if [ ! -f ./Cargo.toml ]; then
 	exit 1
 fi
 
 echo '/*'
-local root_json=$(target/release/substrate key generate --network nftmart --output-type Json | jq -c)
+local root_json=$(target/debug/nftmart-node key generate --output-type Json | jq -c)
 echo '#'root: "$root_json"
 
-local session_json=$(target/release/substrate key generate --network nftmart --output-type Json | jq -c)
+local session_json=$(target/debug/nftmart-node key generate --output-type Json | jq -c)
 echo '#'session: "$session_json"
 
 local root_sk=$(echo "$root_json" | jq -r ".secretPhrase")
@@ -27,7 +27,7 @@ local seq=("${@:1}")
 
 for i in $seq; do
 	for j in stash controller; do
-		local json=$(target/release/substrate key inspect-key --network nftmart "$root_sk"//nftmart/"$j"/"$i" --output-type Json | jq -c)
+		local json=$(target/debug/nftmart-node key inspect "$root_sk"//nftmart/"$j"/"$i" --output-type Json | jq -c)
 		echo '#'"$j""$i": "$json"
 	done
 done
@@ -37,8 +37,8 @@ for i in $seq; do
 done
 
 for i in $seq; do
-	local json_grandpa=$(target/release/substrate key inspect-key --scheme Ed25519 --network nftmart "${session_sk}"//nftmart//grandpa//${i} --output-type Json | jq -c)
-	local json_babe=$(target/release/substrate key inspect-key --scheme Sr25519 --network nftmart "${session_sk}"//nftmart//babe//"${i}" --output-type Json | jq -c)
+	local json_grandpa=$(target/debug/nftmart-node key inspect --scheme Ed25519 "${session_sk}"//nftmart//grandpa//${i} --output-type Json | jq -c)
+	local json_babe=$(target/debug/nftmart-node key inspect --scheme Sr25519 "${session_sk}"//nftmart//babe//"${i}" --output-type Json | jq -c)
 	echo '#'grandpa"${i}": "$json_grandpa"
 	echo '#'babe"${i}": "$json_babe"
 	local pk_grandpa=$(echo "${json_grandpa}" | jq -r ".publicKey")
@@ -53,7 +53,7 @@ done
 
 for i in $seq; do
 	echo p2p node$i:
-	target/release/substrate key generate-node-key 2>&1
+	target/debug/nftmart-node key generate-node-key 2>&1
 	echo
 done
 echo '*/'
@@ -61,7 +61,7 @@ echo '*/'
 echo let root_key: 'AccountId = hex!["'${root_pk#0x}'"].into();' // ${root_addr}
 for i in $seq; do
 	for j in stash controller; do
-		local json=$(target/release/substrate key inspect-key --network nftmart "${root_sk}"//nftmart/"${j}"/"${i}" --output-type Json | jq -c)
+		local json=$(target/debug/nftmart-node key inspect "${root_sk}"//nftmart/"${j}"/"${i}" --output-type Json | jq -c)
 		local pk=$(echo "${json}" | jq -r ".publicKey")
 		local addr=$(echo "${json}" | jq -r ".ss58Address")
 		echo let "${j}""${i}": 'AccountId = hex!["'${pk#0x}'"].into();' // "${addr}"
@@ -70,8 +70,8 @@ done
 
 echo '  let initial_authorities: Vec<(AccountId, AccountId, GrandpaId, BabeId, ImOnlineId, AuthorityDiscoveryId)> = vec!['
 for i in $seq; do
-	local json_grandpa=$(target/release/substrate key inspect-key --scheme Ed25519 --network nftmart "${session_sk}"//nftmart//grandpa//"${i}" --output-type Json | jq -c)
-	local json_babe=$(target/release/substrate key inspect-key --scheme Sr25519 --network nftmart "${session_sk}"//nftmart//babe//"${i}" --output-type Json | jq -c)
+	local json_grandpa=$(target/debug/nftmart-node key inspect --scheme Ed25519 "${session_sk}"//nftmart//grandpa//"${i}" --output-type Json | jq -c)
+	local json_babe=$(target/debug/nftmart-node key inspect --scheme Sr25519 "${session_sk}"//nftmart//babe//"${i}" --output-type Json | jq -c)
 	local pk_grandpa=$(echo "${json_grandpa}" | jq -r ".publicKey")
 	local pk_babe=$(echo "${json_babe}" | jq -r ".publicKey")
 	echo '('stash"${i}", controller"${i}",

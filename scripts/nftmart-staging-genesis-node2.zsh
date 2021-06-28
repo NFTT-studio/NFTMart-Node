@@ -4,12 +4,12 @@
 if [ ! -f ./shell.nix ]; then
 	exit 1
 fi
-if [ ! -f ./ss58-registry.json ]; then
+if [ ! -f ./Cargo.toml ]; then
 	exit 1
 fi
 
 rm -rf target/release/node2
-target/release/substrate \
+target/release/nftmart-node \
  -d target/release/node2 \
  -lruntime=debug \
  --node-key 8608245741558c0a41c3b1704aedbf7385cf900fc34f561113f15bc1341b875e \

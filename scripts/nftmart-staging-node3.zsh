@@ -4,12 +4,12 @@
 if [ ! -f ./shell.nix ]; then
 	exit 1
 fi
-if [ ! -f ./ss58-registry.json ]; then
+if [ ! -f ./Cargo.toml ]; then
 	exit 1
 fi
 
 rm -rf target/release/node3
-target/release/substrate \
+target/release/nftmart-node \
  -d target/release/node3 \
  -lruntime=debug \
  --execution=NativeElseWasm \
