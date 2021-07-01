@@ -9,7 +9,7 @@ use sp_std::vec::Vec;
 use frame_system::pallet_prelude::*;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
 use sp_runtime::{
-	traits::{Bounded, AccountIdConversion, StaticLookup, Zero, One, AtLeast32BitUnsigned},
+	traits::{Bounded, AccountIdConversion, StaticLookup, Zero, One, AtLeast32BitUnsigned, CheckedAdd},
 	RuntimeDebug, SaturatedConversion,
 };
 
@@ -115,7 +115,6 @@ pub mod migrations {
 #[frame_support::pallet]
 pub mod module {
 	use super::*;
-	use sp_runtime::{PerU16};
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config +
@@ -218,15 +217,15 @@ pub mod module {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		platform_fee_rate: PerU16,
-		_phantom: PhantomData<T>,
+		pub classes: Vec<ClassConfig<ClassIdOf<T>, T::AccountId, TokenIdOf<T>>>,
+		pub _phantom: PhantomData<T>,
 	}
 
 	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
-				platform_fee_rate: PerU16::from_rational(1u32, 10000u32),
+				classes: Default::default(),
 				_phantom: Default::default(),
 			}
 		}
@@ -236,6 +235,64 @@ pub mod module {
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
 			<StorageVersion<T>>::put(Releases::default());
+			let mut max_class_id = Zero::zero();
+			// Initialize classes.
+			for ClassConfig { class_id, class_metadata, name, description, properties, admins, tokens } in &self.classes {
+				let class_metadata: NFTMetadata = class_metadata.as_bytes().to_vec();
+				let name: NFTMetadata = name.as_bytes().to_vec();
+				let description: NFTMetadata = description.as_bytes().to_vec();
+				let properties = Properties(<BitFlags<ClassProperty>>::from_bits(*properties).unwrap());
+				assert!(orml_nft::Classes::<T>::get(*class_id).is_none(), "Dup class id");
+				orml_nft::NextClassId::<T>::set(*class_id);
+				let owner: T::AccountId = T::ModuleId::get().into_sub_account(class_id);
+				let (deposit, all_deposit) = Pallet::<T>::create_class_deposit_num_proxies(
+					class_metadata.len().saturated_into(),
+					name.len().saturated_into(),
+					description.len().saturated_into(),
+					admins.len() as u32,
+				);
+				<T as Config>::Currency::deposit_creating(&owner, all_deposit.saturated_into());
+				<T as Config>::Currency::reserve(&owner, deposit.saturated_into()).unwrap();
+				for admin in admins {
+					<pallet_proxy::Pallet<T>>::add_proxy_delegate(&owner, admin.clone(), Default::default(), Zero::zero()).unwrap();
+				}
+				let data: ClassData<BlockNumberOf<T>> = ClassData {
+					deposit,
+					properties,
+					name: name.clone(),
+					description: description.clone(),
+					create_block: <frame_system::Pallet<T>>::block_number(),
+				};
+				orml_nft::Pallet::<T>::create_class(&owner, class_metadata.clone(), data).unwrap();
+
+				if max_class_id < *class_id {
+					max_class_id = *class_id;
+				}
+
+				let mut max_token_id = Zero::zero();
+				for TokenConfig { token_id, token_metadata, royalty, token_owner, token_creator, royalty_beneficiary, quantity } in tokens {
+					assert!(orml_nft::Tokens::<T>::get(*class_id, *token_id).is_none(), "Dup token id");
+					let token_metadata: NFTMetadata = token_metadata.as_bytes().to_vec();
+					let deposit = Pallet::<T>::mint_token_deposit(token_metadata.len().saturated_into());
+					<T as Config>::Currency::deposit_creating(&owner, deposit.saturated_into());
+					<T as Config>::Currency::reserve(&owner, deposit.saturated_into()).unwrap();
+					let data: TokenData<T::AccountId, BlockNumberOf<T>> = TokenData {
+						deposit,
+						create_block: <frame_system::Pallet<T>>::block_number(),
+						royalty: *royalty,
+						creator: token_creator.clone(),
+						royalty_beneficiary: royalty_beneficiary.clone(),
+					};
+					orml_nft::NextTokenId::<T>::insert(*class_id, *token_id);
+					orml_nft::Pallet::<T>::mint(token_owner, *class_id, token_metadata.clone(), data, *quantity).unwrap();
+
+					if max_token_id < *token_id {
+						max_token_id = *token_id;
+					}
+				}
+				orml_nft::NextTokenId::<T>::insert(*class_id, max_token_id.checked_add(&One::one()).unwrap());
+			}
+			orml_nft::NextClassId::<T>::set(max_class_id.checked_add(&One::one()).unwrap());
 		}
 	}
 
@@ -592,13 +649,17 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn create_class_deposit(metadata_len: u32, name_len: u32, description_len: u32) -> (Balance, Balance) {
+		Self::create_class_deposit_num_proxies(metadata_len, name_len, description_len, 1)
+	}
+
+	fn create_class_deposit_num_proxies(metadata_len: u32, name_len: u32, description_len: u32, num_proxies: u32) -> (Balance, Balance) {
 		let deposit: Balance = {
 			let total_bytes = metadata_len.saturating_add(name_len).saturating_add(description_len);
 			T::CreateClassDeposit::get().saturating_add(
 				(total_bytes as Balance).saturating_mul(T::MetaDataByteDeposit::get())
 			)
 		};
-		let proxy_deposit: Balance = <pallet_proxy::Pallet<T>>::deposit(1).saturated_into();
+		let proxy_deposit: Balance = <pallet_proxy::Pallet<T>>::deposit(num_proxies).saturated_into();
 		(deposit, deposit.saturating_add(proxy_deposit))
 	}
 }

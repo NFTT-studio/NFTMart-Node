@@ -114,3 +114,27 @@ pub struct OrderItem<ClassId, TokenId> {
 	#[codec(compact)]
 	pub quantity: TokenId,
 }
+
+#[cfg(feature = "std")]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct ClassConfig<ClassId, AccountId, TokenId> {
+	pub class_id: ClassId,
+	pub class_metadata: String,
+	pub name: String,
+	pub description: String,
+	pub properties: u8,
+	pub admins: Vec<AccountId>,
+	pub tokens: Vec<TokenConfig<AccountId, TokenId>>,
+}
+
+#[cfg(feature = "std")]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct TokenConfig<AccountId, TokenId> {
+	pub token_id: TokenId,
+	pub token_metadata: String,
+	pub royalty: bool,
+	pub token_owner: AccountId,
+	pub token_creator: AccountId,
+	pub royalty_beneficiary: AccountId,
+	pub quantity: TokenId,
+}
