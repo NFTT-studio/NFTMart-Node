@@ -60,6 +60,36 @@
 
 A fresh FRAME-based [Substrate](https://www.substrate.io/) node, ready for hacking :rocket:
 
+## init command with node.js demo
+
+When you start the node ,you can use js script to init the environment，in order use the pallet properly.
+
+Before use the node script ,we need to install package first:
+```
+cd nodejs-demo & yarn
+```
+
+### add white list 
+
+The whitelist manage the user who can create class and nft in NFTMart, so we need to add the address in whitelist before create class and nfts.
+
+```
+node nft-apis.mjs --ws ws://localhost:9944 add-whitelist //Alice <your address> 
+```
+Replace `<your address>` to your address.
+
+### add category
+
+Category as a market tag, when user want to list his NFT to market, he need select a catagory first. And the explore page use the category to filter the listing NFTs.
+
+```
+node nft-apis.mjs --ws ws://localhost:9944 create-category "{\"name\":\"Art\"}" //Alice
+
+```
+Use this cmd, we can create a category named `Art`.
+> Notice: In terminal , we need use `\"` to escape `"`, in order the data will be parsed to Json in the fontend project.
+
+
 ## Getting Started
 
 Follow the steps below to get started with the Node Template, or get it up and running right from your browser
