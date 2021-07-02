@@ -7,7 +7,7 @@ use frame_support::{
 };
 use sp_std::vec::Vec;
 use frame_system::pallet_prelude::*;
-pub use nftmart_traits::constants_types::{GlobalId, Balance, ACCURACY, NATIVE_CURRENCY_ID};
+pub use nftmart_traits::*;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
@@ -15,7 +15,6 @@ use sp_runtime::{
 	RuntimeDebug, SaturatedConversion,
 };
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
-use nftmart_traits::{NftmartConfig, NftmartNft, OrderItem};
 
 mod mock;
 mod tests;
@@ -231,18 +230,13 @@ pub mod module {
 				items: Vec::with_capacity(items.len()),
 			};
 
-			let mut count_of_charged_royalty = 0u8;
+			ensure!(
+				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&items)? <= 1,
+				Error::<T>::TooManyTokenChargedRoyalty,
+			);
 
 			// process all tokens
-			for item in items{
-				let (class_id, token_id, quantity) = item;
-
-				// check only one royalty constrains
-				if T::NFT::token_charged_royalty(class_id, token_id)? {
-					ensure!(count_of_charged_royalty == 0, Error::<T>::TooManyTokenChargedRoyalty);
-					count_of_charged_royalty += 1;
-				}
-
+			for (class_id, token_id, quantity) in items {
 				// reserve selling tokens
 				T::NFT::reserve_tokens(&who, class_id, token_id, quantity)?;
 
@@ -348,18 +342,12 @@ pub mod module {
 				items: Vec::with_capacity(items.len()),
 			};
 
-			let mut count_of_charged_royalty = 0u8;
+			ensure!(
+				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&items)? <= 1,
+				Error::<T>::TooManyTokenChargedRoyalty,
+			);
 
-			// process all tokens
-			for item in items {
-				let (class_id, token_id, quantity) = item;
-
-				// check only one royalty constrains
-				if T::NFT::token_charged_royalty(class_id, token_id)? {
-					ensure!(count_of_charged_royalty == 0, Error::<T>::TooManyTokenChargedRoyalty);
-					count_of_charged_royalty += 1;
-				}
-
+			for (class_id, token_id, quantity) in items {
 				offer.items.push(OrderItem {
 					class_id,
 					token_id,
@@ -399,16 +387,17 @@ pub mod module {
 			// offer_owner pays the money.
 			T::MultiCurrency::transfer(offer.currency_id, &offer_owner, &token_owner, offer.price)?;
 
-			let mut count_of_charged_royalty = 0u8;
+			ensure!(
+				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(
+					&offer.items.iter()
+					.map(|x|(x.class_id, x.token_id, x.quantity))
+					.collect::<Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>>()
+				)? <= 1,
+				Error::<T>::TooManyTokenChargedRoyalty,
+			);
 
 			// token_owner transfers the nfts to offer_owner.
 			for item in &offer.items {
-				// check only one royalty constrains
-				if T::NFT::token_charged_royalty(item.class_id, item.token_id)? {
-					ensure!(count_of_charged_royalty == 0, Error::<T>::TooManyTokenChargedRoyalty);
-					count_of_charged_royalty += 1;
-				}
-
 				T::NFT::transfer(&token_owner, &offer_owner, item.class_id, item.token_id, item.quantity)?;
 			}
 

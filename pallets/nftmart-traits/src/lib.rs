@@ -12,6 +12,8 @@ pub mod constants_types;
 pub use crate::constants_types::*;
 pub use contract_types::*;
 
+pub type ResultPost<T> = sp_std::result::Result<T, sp_runtime::DispatchErrorWithPostInfo<frame_support::weights::PostDispatchInfo>>;
+
 pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn auction_delay() -> BlockNumber;
 	fn is_in_whitelist(_who: &AccountId) -> bool;
@@ -137,4 +139,19 @@ pub struct TokenConfig<AccountId, TokenId> {
 	pub token_creator: AccountId,
 	pub royalty_beneficiary: AccountId,
 	pub quantity: TokenId,
+}
+
+/// Check only one royalty constrains.
+pub fn count_charged_royalty<AccountId, ClassId, TokenId, NFT>(items: &[(ClassId, TokenId, TokenId)])
+	-> ResultPost<u32> where
+	NFT: NftmartNft<AccountId, ClassId, TokenId>,
+	ClassId: Copy, TokenId: Copy,
+{
+	let mut count_of_charged_royalty: u32 = 0;
+	for (class_id, token_id, _quantity) in items {
+		if NFT::token_charged_royalty(*class_id, *token_id)? {
+			count_of_charged_royalty = count_of_charged_royalty.saturating_add(1u32);
+		}
+	}
+	Ok(count_of_charged_royalty)
 }

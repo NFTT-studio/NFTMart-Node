@@ -162,10 +162,10 @@ impl orml_currencies::Config for Runtime {
 }
 
 impl orml_nft::Config for Runtime {
-	type ClassId = nftmart_traits::constants_types::ClassId;
-	type TokenId = nftmart_traits::constants_types::TokenId;
-	type ClassData = nftmart_nft::ClassData<BlockNumberOf<Self>>;
-	type TokenData = nftmart_nft::TokenData<<Self as frame_system::Config>::AccountId, BlockNumberOf<Self>>;
+	type ClassId = ClassId;
+	type TokenId = TokenId;
+	type ClassData = ClassData<BlockNumberOf<Self>>;
+	type TokenData = TokenData<<Self as frame_system::Config>::AccountId, BlockNumberOf<Self>>;
 }
 
 parameter_types! {

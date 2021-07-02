@@ -15,7 +15,7 @@ use sp_runtime::{
 	RuntimeDebug, SaturatedConversion, PerU16,
 };
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
-use nftmart_traits::{NftmartConfig, NftmartNft, OrderItem};
+use nftmart_traits::*;
 
 mod mock;
 mod tests;
@@ -66,6 +66,27 @@ pub struct BritishAuctionBid<AccountId, BlockNumber> {
 	/// last offer block number.
 	#[codec(compact)]
 	pub last_offer_block: BlockNumber,
+}
+
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct DutchAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
+	#[codec(compact)]
+	pub currency_id: CurrencyId,
+	#[codec(compact)]
+	pub category_id: CategoryId,
+	#[codec(compact)]
+	pub deposit: Balance,
+	#[codec(compact)]
+	pub start_price: Balance,
+	#[codec(compact)]
+	pub end_price: Balance,
+	#[codec(compact)]
+	pub deadline: BlockNumber,
+	pub items: Vec<OrderItem<ClassId, TokenId>>,
+	pub allow_british_auction: bool,
+	#[codec(compact)]
+	pub min_raise: PerU16,
 }
 
 #[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug)]
@@ -194,6 +215,41 @@ pub mod module {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+
+		// #[pallet::weight(100_000)]
+		// #[transactional]
+		// #[allow(clippy::too_many_arguments)]
+		// pub fn submit_dutch_auction(
+		// 	origin: OriginFor<T>,
+		// 	#[pallet::compact] currency_id: CurrencyIdOf<T>,
+		// 	#[pallet::compact] category_id: GlobalId,
+		// 	#[pallet::compact] deposit: Balance,
+		// 	#[pallet::compact] start_price: Balance,
+		// 	#[pallet::compact] end_price: Balance,
+		// 	#[pallet::compact] deadline: BlockNumberOf<T>,
+		// 	items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
+		// 	allow_british_auction: bool,
+		// 	#[pallet::compact] min_raise: PerU16,
+		// ) -> DispatchResultWithPostInfo {
+		//
+		//
+		//
+		// 	Ok(().into())
+		// }
+		//
+		// #[pallet::weight(100_000)]
+		// #[transactional]
+		// pub fn bid_dutch_auction(
+		// 	origin: OriginFor<T>,
+		// 	#[pallet::compact] price: Balance,
+		// 	auction_owner: <T::Lookup as StaticLookup>::Source,
+		// 	#[pallet::compact] auction_id: GlobalId,
+		// ) -> DispatchResultWithPostInfo {
+		//
+		//
+		// 	Ok(().into())
+		// }
+
 		/// Create an British auction.
 		///
 		/// - `currency_id`: Currency Id
@@ -252,18 +308,13 @@ pub mod module {
 				last_offer_block: Zero::zero(),
 			};
 
-			let mut count_of_charged_royalty = 0u8;
+			ensure!(
+				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&items)? <= 1,
+				Error::<T>::TooManyTokenChargedRoyalty,
+			);
 
 			// process all tokens
-			for item in items{
-				let (class_id, token_id, quantity) = item;
-
-				// check the `only one royalty constrains`
-				if T::NFT::token_charged_royalty(class_id, token_id)? {
-					ensure!(count_of_charged_royalty == 0, Error::<T>::TooManyTokenChargedRoyalty);
-					count_of_charged_royalty += 1;
-				}
-
+			for (class_id, token_id, quantity) in items{
 				// reserve the selling tokens
 				T::NFT::reserve_tokens(&who, class_id, token_id, quantity)?;
 
