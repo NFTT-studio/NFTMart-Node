@@ -79,24 +79,26 @@ async function main() {
     const sudo = '//Alice';
     await add_whitelist(ws, keyring, sudo, "//Alice2");
 
-    await create_class(ws, keyring, "//Alice");
-    await mint_nft(ws, keyring, "//Alice", 0, 20, true);
-    await mint_nft(ws, keyring, "//Alice", 0, 21, false);
-    await mint_nft(ws, keyring, "//Alice", 0, 22, false);
-    await transfer_nfts(ws, keyring, [[0, 0, 2], [0, 1, 2], [0, 2, 2]], "//Alice", "//Alice2");
+    const classId = 56;
 
-    await add_class_admin(ws, keyring, "//Alice", 0, "//Bob");
+    await create_class(ws, keyring, "//Alice");
+    await mint_nft(ws, keyring, "//Alice", classId, 20, true);
+    await mint_nft(ws, keyring, "//Alice", classId, 21, false);
+    await mint_nft(ws, keyring, "//Alice", classId, 22, false);
+    await transfer_nfts(ws, keyring, [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]], "//Alice", "//Alice2");
+
+    await add_class_admin(ws, keyring, "//Alice", classId, "//Bob");
 
     await create_class(ws, keyring, "//Bob");
-    await mint_nft_by_proxy(ws, keyring, "//Bob", 1, 20, true);
-    await burn_nft(ws, keyring, "//Bob", 1, 0, 20);
-    await destroy_class(ws, keyring, "//Bob", 1);
+    await mint_nft_by_proxy(ws, keyring, "//Bob", classId + 1, 20, true);
+    await burn_nft(ws, keyring, "//Bob", classId + 1, 0, 20);
+    await destroy_class(ws, keyring, "//Bob", classId + 1);
 
     await create_category(ws, keyring, "//Alice", "my category");
-    await submit_order(ws, keyring, "//Alice", [[0, 0, 2], [0, 1, 2], [0, 2, 2]]);
-    await submit_order(ws, keyring, "//Alice", [[0, 0, 3], [0, 1, 3], [0, 2, 3]]);
-    await submit_offer(ws, keyring, "//Bob", [[0, 0, 2], [0, 1, 2], [0, 2, 2]]);
-    await submit_offer(ws, keyring, "//Bob", [[0, 0, 3], [0, 1, 3], [0, 2, 3]]);
+    await submit_order(ws, keyring, "//Alice", [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
+    await submit_order(ws, keyring, "//Alice", [[classId, 0, 3], [classId, 1, 3], [classId, 2, 3]]);
+    await submit_offer(ws, keyring, "//Bob",   [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
+    await submit_offer(ws, keyring, "//Bob",   [[classId, 0, 3], [classId, 1, 3], [classId, 2, 3]]);
 
     let orderIds = await show_order(ws, keyring);
     let offerIds = await show_offer(ws, keyring);
@@ -573,8 +575,23 @@ async function display_nft(classID) {
     const nextTokenId = await Global_Api.query.ormlNft.nextTokenId(classID);
     console.log(`nextTokenId in classId ${classID} is ${nextTokenId}.`);
     classInfo = classInfo.unwrap();
+    classInfo = classInfo.toJSON();
+    try {
+      classInfo.metadata = hexToUtf8(classInfo.metadata.slice(2));
+      classInfo.metadata = JSON.parse(classInfo.metadata);
+    } catch (e) {}
+
+    try {
+      classInfo.data.name = hexToUtf8(classInfo.data.name.slice(2));
+      classInfo.data.name = JSON.parse(classInfo.data.name);
+    } catch (e) {}
+    try {
+      classInfo.data.description = hexToUtf8(classInfo.data.description.slice(2));
+      classInfo.data.description = JSON.parse(classInfo.data.description);
+    } catch (e) {}
+
     const accountInfo = await Global_Api.query.system.account(classInfo.owner);
-    console.log("classInfo: %s", classInfo.toString());
+    console.log("classInfo: %s", JSON.stringify(classInfo));
     console.log("classOwner: %s", accountInfo.toString());
     for (let i = 0; i < nextTokenId; i++) {
       let nft = await Global_Api.query.ormlNft.tokens(classID, i);
