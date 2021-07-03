@@ -1,8 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use nftmart_traits::constants_types::Balance;
-pub use sp_std::vec::Vec;
-pub use nftmart_nft::NFTMetadata;
 
 sp_api::decl_runtime_apis! {
 	/// The helper API to calculate deposit.

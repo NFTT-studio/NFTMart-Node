@@ -988,10 +988,10 @@ impl orml_currencies::Config for Runtime {
 }
 
 impl orml_nft::Config for Runtime {
-	type ClassId = nftmart_traits::constants_types::ClassId;
-	type TokenId = nftmart_traits::constants_types::TokenId;
-	type ClassData = nftmart_nft::ClassData<BlockNumber>;
-	type TokenData = nftmart_nft::TokenData<AccountId, BlockNumber>;
+	type ClassId = nftmart_traits::ClassId;
+	type TokenId = nftmart_traits::TokenId;
+	type ClassData = nftmart_traits::ClassData<BlockNumber>;
+	type TokenData = nftmart_traits::TokenData<AccountId, BlockNumber>;
 }
 
 parameter_types! {
