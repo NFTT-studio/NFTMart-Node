@@ -264,72 +264,46 @@ fn remove_british_auction_should_work() {
 
 #[test]
 fn calc_current_price_should_work() {
-	let auction: DutchAuctionOf<Runtime> = DutchAuction {
-		currency_id: NATIVE_CURRENCY_ID,
-		category_id: 1,
-		deposit: 10 * ACCURACY,
-		min_price: 100 * ACCURACY,
-		max_price: 10000 * ACCURACY,
-		deadline: (time::MINUTES * 120).saturated_into(),
-		created_block: 0,
-		items: vec![],
-		allow_british_auction: false,
-		min_raise: Default::default(),
-	};
 	for (x, y) in vec![
 		(0, 10000), (1, 10000), (29, 10000),
 		(30, 7525), (31, 7525), (59, 7525),
 		(60, 5050), (61, 5050), (89, 5050),
 		(90, 2575), (91, 2575), (119, 2575),
 		(120, 100), (121, 100), (149, 100),
-		(150, 0), (151, 0),  (1511, 0), (15111, 0),
+		(150, 100), (151, 100),  (1511, 100), (15111, 100),
 	] {
 		assert_eq!(
-			crate::calc_current_price::<Runtime>(&auction, (time::MINUTES * x).saturated_into()),
+			crate::calc_current_price::<Runtime>(
+				10000 * ACCURACY, 100 * ACCURACY, 0,
+				(time::MINUTES * 120).saturated_into(),
+				(time::MINUTES * x).saturated_into()
+			),
 			y * ACCURACY,
 			"x={}, y={}", x, y,
 		);
 	}
-	let auction: DutchAuctionOf<Runtime> = DutchAuction {
-		currency_id: NATIVE_CURRENCY_ID,
-		category_id: 1,
-		deposit: 10 * ACCURACY,
-		min_price: 100 * ACCURACY,
-		max_price: 10000 * ACCURACY,
-		deadline: 1,
-		created_block: 0,
-		items: vec![],
-		allow_british_auction: false,
-		min_raise: Default::default(),
-	};
 	for (x, y) in vec![
-		(0, 10000), (1, 10000), (2, 10000), (29*time::MINUTES, 10000),
-		(29*time::MINUTES + 9, 10000), (29*time::MINUTES + 10, 0),
+		(0, 10000), (1, 10000), (2, 100), (29*time::MINUTES, 100),
+		(29*time::MINUTES + 9, 100), (29*time::MINUTES + 10, 100), (30*time::MINUTES, 100),
 	] {
 		assert_eq!(
-			crate::calc_current_price::<Runtime>(&auction, x.saturated_into()),
+			crate::calc_current_price::<Runtime>(
+				10000 * ACCURACY, 100 * ACCURACY, 0, 1,
+				x.saturated_into(),
+			),
 			y * ACCURACY,
 			"x={}, y={}", x, y,
 		);
 	}
-	let auction: DutchAuctionOf<Runtime> = DutchAuction {
-		currency_id: NATIVE_CURRENCY_ID,
-		category_id: 1,
-		deposit: 10 * ACCURACY,
-		min_price: 100,
-		max_price: 101,
-		deadline: 1,
-		created_block: 0,
-		items: vec![],
-		allow_british_auction: false,
-		min_raise: Default::default(),
-	};
 	for (x, y) in vec![
-		(0, 101), (1, 101), (2, 101), (29*time::MINUTES, 101),
-		(29*time::MINUTES + 9, 101), (29*time::MINUTES + 10, 0),
+		(0, 101), (1, 101), (2, 100), (29*time::MINUTES, 100),
+		(29*time::MINUTES + 9, 100), (29*time::MINUTES + 10, 100), (30*time::MINUTES, 100),
 	] {
 		assert_eq!(
-			crate::calc_current_price::<Runtime>(&auction, x.saturated_into()),
+			crate::calc_current_price::<Runtime>(
+				101, 100, 0, 1,
+				x.saturated_into(),
+			),
 			y,
 			"x={}, y={}", x, y,
 		);

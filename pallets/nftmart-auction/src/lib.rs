@@ -7,7 +7,7 @@ use frame_support::{
 };
 use sp_std::vec::Vec;
 use frame_system::pallet_prelude::*;
-use nftmart_traits::constants_types::{GlobalId, Balance, ACCURACY, NATIVE_CURRENCY_ID};
+use nftmart_traits::constants_types::{GlobalId, Balance, ACCURACY};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
@@ -114,6 +114,7 @@ pub type BritishAuctionOf<T> = BritishAuction<CurrencyIdOf<T>,BlockNumberFor<T>,
 pub type BritishAuctionBidOf<T> = BritishAuctionBid<AccountIdOf<T>,BlockNumberFor<T>>;
 pub type DutchAuctionOf<T> = DutchAuction<CurrencyIdOf<T>,BlockNumberFor<T>,GlobalId,ClassIdOf<T>,TokenIdOf<T>>;
 pub type DutchAuctionBidOf<T> = DutchAuctionBid<AccountIdOf<T>,BlockNumberFor<T>>;
+const DESC_INTERVAL: BlockNumber = time::MINUTES * 30;
 
 #[frame_support::pallet]
 pub mod module {
@@ -305,38 +306,41 @@ pub mod module {
 			Ok(().into())
 		}
 
-		// #[pallet::weight(100_000)]
-		// #[transactional]
-		// pub fn bid_dutch_auction(
-		// 	origin: OriginFor<T>,
-		// 	#[pallet::compact] price: Balance,
-		// 	auction_owner: <T::Lookup as StaticLookup>::Source,
-		// 	#[pallet::compact] auction_id: GlobalId,
-		// ) -> DispatchResultWithPostInfo {
-		// 	let purchaser: T::AccountId = ensure_signed(origin)?;
-		// 	let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
-		// 	let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
-		// 	let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
-		//
-		// 	match (auction_bid.last_offer_account, auction.allow_british_auction) {
-		// 		(None, false) => {
-		// 			// check deadline
-		// 			let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
-		// 			ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
-		// 			let current_price: Balance = calc_current_price::<T>(&auction, current_block);
-		//
-		// 		},
-		// 		(last_offer_account, true) => {
-		// 			if let Some(last_offer_account) = last_offer_account {
-		//
-		// 			}
-		// 		},
-		// 		_ => {
-		// 			return Err(Error::<T>::DutchAuctionClosed.into());
-		// 		}
-		// 	}
-		// 	Ok(().into())
-		// }
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn bid_dutch_auction(
+			origin: OriginFor<T>,
+			#[pallet::compact] price: Balance,
+			auction_owner: <T::Lookup as StaticLookup>::Source,
+			#[pallet::compact] auction_id: GlobalId,
+		) -> DispatchResultWithPostInfo {
+			let purchaser: T::AccountId = ensure_signed(origin)?;
+			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
+			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
+			let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
+
+			match (auction_bid.last_offer_account, auction.allow_british_auction) {
+				(None, false) => {
+					// check deadline
+					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
+					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
+					// get price
+					let current_price: Balance = calc_current_price::<T>(auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
+					// delete auction
+
+					// swap
+					let items = to_item_vec!(auction);
+					ensure_one_royalty!(items);
+					swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+						&purchaser, &auction_owner, auction.currency_id, current_price, &items,
+					)?;
+				},
+				_ => {
+					return Err(Error::<T>::DutchAuctionClosed.into());
+				}
+			}
+			Ok(().into())
+		}
 
 		/// Create an British auction.
 		///
@@ -547,21 +551,32 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-fn calc_current_price<T: Config>(auction: &DutchAuctionOf<T>, current_block: BlockNumberOf<T>) -> Balance {
-	let created_block: BlockNumber = auction.created_block.saturated_into();
+fn calc_current_price<T: Config>(
+	max_price: Balance, min_price: Balance,
+	created_block: BlockNumberOf<T>,
+	deadline: BlockNumberOf<T>,
+	current_block: BlockNumberOf<T>,
+) -> Balance {
+	if current_block <= created_block {
+		return max_price;
+	} else if current_block > deadline {
+		return min_price;
+	}
+
+	let created_block: BlockNumber = created_block.saturated_into();
 	let aligned_block: BlockNumber = current_block
 		.saturated_into::<BlockNumber>()
 		.saturating_sub(created_block) // >= 0
-		.checked_div(time::MINUTES * 30) // >= 0
-		.map(|x| x.saturating_mul(time::MINUTES * 30)) // >= 0
+		.checked_div(DESC_INTERVAL) // >= 0
+		.map(|x| x.saturating_mul(DESC_INTERVAL)) // >= 0
 		.map(|x| x.saturating_add(created_block)) // >= created_block
 		.unwrap_or(created_block); // >= created_block
 
-	let deadline: FixedU128 = (auction.deadline.saturated_into::<BlockNumber>(), 1).into();
+	let deadline: FixedU128 = (deadline.saturated_into::<BlockNumber>(), 1).into();
 	let created_block: FixedU128 = (created_block, 1).into();
 	let current_block: FixedU128 = (aligned_block, 1).into();
-	let max_price: FixedU128 = (auction.max_price, ACCURACY).into();
-	let min_price: FixedU128 = (auction.min_price, ACCURACY).into();
+	let max_price: FixedU128 = (max_price, ACCURACY).into();
+	let min_price: FixedU128 = (min_price, ACCURACY).into();
 
 	// calculate current price.
 	let current_price: Balance = max_price
