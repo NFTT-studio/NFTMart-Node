@@ -31,22 +31,22 @@ macro_rules! save_bid {
 		$auction_id: ident,
 		$AuctionBids: ident,
 	) => {{
-		if let Some(account) = &$auction_bid.last_offer_account {
+		if let Some(account) = &$auction_bid.last_bid_account {
 			// check the new bid price.
-			let lowest_price: Balance = $auction_bid.last_offer_price.saturating_add(
-				$auction.min_raise.mul_ceil($auction_bid.last_offer_price));
+			let lowest_price: Balance = $auction_bid.last_bid_price.saturating_add(
+				$auction.min_raise.mul_ceil($auction_bid.last_bid_price));
 
 			ensure!($price > lowest_price, Error::<T>::PriceTooLow);
 
 			ensure!(&$purchaser != account, Error::<T>::DuplicatedBid);
-			let _ = T::MultiCurrency::unreserve($auction.currency_id, account, $auction_bid.last_offer_price);
+			let _ = T::MultiCurrency::unreserve($auction.currency_id, account, $auction_bid.last_bid_price);
 		}
 
 		T::MultiCurrency::reserve($auction.currency_id, &$purchaser, $price)?;
 		let mut auction_bid = $auction_bid;
-		auction_bid.last_offer_price = $price;
-		auction_bid.last_offer_account = Some($purchaser.clone());
-		auction_bid.last_offer_block = frame_system::Pallet::<T>::block_number();
+		auction_bid.last_bid_price = $price;
+		auction_bid.last_bid_account = Some($purchaser.clone());
+		auction_bid.last_bid_block = frame_system::Pallet::<T>::block_number();
 		$AuctionBids::<T>::insert($auction_id, auction_bid);
 	}}
 }
@@ -75,7 +75,7 @@ pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId>
 	/// The auction should be forced to be ended if current block number higher than this value.
 	#[codec(compact)]
 	pub deadline: BlockNumber,
-	/// If true, the real deadline will be max(deadline, last_offer_block + delay).
+	/// If true, the real deadline will be max(deadline, last_bid_block + delay).
 	pub allow_delay: bool,
 	/// Category of this auction.
 	#[codec(compact)]
@@ -87,14 +87,14 @@ pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId>
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BritishAuctionBid<AccountId, BlockNumber> {
-	/// the newest price offered by
+	/// last bid price
 	#[codec(compact)]
-	pub last_offer_price: Balance,
+	pub last_bid_price: Balance,
 	/// the last account offering.
-	pub last_offer_account: Option<AccountId>,
-	/// last offer block number.
+	pub last_bid_account: Option<AccountId>,
+	/// last bid block number.
 	#[codec(compact)]
-	pub last_offer_block: BlockNumber,
+	pub last_bid_block: BlockNumber,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -324,9 +324,9 @@ pub mod module {
 			DutchAuctions::<T>::insert(&who, auction_id, auction);
 
 			let auction_bid: DutchAuctionBidOf<T> = DutchAuctionBid {
-				last_offer_price: min_price,
-				last_offer_account: None,
-				last_offer_block: Zero::zero(),
+				last_bid_price: min_price,
+				last_bid_account: None,
+				last_bid_block: Zero::zero(),
 			};
 
 			DutchAuctionBids::<T>::insert(auction_id, auction_bid);
@@ -345,54 +345,78 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			// let (_, bid) = Self::delete_british_auction(&who, auction_id)?;
-			// ensure!(bid.last_offer_account.is_none(), Error::<T>::CannotRemoveAuction);
+			// ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
 			Self::deposit_event(Event::RemovedDutchAuction(who, auction_id));
 			Ok(().into())
 		}
 
-		// #[pallet::weight(100_000)]
-		// #[transactional]
-		// pub fn bid_dutch_auction(
-		// 	origin: OriginFor<T>,
-		// 	#[pallet::compact] price: Balance,
-		// 	auction_owner: <T::Lookup as StaticLookup>::Source,
-		// 	#[pallet::compact] auction_id: GlobalId,
-		// ) -> DispatchResultWithPostInfo {
-		// 	let purchaser: T::AccountId = ensure_signed(origin)?;
-		// 	let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
-		// 	let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
-		// 	let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
-		//
-		// 	match (auction_bid.last_offer_account, auction.allow_british_auction) {
-		// 		(None, allow_british_auction) => {
-		// 			// check deadline
-		// 			let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
-		// 			ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
-		// 			// get price
-		// 			let current_price: Balance = calc_current_price::<T>(auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
-		//
-		// 			if allow_british_auction {
-		// 				// auction_bid
-		// 			} else {
-		// 				// delete auction
-		//
-		// 				// swap
-		// 				let items = to_item_vec!(auction);
-		// 				ensure_one_royalty!(items);
-		// 				swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-		// 					&purchaser, &auction_owner, auction.currency_id, current_price, &items,
-		// 				)?;
-		// 			}
-		// 		},
-		// 		(Some(last_offer_account), true) => {
-		//
-		// 		},
-		// 		_ => {
-		// 			return Err(Error::<T>::DutchAuctionClosed.into());
-		// 		},
-		// 	}
-		// 	Ok(().into())
-		// }
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn bid_dutch_auction(
+			origin: OriginFor<T>,
+			#[pallet::compact] price: Balance,
+			auction_owner: <T::Lookup as StaticLookup>::Source,
+			#[pallet::compact] auction_id: GlobalId,
+		) -> DispatchResultWithPostInfo {
+			let purchaser: T::AccountId = ensure_signed(origin)?;
+			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
+			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
+			let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
+
+			match (&auction_bid.last_bid_account, auction.allow_british_auction) {
+				(None, true) => {
+					// check deadline
+					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
+					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
+					// get price
+					let current_price: Balance = calc_current_price::<T>(
+						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
+					save_bid!(
+						auction_bid,
+						auction,
+						current_price,
+						purchaser,
+						auction_id,
+						DutchAuctionBids,
+					);
+				},
+				(None, false) => {
+					// check deadline
+					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
+					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
+					// get price
+					let current_price: Balance = calc_current_price::<T>(
+						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
+					// delete auction
+
+					// swap
+					let items = to_item_vec!(auction);
+					ensure_one_royalty!(items);
+					swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+						&purchaser, &auction_owner, auction.currency_id, current_price, &items,
+					)?;
+				}
+				(Some(_), true) => {
+					// check deadline
+					ensure!(
+						Self::get_deadline(true, Zero::zero(), auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
+						Error::<T>::BritishAuctionClosed,
+					);
+					save_bid!(
+						auction_bid,
+						auction,
+						price,
+						purchaser,
+						auction_id,
+						DutchAuctionBids,
+					);
+				},
+				_ => {
+					return Err(Error::<T>::DutchAuctionClosed.into());
+				},
+			}
+			Ok(().into())
+		}
 
 		/// Create an British auction.
 		///
@@ -459,9 +483,9 @@ pub mod module {
 			BritishAuctions::<T>::insert(&who, auction_id, auction);
 
 			let auction_bid: BritishAuctionBidOf<T> = BritishAuctionBid {
-				last_offer_price: init_price,
-				last_offer_account: None,
-				last_offer_block: Zero::zero(),
+				last_bid_price: init_price,
+				last_bid_account: None,
+				last_bid_block: Zero::zero(),
 			};
 
 			BritishAuctionBids::<T>::insert(auction_id, auction_bid);
@@ -487,7 +511,10 @@ pub mod module {
 			let auction_bid: BritishAuctionBidOf<T> = Self::british_auction_bids(auction_id).ok_or(Error::<T>::BritishAuctionBidNotFound)?;
 
 			// check deadline
-			ensure!(Self::get_deadline(&auction, &auction_bid) >= frame_system::Pallet::<T>::block_number(), Error::<T>::BritishAuctionClosed);
+			ensure!(
+				Self::get_deadline(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
+				Error::<T>::BritishAuctionClosed,
+			);
 
 			// check hammer price
 			if !auction.hammer_price.is_zero() && price >= auction.hammer_price {
@@ -503,7 +530,7 @@ pub mod module {
 				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id));
 				Ok(().into())
 			} else {
-				if auction_bid.last_offer_account.is_none() {
+				if auction_bid.last_bid_account.is_none() {
 					ensure!(price >= auction.init_price, Error::<T>::PriceTooLow);
 				}
 
@@ -532,14 +559,17 @@ pub mod module {
 			let _ = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
 			let (auction,auction_bid) = Self::delete_british_auction(&auction_owner, auction_id)?;
-			ensure!(Self::get_deadline(&auction, &auction_bid) < frame_system::Pallet::<T>::block_number(), Error::<T>::CannotRedeemAuctionUntilDeadline);
-			ensure!(auction_bid.last_offer_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
-			let purchaser = auction_bid.last_offer_account.expect("Must be Some");
+			ensure!(
+				Self::get_deadline(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) < frame_system::Pallet::<T>::block_number(),
+				Error::<T>::CannotRedeemAuctionUntilDeadline
+			);
+			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
+			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
 
 			let items = to_item_vec!(auction);
 			ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_offer_price, &items,
+				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_bid_price, &items,
 			)?;
 
 			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id));
@@ -555,7 +585,7 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let (_, bid) = Self::delete_british_auction(&who, auction_id)?;
-			ensure!(bid.last_offer_account.is_none(), Error::<T>::CannotRemoveAuction);
+			ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
 			Self::deposit_event(Event::RemovedBritishAuction(who, auction_id));
 			Ok(().into())
 		}
@@ -569,8 +599,8 @@ impl<T: Config> Pallet<T> {
 			BritishAuctions::<T>::try_mutate_exists(who, auction_id, |maybe_british_auction| {
 				let auction: BritishAuctionOf<T> = maybe_british_auction.as_mut().ok_or(Error::<T>::BritishAuctionNotFound)?.clone();
 
-				if let Some(account) = &auction_bid.last_offer_account {
-					let _ = T::MultiCurrency::unreserve(auction.currency_id, account, auction_bid.last_offer_price);
+				if let Some(account) = &auction_bid.last_bid_account {
+					let _ = T::MultiCurrency::unreserve(auction.currency_id, account, auction_bid.last_bid_price);
 				}
 
 				let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(&who, auction.deposit.saturated_into());
@@ -587,12 +617,12 @@ impl<T: Config> Pallet<T> {
 		})
 	}
 
-	fn get_deadline(auction: &BritishAuctionOf<T>, bid: &BritishAuctionBidOf<T>) -> BlockNumberFor<T> {
-		if auction.allow_delay {
-			let delay = bid.last_offer_block.saturating_add(T::ExtraConfig::auction_delay());
-			core::cmp::max(auction.deadline,delay)
+	fn get_deadline(allow_delay: bool, deadline: BlockNumberOf<T>, last_bid_block: BlockNumberOf<T>) -> BlockNumberFor<T> {
+		if allow_delay {
+			let delay = last_bid_block.saturating_add(T::ExtraConfig::auction_delay());
+			core::cmp::max(deadline,delay)
 		} else {
-			auction.deadline
+			deadline
 		}
 	}
 }
