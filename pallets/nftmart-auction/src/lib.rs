@@ -22,6 +22,35 @@ mod tests;
 
 pub use module::*;
 
+macro_rules! save_bid {
+	(
+		$auction_bid: ident,
+		$auction: ident,
+		$price: ident,
+		$purchaser: ident,
+		$auction_id: ident,
+		$AuctionBids: ident,
+	) => {{
+		if let Some(account) = &$auction_bid.last_offer_account {
+			// check the new bid price.
+			let lowest_price: Balance = $auction_bid.last_offer_price.saturating_add(
+				$auction.min_raise.mul_ceil($auction_bid.last_offer_price));
+
+			ensure!($price > lowest_price, Error::<T>::PriceTooLow);
+
+			ensure!(&$purchaser != account, Error::<T>::DuplicatedBid);
+			let _ = T::MultiCurrency::unreserve($auction.currency_id, account, $auction_bid.last_offer_price);
+		}
+
+		T::MultiCurrency::reserve($auction.currency_id, &$purchaser, $price)?;
+		let mut auction_bid = $auction_bid;
+		auction_bid.last_offer_price = $price;
+		auction_bid.last_offer_account = Some($purchaser.clone());
+		auction_bid.last_offer_block = frame_system::Pallet::<T>::block_number();
+		$AuctionBids::<T>::insert($auction_id, auction_bid);
+	}}
+}
+
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
@@ -174,6 +203,7 @@ pub mod module {
 		CreatedDutchAuction(T::AccountId, GlobalId),
 		/// RemovedBritishAuction \[who, auction_id\]
 		RemovedBritishAuction(T::AccountId, GlobalId),
+		RemovedDutchAuction(T::AccountId, GlobalId),
 		RedeemedBritishAuction(T::AccountId, GlobalId),
 		BidBritishAuction(T::AccountId, GlobalId),
 		HammerBritishAuction(T::AccountId, GlobalId),
@@ -299,48 +329,70 @@ pub mod module {
 				last_offer_block: Zero::zero(),
 			};
 
-			BritishAuctionBids::<T>::insert(auction_id, auction_bid);
+			DutchAuctionBids::<T>::insert(auction_id, auction_bid);
 
 			// emit event.
 			Self::deposit_event(Event::CreatedDutchAuction(who, auction_id));
 			Ok(().into())
 		}
 
+		/// remove a dutch auction by auction owner.
 		#[pallet::weight(100_000)]
 		#[transactional]
-		pub fn bid_dutch_auction(
+		pub fn remove_dutch_auction(
 			origin: OriginFor<T>,
-			#[pallet::compact] price: Balance,
-			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
 		) -> DispatchResultWithPostInfo {
-			let purchaser: T::AccountId = ensure_signed(origin)?;
-			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
-			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
-			let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
-
-			match (auction_bid.last_offer_account, auction.allow_british_auction) {
-				(None, false) => {
-					// check deadline
-					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
-					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
-					// get price
-					let current_price: Balance = calc_current_price::<T>(auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
-					// delete auction
-
-					// swap
-					let items = to_item_vec!(auction);
-					ensure_one_royalty!(items);
-					swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-						&purchaser, &auction_owner, auction.currency_id, current_price, &items,
-					)?;
-				},
-				_ => {
-					return Err(Error::<T>::DutchAuctionClosed.into());
-				}
-			}
+			let who = ensure_signed(origin)?;
+			// let (_, bid) = Self::delete_british_auction(&who, auction_id)?;
+			// ensure!(bid.last_offer_account.is_none(), Error::<T>::CannotRemoveAuction);
+			Self::deposit_event(Event::RemovedDutchAuction(who, auction_id));
 			Ok(().into())
 		}
+
+		// #[pallet::weight(100_000)]
+		// #[transactional]
+		// pub fn bid_dutch_auction(
+		// 	origin: OriginFor<T>,
+		// 	#[pallet::compact] price: Balance,
+		// 	auction_owner: <T::Lookup as StaticLookup>::Source,
+		// 	#[pallet::compact] auction_id: GlobalId,
+		// ) -> DispatchResultWithPostInfo {
+		// 	let purchaser: T::AccountId = ensure_signed(origin)?;
+		// 	let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
+		// 	let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
+		// 	let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
+		//
+		// 	match (auction_bid.last_offer_account, auction.allow_british_auction) {
+		// 		(None, allow_british_auction) => {
+		// 			// check deadline
+		// 			let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
+		// 			ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
+		// 			// get price
+		// 			let current_price: Balance = calc_current_price::<T>(auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
+		//
+		// 			if allow_british_auction {
+		// 				// auction_bid
+		// 			} else {
+		// 				// delete auction
+		//
+		// 				// swap
+		// 				let items = to_item_vec!(auction);
+		// 				ensure_one_royalty!(items);
+		// 				swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+		// 					&purchaser, &auction_owner, auction.currency_id, current_price, &items,
+		// 				)?;
+		// 			}
+		// 		},
+		// 		(Some(last_offer_account), true) => {
+		//
+		// 		},
+		// 		_ => {
+		// 			return Err(Error::<T>::DutchAuctionClosed.into());
+		// 		},
+		// 	}
+		// 	Ok(().into())
+		// }
 
 		/// Create an British auction.
 		///
@@ -394,12 +446,6 @@ pub mod module {
 				items: Vec::with_capacity(items.len()),
 			};
 
-			let auction_bid: BritishAuctionBidOf<T> = BritishAuctionBid {
-				last_offer_price: init_price,
-				last_offer_account: None,
-				last_offer_block: Zero::zero(),
-			};
-
 			ensure_one_royalty!(items);
 			push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
 
@@ -411,6 +457,13 @@ pub mod module {
 
 			// save auction information.
 			BritishAuctions::<T>::insert(&who, auction_id, auction);
+
+			let auction_bid: BritishAuctionBidOf<T> = BritishAuctionBid {
+				last_offer_price: init_price,
+				last_offer_account: None,
+				last_offer_block: Zero::zero(),
+			};
+
 			BritishAuctionBids::<T>::insert(auction_id, auction_bid);
 
 			// emit event.
@@ -450,26 +503,19 @@ pub mod module {
 				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id));
 				Ok(().into())
 			} else {
-				if let Some(account) = &auction_bid.last_offer_account {
-					// check the new bid price.
-					let lowest_price: Balance = auction_bid.last_offer_price.saturating_add(auction.min_raise.mul_ceil(auction_bid.last_offer_price));
-					ensure!(price > lowest_price, Error::<T>::PriceTooLow);
-
-					ensure!(&purchaser != account, Error::<T>::DuplicatedBid);
-					let _ = T::MultiCurrency::unreserve(auction.currency_id, account, auction_bid.last_offer_price);
-				} else {
-					// check the new bid price.
+				if auction_bid.last_offer_account.is_none() {
 					ensure!(price >= auction.init_price, Error::<T>::PriceTooLow);
 				}
 
-				T::MultiCurrency::reserve(auction.currency_id, &purchaser, price)?;
+				save_bid!(
+					auction_bid,
+					auction,
+					price,
+					purchaser,
+					auction_id,
+					BritishAuctionBids,
+				);
 
-				let mut auction_bid = auction_bid;
-				auction_bid.last_offer_price = price;
-				auction_bid.last_offer_account = Some(purchaser.clone());
-				auction_bid.last_offer_block = frame_system::Pallet::<T>::block_number();
-
-				BritishAuctionBids::<T>::insert(auction_id, auction_bid);
 				Self::deposit_event(Event::BidBritishAuction(purchaser, auction_id));
 				Ok(().into())
 			}
