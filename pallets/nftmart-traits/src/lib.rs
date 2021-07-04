@@ -155,3 +155,63 @@ pub fn count_charged_royalty<AccountId, ClassId, TokenId, NFT>(items: &[(ClassId
 	}
 	Ok(count_of_charged_royalty)
 }
+
+/// Swap assets between nfts owner and nfts purchaser.
+pub fn swap_assets<MultiCurrency, NFT, AccountId, ClassId, TokenId, CurrencyId>(
+	pay_currency: &AccountId,
+	pay_nfts: &AccountId,
+	currency_id: CurrencyId,
+	price: Balance,
+	items: &[(ClassId, TokenId, TokenId)],
+) -> ResultPost<()> where
+	MultiCurrency: orml_traits::MultiCurrency<AccountId, CurrencyId = CurrencyId, Balance = Balance>,
+	NFT: NftmartNft<AccountId, ClassId, TokenId>,
+	ClassId: Copy, TokenId: Copy,
+{
+	MultiCurrency::transfer(currency_id, pay_currency, pay_nfts, price)?;
+	for (class_id, token_id, quantity) in items {
+		NFT::transfer(pay_nfts, pay_currency, *class_id, *token_id, *quantity)?;
+	}
+	Ok(())
+}
+
+#[macro_export]
+macro_rules! to_item_vec {
+	($obj: ident) => {{
+		let items = $obj.items.iter().map(|x|(x.class_id, x.token_id, x.quantity))
+			 .collect::<Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>>();
+		items
+	}}
+}
+
+#[macro_export]
+macro_rules! ensure_one_royalty {
+	($items: ident) => {
+		ensure!(
+			count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&$items)? <= 1,
+			Error::<T>::TooManyTokenChargedRoyalty,
+		);
+	}
+}
+
+pub fn push_tokens<AccountId, ClassId, TokenId, NFT>(
+	nft_owner: Option<&AccountId>,
+	items: &[(ClassId, TokenId, TokenId)],
+	push_to: &mut Vec<OrderItem<ClassId, TokenId>>,
+) -> ResultPost<()> where
+	NFT: NftmartNft<AccountId, ClassId, TokenId>,
+	ClassId: Copy, TokenId: Copy,
+{
+	for &(class_id, token_id, quantity) in items {
+		if let Some(nft_owner) = nft_owner {
+			NFT::reserve_tokens(nft_owner, class_id, token_id, quantity)?;
+		}
+		push_to.push(OrderItem{
+			class_id,
+			token_id,
+			quantity,
+		})
+	}
+	Ok(())
+}
+

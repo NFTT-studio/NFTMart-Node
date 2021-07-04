@@ -230,22 +230,8 @@ pub mod module {
 				items: Vec::with_capacity(items.len()),
 			};
 
-			ensure!(
-				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&items)? <= 1,
-				Error::<T>::TooManyTokenChargedRoyalty,
-			);
-
-			// process all tokens
-			for (class_id, token_id, quantity) in items {
-				// reserve selling tokens
-				T::NFT::reserve_tokens(&who, class_id, token_id, quantity)?;
-
-				order.items.push(OrderItem{
-					class_id,
-					token_id,
-					quantity,
-				})
-			}
+			ensure_one_royalty!(items);
+			push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut order.items)?;
 
 			T::ExtraConfig::inc_count_in_category(category_id)?;
 			let order_id = T::ExtraConfig::get_then_inc_id()?;
@@ -276,13 +262,11 @@ pub mod module {
 			// Check deadline of this order
 			ensure!(frame_system::Pallet::<T>::block_number() < order.deadline, Error::<T>::TakeExpiredOrderOrOffer);
 
-			// Purchaser pays the money.
-			T::MultiCurrency::transfer(order.currency_id, &purchaser, &order_owner, order.price)?;
-
-			// OrderOwner/TokenOwner transfers the nfts to purchaser.
-			for item in &order.items {
-				T::NFT::transfer(&order_owner, &purchaser, item.class_id, item.token_id, item.quantity)?;
-			}
+			let items = to_item_vec!(order);
+			ensure_one_royalty!(items);
+			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+				&purchaser, &order_owner, order.currency_id, order.price, &items,
+			)?;
 
 			Self::deposit_event(Event::TakenOrder(purchaser, order_owner, order_id));
 			Ok(().into())
@@ -342,18 +326,8 @@ pub mod module {
 				items: Vec::with_capacity(items.len()),
 			};
 
-			ensure!(
-				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&items)? <= 1,
-				Error::<T>::TooManyTokenChargedRoyalty,
-			);
-
-			for (class_id, token_id, quantity) in items {
-				offer.items.push(OrderItem {
-					class_id,
-					token_id,
-					quantity,
-				})
-			}
+			ensure_one_royalty!(items);
+			push_tokens::<_, _, _, T::NFT>(None, &items, &mut offer.items)?;
 
 			T::ExtraConfig::inc_count_in_category(category_id)?;
 			let offer_id = T::ExtraConfig::get_then_inc_id()?;
@@ -384,22 +358,11 @@ pub mod module {
 			// Check deadline of this offer
 			ensure!(frame_system::Pallet::<T>::block_number() < offer.deadline, Error::<T>::TakeExpiredOrderOrOffer);
 
-			// offer_owner pays the money.
-			T::MultiCurrency::transfer(offer.currency_id, &offer_owner, &token_owner, offer.price)?;
-
-			ensure!(
-				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(
-					&offer.items.iter()
-					.map(|x|(x.class_id, x.token_id, x.quantity))
-					.collect::<Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>>()
-				)? <= 1,
-				Error::<T>::TooManyTokenChargedRoyalty,
-			);
-
-			// token_owner transfers the nfts to offer_owner.
-			for item in &offer.items {
-				T::NFT::transfer(&token_owner, &offer_owner, item.class_id, item.token_id, item.quantity)?;
-			}
+			let items = to_item_vec!(offer);
+			ensure_one_royalty!(items);
+			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+				&offer_owner, &token_owner, offer.currency_id, offer.price, &items,
+			)?;
 
 			Self::deposit_event(Event::TakenOffer(token_owner, offer_owner, offer_id));
 			Ok(().into())

@@ -11,7 +11,7 @@ use nftmart_traits::constants_types::{GlobalId, Balance, ACCURACY, NATIVE_CURREN
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, StaticLookup, Zero, One, Saturating, CheckedDiv},
+	traits::{AtLeast32BitUnsigned, StaticLookup, Zero, Saturating, CheckedDiv},
 	RuntimeDebug, SaturatedConversion, PerU16, FixedU128, FixedPointNumber,
 };
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
@@ -280,19 +280,8 @@ pub mod module {
 				min_raise,
 			};
 
-			ensure!(
-				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&items)? <= 1,
-				Error::<T>::TooManyTokenChargedRoyalty,
-			);
-
-			for (class_id, token_id, quantity) in items{
-				T::NFT::reserve_tokens(&who, class_id, token_id, quantity)?;
-				auction.items.push(OrderItem{
-					class_id,
-					token_id,
-					quantity,
-				})
-			}
+			ensure_one_royalty!(items);
+			push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
 
 			// add the auction to a category
 			T::ExtraConfig::inc_count_in_category(category_id)?;
@@ -316,38 +305,38 @@ pub mod module {
 			Ok(().into())
 		}
 
-		#[pallet::weight(100_000)]
-		#[transactional]
-		pub fn bid_dutch_auction(
-			origin: OriginFor<T>,
-			#[pallet::compact] price: Balance,
-			auction_owner: <T::Lookup as StaticLookup>::Source,
-			#[pallet::compact] auction_id: GlobalId,
-		) -> DispatchResultWithPostInfo {
-			let purchaser: T::AccountId = ensure_signed(origin)?;
-			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
-			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
-			let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
-
-			match (auction_bid.last_offer_account, auction.allow_british_auction) {
-				(None, false) => {
-					// check deadline
-					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
-					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
-					let current_price: Balance = calc_current_price::<T>(&auction, current_block);
-
-				},
-				(last_offer_account, true) => {
-					if let Some(last_offer_account) = last_offer_account {
-
-					}
-				},
-				_ => {
-					return Err(Error::<T>::DutchAuctionClosed.into());
-				}
-			}
-			Ok(().into())
-		}
+		// #[pallet::weight(100_000)]
+		// #[transactional]
+		// pub fn bid_dutch_auction(
+		// 	origin: OriginFor<T>,
+		// 	#[pallet::compact] price: Balance,
+		// 	auction_owner: <T::Lookup as StaticLookup>::Source,
+		// 	#[pallet::compact] auction_id: GlobalId,
+		// ) -> DispatchResultWithPostInfo {
+		// 	let purchaser: T::AccountId = ensure_signed(origin)?;
+		// 	let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
+		// 	let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
+		// 	let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
+		//
+		// 	match (auction_bid.last_offer_account, auction.allow_british_auction) {
+		// 		(None, false) => {
+		// 			// check deadline
+		// 			let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
+		// 			ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
+		// 			let current_price: Balance = calc_current_price::<T>(&auction, current_block);
+		//
+		// 		},
+		// 		(last_offer_account, true) => {
+		// 			if let Some(last_offer_account) = last_offer_account {
+		//
+		// 			}
+		// 		},
+		// 		_ => {
+		// 			return Err(Error::<T>::DutchAuctionClosed.into());
+		// 		}
+		// 	}
+		// 	Ok(().into())
+		// }
 
 		/// Create an British auction.
 		///
@@ -407,22 +396,8 @@ pub mod module {
 				last_offer_block: Zero::zero(),
 			};
 
-			ensure!(
-				count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&items)? <= 1,
-				Error::<T>::TooManyTokenChargedRoyalty,
-			);
-
-			// process all tokens
-			for (class_id, token_id, quantity) in items{
-				// reserve the selling tokens
-				T::NFT::reserve_tokens(&who, class_id, token_id, quantity)?;
-
-				auction.items.push(OrderItem{
-					class_id,
-					token_id,
-					quantity,
-				})
-			}
+			ensure_one_royalty!(items);
+			push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
 
 			// add the auction to a category
 			T::ExtraConfig::inc_count_in_category(category_id)?;
@@ -461,11 +436,13 @@ pub mod module {
 			if !auction.hammer_price.is_zero() && price >= auction.hammer_price {
 				// delete the auction and release all assets reserved by this auction.
 				Self::delete_british_auction(&auction_owner, auction_id)?;
-				// make the deals with `hammer_price`. swap assets.
-				T::MultiCurrency::transfer(auction.currency_id, &purchaser, &auction_owner, auction.hammer_price)?;
-				for item in &auction.items {
-					T::NFT::transfer(&auction_owner, &purchaser, item.class_id, item.token_id, item.quantity)?;
-				}
+
+				let items = to_item_vec!(auction);
+				ensure_one_royalty!(items);
+				swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+					&purchaser, &auction_owner, auction.currency_id, auction.hammer_price, &items,
+				)?;
+
 				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id));
 				Ok(().into())
 			} else {
@@ -508,10 +485,13 @@ pub mod module {
 			ensure!(Self::get_deadline(&auction, &auction_bid) < frame_system::Pallet::<T>::block_number(), Error::<T>::CannotRedeemAuctionUntilDeadline);
 			ensure!(auction_bid.last_offer_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
 			let purchaser = auction_bid.last_offer_account.expect("Must be Some");
-			T::MultiCurrency::transfer(auction.currency_id, &purchaser, &auction_owner, auction_bid.last_offer_price)?;
-			for item in &auction.items {
-				T::NFT::transfer(&auction_owner, &purchaser, item.class_id, item.token_id, item.quantity)?;
-			}
+
+			let items = to_item_vec!(auction);
+			ensure_one_royalty!(items);
+			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_offer_price, &items,
+			)?;
+
 			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id));
 			Ok(().into())
 		}
