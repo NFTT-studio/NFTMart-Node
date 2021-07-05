@@ -18,7 +18,8 @@ use orml_traits::{MultiCurrency, MultiReservableCurrency};
 use nftmart_traits::*;
 
 mod mock;
-mod tests;
+mod british_tests;
+mod dutch_tests;
 
 mod utils;
 pub use utils::*;
