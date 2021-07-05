@@ -51,6 +51,40 @@ macro_rules! save_bid {
 	}}
 }
 
+macro_rules! delete_auction {
+	(
+		$AuctionBids: ident,
+		$Auctions: ident,
+		$who: ident,
+		$auction_id: ident,
+		$AuctionBidNotFound: ident,
+		$AuctionNotFound: ident,
+	) => {
+		$AuctionBids::<T>::try_mutate_exists($auction_id, |maybe_auction_bid| {
+			let auction_bid = maybe_auction_bid.as_mut().ok_or(Error::<T>::$AuctionBidNotFound)?.clone();
+			$Auctions::<T>::try_mutate_exists($who, $auction_id, |maybe_auction| {
+				let auction = maybe_auction.as_mut().ok_or(Error::<T>::$AuctionNotFound)?.clone();
+
+				if let Some(account) = &auction_bid.last_bid_account {
+					let _ = T::MultiCurrency::unreserve(auction.currency_id, account, auction_bid.last_bid_price);
+				}
+
+				let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(&$who, auction.deposit.saturated_into());
+
+				for item in &auction.items {
+					T::NFT::unreserve_tokens($who, item.class_id, item.token_id, item.quantity)?;
+				}
+
+				T::ExtraConfig::dec_count_in_category(auction.category_id)?;
+
+				*maybe_auction_bid = None;
+				*maybe_auction = None;
+				Ok((auction, auction_bid))
+			})
+		})
+	}
+}
+
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
@@ -344,8 +378,8 @@ pub mod module {
 			#[pallet::compact] auction_id: GlobalId,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			// let (_, bid) = Self::delete_british_auction(&who, auction_id)?;
-			// ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
+			let (_, bid) = Self::delete_dutch_auction(&who, auction_id)?;
+			ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
 			Self::deposit_event(Event::RemovedDutchAuction(who, auction_id));
 			Ok(().into())
 		}
@@ -594,27 +628,25 @@ pub mod module {
 
 impl<T: Config> Pallet<T> {
 	fn delete_british_auction(who: &T::AccountId, auction_id: GlobalId) -> Result<(BritishAuctionOf<T>, BritishAuctionBidOf<T>), DispatchError> {
-		BritishAuctionBids::<T>::try_mutate_exists(auction_id, |maybe_british_auction_bid| {
-			let auction_bid: BritishAuctionBidOf<T> = maybe_british_auction_bid.as_mut().ok_or(Error::<T>::BritishAuctionBidNotFound)?.clone();
-			BritishAuctions::<T>::try_mutate_exists(who, auction_id, |maybe_british_auction| {
-				let auction: BritishAuctionOf<T> = maybe_british_auction.as_mut().ok_or(Error::<T>::BritishAuctionNotFound)?.clone();
+		delete_auction!(
+			BritishAuctionBids,
+			BritishAuctions,
+			who,
+			auction_id,
+			BritishAuctionBidNotFound,
+			BritishAuctionNotFound,
+		)
+	}
 
-				if let Some(account) = &auction_bid.last_bid_account {
-					let _ = T::MultiCurrency::unreserve(auction.currency_id, account, auction_bid.last_bid_price);
-				}
-
-				let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(&who, auction.deposit.saturated_into());
-
-				for item in &auction.items {
-					T::NFT::unreserve_tokens(who, item.class_id, item.token_id, item.quantity)?;
-				}
-
-				T::ExtraConfig::dec_count_in_category(auction.category_id)?;
-				*maybe_british_auction_bid = None;
-				*maybe_british_auction = None;
-				Ok((auction, auction_bid))
-			})
-		})
+	fn delete_dutch_auction(who: &T::AccountId, auction_id: GlobalId) -> Result<(DutchAuctionOf<T>, DutchAuctionBidOf<T>), DispatchError> {
+		delete_auction!(
+			DutchAuctionBids,
+			DutchAuctions,
+			who,
+			auction_id,
+			DutchAuctionBidNotFound,
+			DutchAuctionNotFound,
+		)
 	}
 
 	fn get_deadline(allow_delay: bool, deadline: BlockNumberOf<T>, last_bid_block: BlockNumberOf<T>) -> BlockNumberFor<T> {
