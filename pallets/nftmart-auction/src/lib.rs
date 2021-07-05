@@ -403,23 +403,22 @@ pub mod module {
 					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
 					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
 					// get price
-					let current_price: Balance = calc_current_price::<T>(
+					let current_price: Balance = Self::calc_current_price(
 						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
-					save_bid!(
+					Self::save_dutch_bid(
 						auction_bid,
 						auction,
 						current_price,
-						purchaser,
+						purchaser.clone(),
 						auction_id,
-						DutchAuctionBids,
-					);
+					)?;
 				},
 				(None, false) => {
 					// check deadline
 					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
 					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
 					// get price
-					let current_price: Balance = calc_current_price::<T>(
+					let current_price: Balance = Self::calc_current_price(
 						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
 					// delete auction
 
@@ -436,14 +435,13 @@ pub mod module {
 						Self::get_deadline(true, Zero::zero(), auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
 						Error::<T>::BritishAuctionClosed,
 					);
-					save_bid!(
+					Self::save_dutch_bid(
 						auction_bid,
 						auction,
 						price,
-						purchaser,
+						purchaser.clone(),
 						auction_id,
-						DutchAuctionBids,
-					);
+					)?;
 				},
 				_ => {
 					return Err(Error::<T>::DutchAuctionClosed.into());
@@ -568,14 +566,13 @@ pub mod module {
 					ensure!(price >= auction.init_price, Error::<T>::PriceTooLow);
 				}
 
-				save_bid!(
+				Self::save_british_bid(
 					auction_bid,
 					auction,
 					price,
-					purchaser,
+					purchaser.clone(),
 					auction_id,
-					BritishAuctionBids,
-				);
+				)?;
 
 				Self::deposit_event(Event::BidBritishAuction(purchaser, auction_id));
 				Ok(().into())
@@ -627,7 +624,9 @@ pub mod module {
 }
 
 impl<T: Config> Pallet<T> {
-	fn delete_british_auction(who: &T::AccountId, auction_id: GlobalId) -> Result<(BritishAuctionOf<T>, BritishAuctionBidOf<T>), DispatchError> {
+	fn delete_british_auction(
+		who: &T::AccountId, auction_id: GlobalId
+	) -> Result<(BritishAuctionOf<T>, BritishAuctionBidOf<T>), DispatchError> {
 		delete_auction!(
 			BritishAuctionBids,
 			BritishAuctions,
@@ -638,7 +637,9 @@ impl<T: Config> Pallet<T> {
 		)
 	}
 
-	fn delete_dutch_auction(who: &T::AccountId, auction_id: GlobalId) -> Result<(DutchAuctionOf<T>, DutchAuctionBidOf<T>), DispatchError> {
+	fn delete_dutch_auction(
+		who: &T::AccountId, auction_id: GlobalId
+	) -> Result<(DutchAuctionOf<T>, DutchAuctionBidOf<T>), DispatchError> {
 		delete_auction!(
 			DutchAuctionBids,
 			DutchAuctions,
@@ -649,7 +650,39 @@ impl<T: Config> Pallet<T> {
 		)
 	}
 
-	fn get_deadline(allow_delay: bool, deadline: BlockNumberOf<T>, last_bid_block: BlockNumberOf<T>) -> BlockNumberFor<T> {
+	fn save_dutch_bid(
+		auction_bid: DutchAuctionBidOf<T>, auction: DutchAuctionOf<T>,
+		price: Balance, purchaser: T::AccountId, auction_id: GlobalId
+	) -> DispatchResult {
+		save_bid!(
+			auction_bid,
+			auction,
+			price,
+			purchaser,
+			auction_id,
+			DutchAuctionBids,
+		);
+		Ok(())
+	}
+
+	fn save_british_bid(
+		auction_bid: BritishAuctionBidOf<T>, auction: BritishAuctionOf<T>,
+		price: Balance, purchaser: T::AccountId, auction_id: GlobalId
+	) -> DispatchResult {
+		save_bid!(
+			auction_bid,
+			auction,
+			price,
+			purchaser,
+			auction_id,
+			BritishAuctionBids,
+		);
+		Ok(())
+	}
+
+	fn get_deadline(
+		allow_delay: bool, deadline: BlockNumberOf<T>, last_bid_block: BlockNumberOf<T>
+	) -> BlockNumberFor<T> {
 		if allow_delay {
 			let delay = last_bid_block.saturating_add(T::ExtraConfig::auction_delay());
 			core::cmp::max(deadline,delay)
@@ -657,43 +690,43 @@ impl<T: Config> Pallet<T> {
 			deadline
 		}
 	}
-}
 
-fn calc_current_price<T: Config>(
-	max_price: Balance, min_price: Balance,
-	created_block: BlockNumberOf<T>,
-	deadline: BlockNumberOf<T>,
-	current_block: BlockNumberOf<T>,
-) -> Balance {
-	if current_block <= created_block {
-		return max_price;
-	} else if current_block > deadline {
-		return min_price;
+	fn calc_current_price(
+		max_price: Balance, min_price: Balance,
+		created_block: BlockNumberOf<T>,
+		deadline: BlockNumberOf<T>,
+		current_block: BlockNumberOf<T>,
+	) -> Balance {
+		if current_block <= created_block {
+			return max_price;
+		} else if current_block > deadline {
+			return min_price;
+		}
+
+		let created_block: BlockNumber = created_block.saturated_into();
+		let aligned_block: BlockNumber = current_block
+			.saturated_into::<BlockNumber>()
+			.saturating_sub(created_block) // >= 0
+			.checked_div(DESC_INTERVAL) // >= 0
+			.map(|x| x.saturating_mul(DESC_INTERVAL)) // >= 0
+			.map(|x| x.saturating_add(created_block)) // >= created_block
+			.unwrap_or(created_block); // >= created_block
+
+		let deadline: FixedU128 = (deadline.saturated_into::<BlockNumber>(), 1).into();
+		let created_block: FixedU128 = (created_block, 1).into();
+		let current_block: FixedU128 = (aligned_block, 1).into();
+		let max_price: FixedU128 = (max_price, ACCURACY).into();
+		let min_price: FixedU128 = (min_price, ACCURACY).into();
+
+		// calculate current price.
+		let current_price: Balance = max_price
+			.saturating_sub(min_price) // > 0
+			.saturating_mul(current_block.saturating_sub(created_block)) // >= 0
+			.checked_div(&deadline.saturating_sub(created_block)) // >= 0
+			.map(|x| max_price.saturating_sub(x)) // >= min_price && <= max_price
+			.unwrap_or(max_price) // >= min_price && <= max_price
+			.saturating_mul_int(ACCURACY); // >= min_price && <= max_price
+
+		current_price
 	}
-
-	let created_block: BlockNumber = created_block.saturated_into();
-	let aligned_block: BlockNumber = current_block
-		.saturated_into::<BlockNumber>()
-		.saturating_sub(created_block) // >= 0
-		.checked_div(DESC_INTERVAL) // >= 0
-		.map(|x| x.saturating_mul(DESC_INTERVAL)) // >= 0
-		.map(|x| x.saturating_add(created_block)) // >= created_block
-		.unwrap_or(created_block); // >= created_block
-
-	let deadline: FixedU128 = (deadline.saturated_into::<BlockNumber>(), 1).into();
-	let created_block: FixedU128 = (created_block, 1).into();
-	let current_block: FixedU128 = (aligned_block, 1).into();
-	let max_price: FixedU128 = (max_price, ACCURACY).into();
-	let min_price: FixedU128 = (min_price, ACCURACY).into();
-
-	// calculate current price.
-	let current_price: Balance = max_price
-		.saturating_sub(min_price) // > 0
-		.saturating_mul(current_block.saturating_sub(created_block)) // >= 0
-		.checked_div(&deadline.saturating_sub(created_block)) // >= 0
-		.map(|x| max_price.saturating_sub(x)) // >= min_price && <= max_price
-		.unwrap_or(max_price) // >= min_price && <= max_price
-		.saturating_mul_int(ACCURACY); // >= min_price && <= max_price
-
-	current_price
 }
