@@ -1,6 +1,4 @@
 #![cfg(test)]
-#![allow(unused_imports)]
-#![allow(dead_code)]
 
 use super::{NATIVE_CURRENCY_ID};
 use crate::mock::*;
@@ -9,7 +7,6 @@ use orml_nft::AccountToken;
 use nftmart_traits::*;
 use frame_support::{assert_ok};
 use paste::paste;
-use crate::{DutchAuction, DutchAuctionOf};
 
 macro_rules! submit_british_auction_should_work {
     ( $(#[$attr: meta])* $test_name: ident, $hammer_price: expr) => {

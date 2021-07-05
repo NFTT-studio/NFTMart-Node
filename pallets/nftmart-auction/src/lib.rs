@@ -90,6 +90,7 @@ pub mod module {
 		RedeemedBritishAuction(T::AccountId, GlobalId),
 		RedeemedDutchAuction(T::AccountId, GlobalId),
 		BidBritishAuction(T::AccountId, GlobalId),
+		BidDutchAuction(T::AccountId, GlobalId),
 		HammerBritishAuction(T::AccountId, GlobalId),
 	}
 
@@ -248,6 +249,8 @@ pub mod module {
 						purchaser.clone(),
 						auction_id,
 					)?;
+
+					Self::deposit_event(Event::BidDutchAuction(purchaser, auction_id));
 				},
 				(None, false) => {
 					// check deadline
@@ -264,6 +267,7 @@ pub mod module {
 					swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 						&purchaser, &auction_owner, auction.currency_id, current_price, &items,
 					)?;
+					Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
 				}
 				(Some(_), true) => {
 					// check deadline
@@ -278,6 +282,8 @@ pub mod module {
 						purchaser.clone(),
 						auction_id,
 					)?;
+
+					Self::deposit_event(Event::BidDutchAuction(purchaser, auction_id));
 				},
 				_ => {
 					return Err(Error::<T>::DutchAuctionClosed.into());
