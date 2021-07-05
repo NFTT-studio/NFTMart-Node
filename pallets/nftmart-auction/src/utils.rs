@@ -103,3 +103,14 @@ pub fn calc_current_price<T: Config>(
 
 	current_price
 }
+
+pub fn get_deadline<T: Config>(
+	allow_delay: bool, deadline: BlockNumberOf<T>, last_bid_block: BlockNumberOf<T>
+) -> BlockNumberFor<T> {
+	if allow_delay {
+		let delay = last_bid_block.saturating_add(T::ExtraConfig::auction_delay());
+		core::cmp::max(deadline,delay)
+	} else {
+		deadline
+	}
+}

@@ -88,6 +88,7 @@ pub mod module {
 		RemovedBritishAuction(T::AccountId, GlobalId),
 		RemovedDutchAuction(T::AccountId, GlobalId),
 		RedeemedBritishAuction(T::AccountId, GlobalId),
+		RedeemedDutchAuction(T::AccountId, GlobalId),
 		BidBritishAuction(T::AccountId, GlobalId),
 		HammerBritishAuction(T::AccountId, GlobalId),
 	}
@@ -219,20 +220,6 @@ pub mod module {
 			Ok(().into())
 		}
 
-		/// remove a dutch auction by auction owner.
-		#[pallet::weight(100_000)]
-		#[transactional]
-		pub fn remove_dutch_auction(
-			origin: OriginFor<T>,
-			#[pallet::compact] auction_id: GlobalId,
-		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			let (_, bid) = Self::delete_dutch_auction(&who, auction_id)?;
-			ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
-			Self::deposit_event(Event::RemovedDutchAuction(who, auction_id));
-			Ok(().into())
-		}
-
 		#[pallet::weight(100_000)]
 		#[transactional]
 		pub fn bid_dutch_auction(
@@ -281,7 +268,7 @@ pub mod module {
 				(Some(_), true) => {
 					// check deadline
 					ensure!(
-						Self::get_deadline(true, Zero::zero(), auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
+						get_deadline::<T>(true, Zero::zero(), auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
 						Error::<T>::BritishAuctionClosed,
 					);
 					Self::save_dutch_bid(
@@ -296,6 +283,48 @@ pub mod module {
 					return Err(Error::<T>::DutchAuctionClosed.into());
 				},
 			}
+			Ok(().into())
+		}
+
+		/// redeem
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn redeem_dutch_auction(
+			origin: OriginFor<T>,
+			auction_owner: <T::Lookup as StaticLookup>::Source,
+			#[pallet::compact] auction_id: GlobalId,
+		) -> DispatchResultWithPostInfo {
+			let _ = ensure_signed(origin)?;
+			let auction_owner = T::Lookup::lookup(auction_owner)?;
+			let (auction,auction_bid) = Self::delete_dutch_auction(&auction_owner, auction_id)?;
+			ensure!(
+				get_deadline::<T>(true, Zero::zero(), auction_bid.last_bid_block) < frame_system::Pallet::<T>::block_number(),
+				Error::<T>::CannotRedeemAuctionUntilDeadline
+			);
+			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
+			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
+
+			let items = to_item_vec!(auction);
+			ensure_one_royalty!(items);
+			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
+				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_bid_price, &items,
+			)?;
+
+			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
+			Ok(().into())
+		}
+
+		/// remove a dutch auction by auction owner.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn remove_dutch_auction(
+			origin: OriginFor<T>,
+			#[pallet::compact] auction_id: GlobalId,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			let (_, bid) = Self::delete_dutch_auction(&who, auction_id)?;
+			ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
+			Self::deposit_event(Event::RemovedDutchAuction(who, auction_id));
 			Ok(().into())
 		}
 
@@ -393,7 +422,7 @@ pub mod module {
 
 			// check deadline
 			ensure!(
-				Self::get_deadline(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
+				get_deadline::<T>(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
 				Error::<T>::BritishAuctionClosed,
 			);
 
@@ -440,7 +469,7 @@ pub mod module {
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
 			let (auction,auction_bid) = Self::delete_british_auction(&auction_owner, auction_id)?;
 			ensure!(
-				Self::get_deadline(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) < frame_system::Pallet::<T>::block_number(),
+				get_deadline::<T>(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) < frame_system::Pallet::<T>::block_number(),
 				Error::<T>::CannotRedeemAuctionUntilDeadline
 			);
 			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
@@ -527,16 +556,5 @@ impl<T: Config> Pallet<T> {
 			BritishAuctionBids,
 		);
 		Ok(())
-	}
-
-	fn get_deadline(
-		allow_delay: bool, deadline: BlockNumberOf<T>, last_bid_block: BlockNumberOf<T>
-	) -> BlockNumberFor<T> {
-		if allow_delay {
-			let delay = last_bid_block.saturating_add(T::ExtraConfig::auction_delay());
-			core::cmp::max(deadline,delay)
-		} else {
-			deadline
-		}
 	}
 }
