@@ -13,16 +13,25 @@ use pallet_contracts::chain_extension::{
 	SysConfig,
 	UncheckedFrom,
 };
-use sp_runtime::{DispatchError, AccountId32};
-use nftmart_traits::{Properties, BitFlags, ClassProperty};
+use sp_runtime::{DispatchError, AccountId32, traits::Verify};
+use nftmart_traits::{Properties, BitFlags, ClassProperty, Signature};
+use core::convert::TryFrom;
+use sp_std::vec::Vec;
 
 /// Contract extension for `FetchRandom`
 pub struct FetchRandomExtension;
 use super::Runtime;
 
-pub fn to_account_id(account: &[u8]) -> AccountId32 {
-	use core::convert::TryFrom;
-	AccountId32::try_from(account).unwrap()
+pub fn to_account_id(account: &[u8]) -> Result<AccountId32, DispatchError> {
+	AccountId32::try_from(account).map_err(|_|DispatchError::Other("Cannot be converted into AccountId32"))
+}
+
+fn sr25519_signature(sign: &[u8]) -> Result<Signature, DispatchError> {
+	if let Ok(signature) = sp_core::sr25519::Signature::try_from(sign) {
+		Ok(signature.into())
+	} else {
+		Err(DispatchError::Other("Not sr25519 signature"))
+	}
 }
 
 impl ChainExtension<Runtime> for FetchRandomExtension {
@@ -52,7 +61,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 			2002 => {
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
-				let caller = to_account_id(caller.as_ref());
+				let caller = to_account_id(caller.as_ref())?;
 				let (metadata, name, description, properties): (_, _, _, u8) = env.read_as()?;
 				let p = Properties(<BitFlags<ClassProperty>>::from_bits(properties).map_err(|_| "invalid class properties value")?);
 				let (owner, class_id) = super::Nftmart::do_create_class(&caller, metadata, name, description, p).map_err(|e| e.error)?;
@@ -64,7 +73,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 			2003 => {
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
-				let caller = to_account_id(caller.as_ref());
+				let caller = to_account_id(caller.as_ref())?;
 				let (to, class_id, metadata, quantity, charge_royalty) = env.read_as()?;
 				let (class_owner, beneficiary, class_id, token_id, quantity) =
 					super::Nftmart::do_proxy_mint(&caller, &to, class_id, metadata, quantity, charge_royalty).map_err(|e| e.error)?;
@@ -76,7 +85,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 			2004 => {
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
-				let caller = to_account_id(caller.as_ref());
+				let caller: AccountId32 = to_account_id(caller.as_ref())?;
 				let (to, class_id, token_id, quantity) = env.read_as()?;
 				super::Nftmart::do_transfer(&caller, &to, class_id, token_id, quantity)?;
 				let r = ().encode();
@@ -90,6 +99,14 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 				let mut env = env.buf_in_buf_out();
 				let (class_id, token_id) = env.read_as()?;
 				let r = super::Nftmart::contract_tokens(class_id, token_id);
+				env.write(&r.encode(), false, None)?;
+			}
+
+			1101 => {
+				let mut env = env.buf_in_buf_out();
+				let (account_id, signature, msg): (AccountId32, Vec<u8>, Vec<u8>) = env.read_as()?;
+				let s = sr25519_signature(&signature[..])?;
+				let r = s.verify(&msg[..], &account_id);
 				env.write(&r.encode(), false, None)?;
 			}
 
