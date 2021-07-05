@@ -273,7 +273,7 @@ fn calc_current_price_should_work() {
 		(150, 100), (151, 100),  (1511, 100), (15111, 100),
 	] {
 		assert_eq!(
-			NftmartAuction::calc_current_price(
+			crate::calc_current_price::<Runtime>(
 				10000 * ACCURACY, 100 * ACCURACY, 0,
 				(time::MINUTES * 120).saturated_into(),
 				(time::MINUTES * x).saturated_into()
@@ -287,7 +287,7 @@ fn calc_current_price_should_work() {
 		(29*time::MINUTES + 9, 100), (29*time::MINUTES + 10, 100), (30*time::MINUTES, 100),
 	] {
 		assert_eq!(
-			NftmartAuction::calc_current_price(
+			crate::calc_current_price::<Runtime>(
 				10000 * ACCURACY, 100 * ACCURACY, 0, 1,
 				x.saturated_into(),
 			),
@@ -300,7 +300,7 @@ fn calc_current_price_should_work() {
 		(29*time::MINUTES + 9, 100), (29*time::MINUTES + 10, 100), (30*time::MINUTES, 100),
 	] {
 		assert_eq!(
-			NftmartAuction::calc_current_price(
+			crate::calc_current_price::<Runtime>(
 				101, 100, 0, 1,
 				x.saturated_into(),
 			),

@@ -20,164 +20,13 @@ use nftmart_traits::*;
 mod mock;
 mod tests;
 
+mod utils;
+pub use utils::*;
+
+mod types;
+pub use types::*;
+
 pub use module::*;
-
-macro_rules! save_bid {
-	(
-		$auction_bid: ident,
-		$auction: ident,
-		$price: ident,
-		$purchaser: ident,
-		$auction_id: ident,
-		$AuctionBids: ident,
-	) => {{
-		if let Some(account) = &$auction_bid.last_bid_account {
-			// check the new bid price.
-			let lowest_price: Balance = $auction_bid.last_bid_price.saturating_add(
-				$auction.min_raise.mul_ceil($auction_bid.last_bid_price));
-
-			ensure!($price > lowest_price, Error::<T>::PriceTooLow);
-
-			ensure!(&$purchaser != account, Error::<T>::DuplicatedBid);
-			let _ = T::MultiCurrency::unreserve($auction.currency_id, account, $auction_bid.last_bid_price);
-		}
-
-		T::MultiCurrency::reserve($auction.currency_id, &$purchaser, $price)?;
-		let mut auction_bid = $auction_bid;
-		auction_bid.last_bid_price = $price;
-		auction_bid.last_bid_account = Some($purchaser.clone());
-		auction_bid.last_bid_block = frame_system::Pallet::<T>::block_number();
-		$AuctionBids::<T>::insert($auction_id, auction_bid);
-	}}
-}
-
-macro_rules! delete_auction {
-	(
-		$AuctionBids: ident,
-		$Auctions: ident,
-		$who: ident,
-		$auction_id: ident,
-		$AuctionBidNotFound: ident,
-		$AuctionNotFound: ident,
-	) => {
-		$AuctionBids::<T>::try_mutate_exists($auction_id, |maybe_auction_bid| {
-			let auction_bid = maybe_auction_bid.as_mut().ok_or(Error::<T>::$AuctionBidNotFound)?.clone();
-			$Auctions::<T>::try_mutate_exists($who, $auction_id, |maybe_auction| {
-				let auction = maybe_auction.as_mut().ok_or(Error::<T>::$AuctionNotFound)?.clone();
-
-				if let Some(account) = &auction_bid.last_bid_account {
-					let _ = T::MultiCurrency::unreserve(auction.currency_id, account, auction_bid.last_bid_price);
-				}
-
-				let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(&$who, auction.deposit.saturated_into());
-
-				for item in &auction.items {
-					T::NFT::unreserve_tokens($who, item.class_id, item.token_id, item.quantity)?;
-				}
-
-				T::ExtraConfig::dec_count_in_category(auction.category_id)?;
-
-				*maybe_auction_bid = None;
-				*maybe_auction = None;
-				Ok((auction, auction_bid))
-			})
-		})
-	}
-}
-
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
-	/// currency ID for this auction
-	#[codec(compact)]
-	pub currency_id: CurrencyId,
-	/// If encountered this price, the auction should be finished.
-	#[codec(compact)]
-	pub hammer_price: Balance,
-	/// The new price offered should meet `new_price>old_price*(1+min_raise)`
-	/// if Some(min_raise), min_raise > 0.
-	#[codec(compact)]
-	pub min_raise: PerU16,
-	/// The auction owner/creator should deposit some balances to create an auction.
-	/// After this auction finishing or deleting, this balances
-	/// will be returned to the auction owner.
-	#[codec(compact)]
-	pub deposit: Balance,
-	/// The initialized price of `currency_id` for auction.
-	#[codec(compact)]
-	pub init_price: Balance,
-	/// The auction should be forced to be ended if current block number higher than this value.
-	#[codec(compact)]
-	pub deadline: BlockNumber,
-	/// If true, the real deadline will be max(deadline, last_bid_block + delay).
-	pub allow_delay: bool,
-	/// Category of this auction.
-	#[codec(compact)]
-	pub category_id: CategoryId,
-	/// nft list
-	pub items: Vec<OrderItem<ClassId, TokenId>>,
-}
-
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct BritishAuctionBid<AccountId, BlockNumber> {
-	/// last bid price
-	#[codec(compact)]
-	pub last_bid_price: Balance,
-	/// the last account offering.
-	pub last_bid_account: Option<AccountId>,
-	/// last bid block number.
-	#[codec(compact)]
-	pub last_bid_block: BlockNumber,
-}
-
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct DutchAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
-	#[codec(compact)]
-	pub currency_id: CurrencyId,
-	#[codec(compact)]
-	pub category_id: CategoryId,
-	#[codec(compact)]
-	pub deposit: Balance,
-	#[codec(compact)]
-	pub min_price: Balance,
-	#[codec(compact)]
-	pub max_price: Balance,
-	#[codec(compact)]
-	pub deadline: BlockNumber,
-	#[codec(compact)]
-	pub created_block: BlockNumber,
-	pub items: Vec<OrderItem<ClassId, TokenId>>,
-	pub allow_british_auction: bool,
-	#[codec(compact)]
-	pub min_raise: PerU16,
-}
-
-pub type DutchAuctionBid<AccountId, BlockNumber> = BritishAuctionBid<AccountId, BlockNumber>;
-
-#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug)]
-enum Releases {
-	V1_0_0,
-}
-
-impl Default for Releases {
-	fn default() -> Self {
-		Releases::V1_0_0
-	}
-}
-
-pub type TokenIdOf<T> = <T as module::Config>::TokenId;
-pub type ClassIdOf<T> = <T as module::Config>::ClassId;
-pub type BalanceOf<T> = <<T as module::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrency<<T as frame_system::Config>::AccountId>>::CurrencyId;
-pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
-pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
-pub type BritishAuctionOf<T> = BritishAuction<CurrencyIdOf<T>,BlockNumberFor<T>,GlobalId,ClassIdOf<T>,TokenIdOf<T>>;
-pub type BritishAuctionBidOf<T> = BritishAuctionBid<AccountIdOf<T>,BlockNumberFor<T>>;
-pub type DutchAuctionOf<T> = DutchAuction<CurrencyIdOf<T>,BlockNumberFor<T>,GlobalId,ClassIdOf<T>,TokenIdOf<T>>;
-pub type DutchAuctionBidOf<T> = DutchAuctionBid<AccountIdOf<T>,BlockNumberFor<T>>;
-const DESC_INTERVAL: BlockNumber = time::MINUTES * 30;
 
 #[frame_support::pallet]
 pub mod module {
@@ -403,7 +252,7 @@ pub mod module {
 					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
 					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
 					// get price
-					let current_price: Balance = Self::calc_current_price(
+					let current_price: Balance = calc_current_price::<T>(
 						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
 					Self::save_dutch_bid(
 						auction_bid,
@@ -418,7 +267,7 @@ pub mod module {
 					let current_block: BlockNumberOf<T> = frame_system::Pallet::<T>::block_number();
 					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
 					// get price
-					let current_price: Balance = Self::calc_current_price(
+					let current_price: Balance = calc_current_price::<T>(
 						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
 					// delete auction
 					Self::delete_dutch_auction(&auction_owner, auction_id)?;
@@ -689,44 +538,5 @@ impl<T: Config> Pallet<T> {
 		} else {
 			deadline
 		}
-	}
-
-	fn calc_current_price(
-		max_price: Balance, min_price: Balance,
-		created_block: BlockNumberOf<T>,
-		deadline: BlockNumberOf<T>,
-		current_block: BlockNumberOf<T>,
-	) -> Balance {
-		if current_block <= created_block {
-			return max_price;
-		} else if current_block > deadline {
-			return min_price;
-		}
-
-		let created_block: BlockNumber = created_block.saturated_into();
-		let aligned_block: BlockNumber = current_block
-			.saturated_into::<BlockNumber>()
-			.saturating_sub(created_block) // >= 0
-			.checked_div(DESC_INTERVAL) // >= 0
-			.map(|x| x.saturating_mul(DESC_INTERVAL)) // >= 0
-			.map(|x| x.saturating_add(created_block)) // >= created_block
-			.unwrap_or(created_block); // >= created_block
-
-		let deadline: FixedU128 = (deadline.saturated_into::<BlockNumber>(), 1).into();
-		let created_block: FixedU128 = (created_block, 1).into();
-		let current_block: FixedU128 = (aligned_block, 1).into();
-		let max_price: FixedU128 = (max_price, ACCURACY).into();
-		let min_price: FixedU128 = (min_price, ACCURACY).into();
-
-		// calculate current price.
-		let current_price: Balance = max_price
-			.saturating_sub(min_price) // > 0
-			.saturating_mul(current_block.saturating_sub(created_block)) // >= 0
-			.checked_div(&deadline.saturating_sub(created_block)) // >= 0
-			.map(|x| max_price.saturating_sub(x)) // >= min_price && <= max_price
-			.unwrap_or(max_price) // >= min_price && <= max_price
-			.saturating_mul_int(ACCURACY); // >= min_price && <= max_price
-
-		current_price
 	}
 }
