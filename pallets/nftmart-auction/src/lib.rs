@@ -421,7 +421,7 @@ pub mod module {
 					let current_price: Balance = Self::calc_current_price(
 						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
 					// delete auction
-
+					Self::delete_dutch_auction(&auction_owner, auction_id)?;
 					// swap
 					let items = to_item_vec!(auction);
 					ensure_one_royalty!(items);
