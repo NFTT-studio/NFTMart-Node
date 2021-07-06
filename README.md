@@ -89,6 +89,18 @@ node nft-apis.mjs --ws ws://localhost:9944 create-category "{\"name\":\"Art\"}" 
 Use this cmd, we can create a category named `Art`.
 > Notice: In terminal , we need use `\"` to escape `"`, in order the data will be parsed to Json in the fontend project.
 
+## explanation of nouns
+
+Maybe we have some confuse about `Category` `Class` `Collections`, here is the explanation.
+### Category
+
+Category is manage by sudo account in our App, in order to split NFT market.
+If user wants to listing his NFT to the market ,he must select a category befor listing.
+And other user can find the nft in specified category.
+### Class / Collections
+
+### Permission rule
+
 
 ## Getting Started
 
