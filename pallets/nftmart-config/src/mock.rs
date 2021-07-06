@@ -2,7 +2,7 @@
 
 use nftmart_traits::constants_types::*;
 use crate as nftmart_config;
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{construct_runtime, parameter_types, traits::{Filter, InstanceFilter}, RuntimeDebug};
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
@@ -124,7 +124,6 @@ impl nftmart_config::Config for Runtime {
 }
 
 use frame_system::Call as SystemCall;
-use frame_support::max_encoded_len::MaxEncodedLen;
 
 pub type Block = sp_runtime::generic::Block<Header, UncheckedExtrinsic>;
 pub type UncheckedExtrinsic = sp_runtime::generic::UncheckedExtrinsic<u32, Call, u32, ()>;

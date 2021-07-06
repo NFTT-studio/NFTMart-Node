@@ -11,6 +11,7 @@ pub use orml_traits::nft::{TokenInfo, ClassInfo, AccountToken};
 pub mod constants_types;
 pub use crate::constants_types::*;
 pub use contract_types::*;
+pub use log;
 
 pub type ResultPost<T> = sp_std::result::Result<T, sp_runtime::DispatchErrorWithPostInfo<frame_support::weights::PostDispatchInfo>>;
 
@@ -192,6 +193,20 @@ macro_rules! ensure_one_royalty {
 			Error::<T>::TooManyTokenChargedRoyalty,
 		);
 	}
+}
+
+#[macro_export]
+macro_rules! nft_log {
+	($condition:expr, $($msg: expr),+ $(,)?) => {
+		{
+			let log_level = if $condition {
+				log::Level::Debug
+			} else {
+				log::Level::Info
+			};
+			log::log!(target: "nftmart", log_level, $($msg),+);
+		}
+	};
 }
 
 pub fn push_tokens<AccountId, ClassId, TokenId, NFT>(

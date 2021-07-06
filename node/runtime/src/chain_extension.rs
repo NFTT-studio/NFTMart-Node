@@ -62,7 +62,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let caller = to_account_id(caller.as_ref())?;
-				let (metadata, name, description, properties): (_, _, _, u8) = env.read_as()?;
+				let (metadata, name, description, properties): (_, _, _, u8) = env.read_as_unbounded(env.in_len())?;
 				let p = Properties(<BitFlags<ClassProperty>>::from_bits(properties).map_err(|_| "invalid class properties value")?);
 				let (owner, class_id) = super::Nftmart::do_create_class(&caller, metadata, name, description, p).map_err(|e| e.error)?;
 				let r = (owner, class_id).encode();
@@ -74,7 +74,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let caller = to_account_id(caller.as_ref())?;
-				let (to, class_id, metadata, quantity, charge_royalty) = env.read_as()?;
+				let (to, class_id, metadata, quantity, charge_royalty) = env.read_as_unbounded(env.in_len())?;
 				let (class_owner, beneficiary, class_id, token_id, quantity) =
 					super::Nftmart::do_proxy_mint(&caller, &to, class_id, metadata, quantity, charge_royalty).map_err(|e| e.error)?;
 				let r = (class_owner, beneficiary, class_id, token_id, quantity).encode();
@@ -104,7 +104,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 
 			1101 => {
 				let mut env = env.buf_in_buf_out();
-				let (account_id, signature, msg): (AccountId32, Vec<u8>, Vec<u8>) = env.read_as()?;
+				let (account_id, signature, msg): (AccountId32, Vec<u8>, Vec<u8>) = env.read_as_unbounded(env.in_len())?;
 				let s = sr25519_signature(&signature[..])?;
 				let r = s.verify(&msg[..], &account_id);
 				env.write(&r.encode(), false, None)?;

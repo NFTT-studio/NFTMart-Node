@@ -17,11 +17,13 @@ enumflags2 = { version = "0.6.3" }
 orml-traits = { default-features = false, path = "../orml-traits" }
 sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
 contract-types = { path = "contract-types", default-features = false }
+log = { version = "0.4.14", default-features = false }
 
 [features]
 default = ['std']
 std = [
 	"serde",
+	"log/std",
 	"codec/std",
 	"sp-core/std",
 	'sp-std/std',
