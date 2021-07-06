@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use codec::Encode;
 use frame_support::log::{
 	error,
@@ -14,13 +16,11 @@ use pallet_contracts::chain_extension::{
 	UncheckedFrom,
 };
 use sp_runtime::{DispatchError, AccountId32, traits::Verify};
-use nftmart_traits::{Properties, BitFlags, ClassProperty, Signature};
+use nftmart_traits::{Properties, BitFlags, ClassProperty, Signature, ClassId, TokenId};
 use core::convert::TryFrom;
 use sp_std::vec::Vec;
 
-/// Contract extension for `FetchRandom`
-pub struct FetchRandomExtension;
-use super::Runtime;
+pub struct NftmartExtension<Runtime>(sp_std::marker::PhantomData<Runtime>);
 
 pub fn to_account_id(account: &[u8]) -> Result<AccountId32, DispatchError> {
 	AccountId32::try_from(account).map_err(|_|DispatchError::Other("Cannot be converted into AccountId32"))
@@ -30,11 +30,16 @@ fn sr25519_signature(sign: &[u8]) -> Result<Signature, DispatchError> {
 	if let Ok(signature) = sp_core::sr25519::Signature::try_from(sign) {
 		Ok(signature.into())
 	} else {
-		Err(DispatchError::Other("Not sr25519 signature"))
+		Err(DispatchError::Other("Not a sr25519 signature"))
 	}
 }
 
-impl ChainExtension<Runtime> for FetchRandomExtension {
+impl<Runtime> ChainExtension<Runtime> for NftmartExtension<Runtime> where
+	Runtime: frame_system::Config<AccountId = AccountId32>,
+	Runtime: pallet_contracts::Config,
+	Runtime: pallet_randomness_collective_flip::Config,
+	Runtime: nftmart_nft::Config<ClassId = ClassId, TokenId = TokenId>,
+{
 	fn call<E: Ext>(
 		func_id: u32,
 		env: Environment<E, InitState>,
@@ -46,7 +51,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 		match func_id {
 			2001 => {
 				let mut env = env.buf_in_buf_out();
-				let random_seed = super::RandomnessCollectiveFlip::random_seed().0;
+				let random_seed = pallet_randomness_collective_flip::Pallet::<Runtime>::random_seed().0;
 				let random_slice = random_seed.encode();
 				trace!(
 					target: "runtime",
@@ -61,10 +66,10 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 			2002 => {
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
-				let caller = to_account_id(caller.as_ref())?;
+				let caller: <Runtime as SysConfig>::AccountId = to_account_id(caller.as_ref())?;
 				let (metadata, name, description, properties): (_, _, _, u8) = env.read_as_unbounded(env.in_len())?;
 				let p = Properties(<BitFlags<ClassProperty>>::from_bits(properties).map_err(|_| "invalid class properties value")?);
-				let (owner, class_id) = super::Nftmart::do_create_class(&caller, metadata, name, description, p).map_err(|e| e.error)?;
+				let (owner, class_id) = nftmart_nft::Pallet::<Runtime>::do_create_class(&caller, metadata, name, description, p).map_err(|e| e.error)?;
 				let r = (owner, class_id).encode();
 				env.write(&r, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to return result from do_create_class"))?;
@@ -76,7 +81,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 				let caller = to_account_id(caller.as_ref())?;
 				let (to, class_id, metadata, quantity, charge_royalty) = env.read_as_unbounded(env.in_len())?;
 				let (class_owner, beneficiary, class_id, token_id, quantity) =
-					super::Nftmart::do_proxy_mint(&caller, &to, class_id, metadata, quantity, charge_royalty).map_err(|e| e.error)?;
+					nftmart_nft::Pallet::<Runtime>::do_proxy_mint(&caller, &to, class_id, metadata, quantity, charge_royalty).map_err(|e| e.error)?;
 				let r = (class_owner, beneficiary, class_id, token_id, quantity).encode();
 				env.write(&r, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to return result from do_proxy_mint"))?;
@@ -87,7 +92,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 				let caller = env.ext().caller().clone();
 				let caller: AccountId32 = to_account_id(caller.as_ref())?;
 				let (to, class_id, token_id, quantity) = env.read_as()?;
-				super::Nftmart::do_transfer(&caller, &to, class_id, token_id, quantity)?;
+				nftmart_nft::Pallet::<Runtime>::do_transfer(&caller, &to, class_id, token_id, quantity)?;
 				let r = ().encode();
 				env.write(&r, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to return result from do_transfer"))?;
@@ -98,7 +103,7 @@ impl ChainExtension<Runtime> for FetchRandomExtension {
 			1001 => {
 				let mut env = env.buf_in_buf_out();
 				let (class_id, token_id) = env.read_as()?;
-				let r = super::Nftmart::contract_tokens(class_id, token_id);
+				let r = nftmart_nft::Pallet::<Runtime>::contract_tokens(class_id, token_id);
 				env.write(&r.encode(), false, None)?;
 			}
 

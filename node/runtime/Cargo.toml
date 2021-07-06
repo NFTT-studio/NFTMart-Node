@@ -24,7 +24,6 @@ sp-authority-discovery = { version = "3.0.0", default-features = false, git = 'h
 sp-consensus-babe = { version = "0.9.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
 sp-block-builder = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', default-features = false, version = "3.0.0"}
 sp-inherents = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-node-primitives = { version = "2.0.0", path = "../primitives", default-features = false }
 sp-offchain = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
 sp-core = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
 sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
@@ -80,6 +79,9 @@ pallet-utility = { version = "3.0.0", default-features = false, git = 'https://g
 pallet-transaction-payment = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
 pallet-transaction-payment-rpc-runtime-api = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
 
+node-primitives = { version = "2.0.0", path = "../primitives", default-features = false }
+chain-extension = { path = "../chain_extension", default-features = false }
+
 # pallets dependencies
 orml-currencies = { version = "0.4.1-dev", default-features = false, path = "../../pallets/orml-currencies" }
 orml-tokens = { version = "0.4.1-dev", default-features = false, path = "../../pallets/orml-tokens" }
@@ -101,6 +103,7 @@ sp-io = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git'
 default = ["std"]
 with-tracing = [ "frame-executive/with-tracing" ]
 std = [
+	"chain-extension/std",
 	"sp-authority-discovery/std",
 	"pallet-authority-discovery/std",
 	"pallet-authorship/std",

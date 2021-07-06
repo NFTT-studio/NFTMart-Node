@@ -798,6 +798,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "chain-extension"
+version = "2.0.1"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "nftmart-nft",
+ "nftmart-traits",
+ "pallet-contracts",
+ "pallet-randomness-collective-flip",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3990,6 +4006,7 @@ dependencies = [
 name = "nftmart-aura-node-runtime"
 version = "3.0.0"
 dependencies = [
+ "chain-extension",
  "frame-benchmarking",
  "frame-executive",
  "frame-support",
@@ -4341,6 +4358,7 @@ dependencies = [
 name = "node-runtime"
 version = "2.0.1"
 dependencies = [
+ "chain-extension",
  "frame-benchmarking",
  "frame-election-provider-support",
  "frame-executive",

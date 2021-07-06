@@ -60,6 +60,7 @@ nftmart-nft = { path = "../../pallets/nftmart-nft", default-features = false }
 nftmart-order = { path = "../../pallets/nftmart-order", default-features = false }
 nftmart-config = { path = "../../pallets/nftmart-config", default-features = false }
 nftmart-rpc-runtime-api = { default-features = false, path = "../../pallets/nftmart-nft/rpc/runtime-api" }
+chain-extension = { path = "../chain_extension", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "4.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
@@ -68,6 +69,7 @@ substrate-wasm-builder = { version = "4.0.0", git = 'https://github.com/parityte
 default = ["std"]
 std = [
 	"codec/std",
+	"chain-extension/std",
 	"frame-executive/std",
 	"frame-support/std",
 	"frame-system-rpc-runtime-api/std",
