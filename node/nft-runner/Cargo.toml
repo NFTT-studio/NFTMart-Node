@@ -1,0 +1,51 @@
+[package]
+name = "nft-runner"
+version = "0.1.0"
+authors = ["Parity Technologies <admin@parity.io>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+test-runner = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', version = "0.9.0" }
+
+frame-system = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+frame-support = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', version = "3.0.0" }
+frame-benchmarking = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', version = "3.0.0" }
+pallet-balances = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', version = "3.0.0" }
+pallet-sudo = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', version = "3.0.0" }
+pallet-transaction-payment = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+
+node-runtime = { path = "../runtime", version = "2.0.1" }
+node-primitives = { version = "2.0.0", path = "../primitives" }
+node-cli = { path = "../cli", version = "2.0.0" }
+
+grandpa = { version = "0.9.0", package = "sc-finality-grandpa", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sp-consensus-babe = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-consensus-babe = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-consensus-manual-seal = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-service = { version = "0.9.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-executor = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-client-api = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-network = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-informant = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-consensus = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+
+sp-core = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', version = "3.0.0" }
+sp-runtime = { git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b', version = "3.0.0" }
+sp-keyring = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sp-timestamp = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sp-api = { version = "3.0.0",  git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sp-inherents = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sp-keystore = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+
+log = "0.4.14"
+
+# pallets dependencies
+orml-currencies = { path = "../../pallets/orml-currencies" }
+orml-tokens = { path = "../../pallets/orml-tokens" }
+orml-traits = { path = "../../pallets/orml-traits" }
+orml-nft = { path = "../../pallets/orml-nft" }
+nftmart-traits = { path = "../../pallets/nftmart-traits" }
+nftmart-nft = { path = "../../pallets/nftmart-nft" }
+nftmart-order = { path = "../../pallets/nftmart-order" }
+nftmart-config = { path = "../../pallets/nftmart-config" }

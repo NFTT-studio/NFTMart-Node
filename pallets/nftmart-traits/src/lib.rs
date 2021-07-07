@@ -196,16 +196,23 @@ macro_rules! ensure_one_royalty {
 }
 
 #[macro_export]
-macro_rules! nft_log {
-	($condition:expr, $($msg: expr),+ $(,)?) => {
-		{
-			let log_level = if $condition {
-				log::Level::Debug
-			} else {
-				log::Level::Info
-			};
-			log::log!(target: "nftmart", log_level, $($msg),+);
-		}
+macro_rules! nft_dbg {
+	($($msg: expr),+ $(,)?) => {
+		log::log!(target: "nftmart", log::Level::Debug, $($msg),+);
+	};
+}
+
+#[macro_export]
+macro_rules! nft_info {
+	($($msg: expr),+ $(,)?) => {
+		log::log!(target: "nftmart", log::Level::Info, $($msg),+);
+	};
+}
+
+#[macro_export]
+macro_rules! nft_err {
+	($($msg: expr),+ $(,)?) => {
+		log::log!(target: "nftmart", log::Level::Error, $($msg),+);
 	};
 }
 

@@ -47,9 +47,6 @@ impl SubstrateCli for Cli {
 	}
 
 	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
-		sp_core::crypto::set_default_ss58_version(
-			sp_core::crypto::Ss58AddressFormat::Custom(node_template_runtime::SS58Prefix::get() as u16)
-		);
 		Ok(match id {
 			"dev" => Box::new(chain_spec::development_config()?),
 			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
@@ -66,6 +63,10 @@ impl SubstrateCli for Cli {
 
 /// Parse and run command line arguments
 pub fn run() -> sc_cli::Result<()> {
+	sp_core::crypto::set_default_ss58_version(
+		sp_core::crypto::Ss58AddressFormat::Custom(node_template_runtime::SS58Prefix::get() as u16)
+	);
+
 	let cli = Cli::from_args();
 
 	match &cli.subcommand {
