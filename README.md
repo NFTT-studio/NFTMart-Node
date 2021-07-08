@@ -89,7 +89,7 @@ node nft-apis.mjs --ws ws://localhost:9944 create-category "{\"name\":\"Art\"}" 
 Use this cmd, we can create a category named `Art`.
 > Notice: In terminal , we need use `\"` to escape `"`, in order the data will be parsed to Json in the fontend project.
 
-## explanation of nouns
+## Explanation of nouns
 
 Maybe we have some confuse about `Category` `Class` `Collections`, here is the explanation.
 ### Category
@@ -99,8 +99,14 @@ If user wants to listing his NFT to the market ,he must select a category befor 
 And other user can find the nft in specified category.
 ### Class / Collections
 
-### Permission rule
+Class is the same thing as Collections, we call it class in substrate node, and call it collections in fontend app.
 
+Its create by the whitelist user, so if you want to create class/collection in our app ,you need to request whitelist permission from the administrator(sudo account).
+
+### Permission rule
+- normal user —— normal users are NFT trader or investor, they can buy and listing their NFT.
+- whitelist user —— whitelist users are NFT issuer, they can create class/collection and mint NFT. Alse can trade other NFTs.
+- administrator —— administrator is manager of this App, he can manage category , manage whitelist and have other rights.
 
 ## Getting Started
 
