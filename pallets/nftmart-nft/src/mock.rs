@@ -205,8 +205,8 @@ construct_runtime!(
 		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
 		Currencies: orml_currencies::{Pallet, Call, Event<T>},
 		OrmlNFT: orml_nft::{Pallet, Storage, Config<T>},
-		NftmartConf: nftmart_config::{Pallet, Call, Event<T>},
-		Nftmart: nftmart_nft::{Pallet, Call, Event<T>},
+		NftmartConf: nftmart_config::{Pallet, Call, Event<T>, Config<T>},
+		Nftmart: nftmart_nft::{Pallet, Call, Event<T>, Config<T>},
 	}
 );
 

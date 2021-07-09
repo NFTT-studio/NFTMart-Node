@@ -41,8 +41,12 @@ impl Default for Releases {
 
 pub mod migrations {
 	use super::*;
+	pub type OldClass<T> = orml_nft::ClassInfo<TokenIdOf<T>, <T as frame_system::Config>::AccountId, OldClassData>;
+	pub type NewClass<T> = orml_nft::ClassInfo<TokenIdOf<T>, <T as frame_system::Config>::AccountId, ClassData<BlockNumberOf<T>>>;
+	pub type OldToken<T> = orml_nft::TokenInfo<TokenIdOf<T>, OldTokenData>;
+	pub type NewToken<T> = orml_nft::TokenInfo<TokenIdOf<T>, TokenData<<T as frame_system::Config>::AccountId, BlockNumberOf<T>>>;
 
-	#[derive(Decode)]
+	#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 	pub struct OldClassData {
 		#[codec(compact)]
 		pub deposit: Balance,
@@ -51,7 +55,7 @@ pub mod migrations {
 		pub description: Vec<u8>,
 	}
 
-	#[derive(Decode)]
+	#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 	pub struct OldTokenData {
 		#[codec(compact)]
 		pub deposit: Balance,
@@ -86,27 +90,28 @@ pub mod migrations {
 	}
 
 	pub fn do_migrate<T: Config>() -> Weight {
-		// type OldClass<T> = orml_nft::ClassInfo<TokenIdOf<T>, <T as frame_system::Config>::AccountId, OldClassData>;
-		// type NewClass<T> = orml_nft::ClassInfo<TokenIdOf<T>, <T as frame_system::Config>::AccountId, ClassData<BlockNumberOf<T>>>;
-		// orml_nft::Classes::<T>::translate::<OldClass<T>, _>(|_, p: OldClass<T>| {
-		// 	let new_data: NewClass<T> = NewClass::<T> {
-		// 		 metadata: p.metadata,
-		// 		 total_issuance: p.total_issuance,
-		// 		 owner: p.owner,
-		// 		 data: p.data.upgraded::<BlockNumberOf<T>>(),
-		// 	};
-		// 	Some(new_data)
-		// });
-		// type OldToken<T> = orml_nft::TokenInfo<<T as frame_system::Config>::AccountId, OldTokenData>;
-		// type NewToken<T> = orml_nft::TokenInfo<<T as frame_system::Config>::AccountId, TokenData<<T as frame_system::Config>::AccountId, BlockNumberOf<T>>>;
-		// orml_nft::Tokens::<T>::translate::<OldToken<T>, _>(|_, _, p: OldToken<T>| {
-		// 	let new_data: NewToken<T> = NewToken::<T> {
-		// 		metadata: p.metadata,
-		// 		owner: p.owner.clone(),
-		// 		data: p.data.upgraded::<<T as frame_system::Config>::AccountId, BlockNumberOf<T>>(p.owner),
-		// 	};
-		// 	Some(new_data)
-		// });
+		// migrate classes
+		orml_nft::Classes::<T>::translate::<OldClass<T>, _>(|_, p: OldClass<T>| {
+			let new_data: NewClass<T> = NewClass::<T> {
+				 metadata: p.metadata,
+				 total_issuance: p.total_issuance,
+				 owner: p.owner,
+				 data: p.data.upgraded::<BlockNumberOf<T>>(),
+			};
+			Some(new_data)
+		});
+		// migrate tokens
+		orml_nft::Tokens::<T>::translate::<OldToken<T>, _>(|_, _, p: OldToken<T>| {
+			let new_data: NewToken<T> = NewToken::<T> {
+				metadata: p.metadata,
+				data: p.data.upgraded::<<T as frame_system::Config>::AccountId, BlockNumberOf<T>>(Default::default()),
+				quantity: p.quantity,
+			};
+			Some(new_data)
+		});
+		// migrate account_data.
+		// ...
+		// ...
 		T::BlockWeights::get().max_block
 	}
 }

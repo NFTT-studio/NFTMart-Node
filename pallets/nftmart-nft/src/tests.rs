@@ -1,14 +1,46 @@
 #![cfg(test)]
 
 use super::*;
-use frame_support::{assert_noop, assert_ok};
+use frame_support::{assert_noop, assert_ok, generate_storage_alias, Twox64Concat, traits::PalletInfo};
 use crate::mock::{Event, *};
 use orml_nft::{ClassInfoOf};
+
+#[test]
+fn migrate_should_work() {
+	ExtBuilder::default().build().execute_with(|| {
+		{
+			use crate::migrations::{OldClass, OldClassData};
+			generate_storage_alias!(OrmlNFT, Classes => Map<(ClassId, Twox64Concat), OldClass<Runtime>>);
+			for i in 0..1000 {
+				Classes::insert(i, OldClass::<Runtime> {
+					metadata: b"class metadata".to_vec(),
+					total_issuance: 44,
+					owner: ALICE,
+					data: OldClassData {
+						deposit: 33,
+						properties: Default::default(),
+						name: b"class name".to_vec(),
+						description: b"class description".to_vec(),
+					}
+				});
+			}
+			assert_eq!(44, Classes::get(1).unwrap().total_issuance);
+		}
+		assert_eq!(None, OrmlNFT::classes(1));
+		use std::time::Instant;
+		let now = Instant::now();
+		crate::migrations::do_migrate::<Runtime>();
+		let elapsed = now.elapsed();
+		println!("Elapsed: {:.2?}", elapsed);
+		assert_eq!(44, OrmlNFT::classes(1).unwrap().total_issuance);
+	});
+}
 
 #[test]
 fn update_token_royalty() {
 	// royalty
 	ExtBuilder::default().build().execute_with(|| {
+		assert_eq!(<Runtime as frame_system::Config>::PalletInfo::name::<Nftmart>(), Some("Nftmart"));
 		add_category();
 		ensure_bob_balances(ACCURACY * 4);
 		add_class(ALICE);
