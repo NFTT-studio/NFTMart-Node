@@ -504,8 +504,8 @@ impl pallet_staking::Config for Runtime {
 	type EraPayout = pallet_staking::ConvertCurve<RewardCurve>;
 	type NextNewSession = Session;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
-	// type ElectionProvider = onchain::OnChainSequentialPhragmen<pallet_election_provider_multi_phase::OnChainConfig<Self>>;
-	type ElectionProvider = ElectionProviderMultiPhase;
+	type ElectionProvider = onchain::OnChainSequentialPhragmen<pallet_election_provider_multi_phase::OnChainConfig<Self>>;
+	// type ElectionProvider = ElectionProviderMultiPhase; // TODO
 	type GenesisElectionProvider =
 		onchain::OnChainSequentialPhragmen<pallet_election_provider_multi_phase::OnChainConfig<Self>>;
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
