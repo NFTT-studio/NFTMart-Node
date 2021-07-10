@@ -14,10 +14,10 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "2.0.0" }
 derive_more = "0.99"
 log = "0.4.8"
-sc-cli = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-sc-client-api = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-sc-service = { version = "0.9.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-sp-blockchain = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-sp-core = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-sp-runtime = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sc-cli = { version = "0.9.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+sc-client-api = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+sc-service = { version = "0.9.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+sp-blockchain = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+sp-core = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+sp-runtime = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
 structopt = "0.3.8"

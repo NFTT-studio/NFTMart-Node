@@ -10,12 +10,12 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
-sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-sp-io = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+sp-io = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
 
-frame-support = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-frame-system = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+frame-support = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+frame-system = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
 
 orml-traits = { path = "../orml-traits", version = "0.4.1-dev", default-features = false }
 orml-utilities = { path = "../orml-utilities", version = "0.4.1-dev", default-features = false }
@@ -23,8 +23,8 @@ orml-utilities = { path = "../orml-utilities", version = "0.4.1-dev", default-fe
 funty = { version = "=1.1.0", default-features = false } # https://github.com/bitvecto-rs/bitvec/issues/105
 
 [dev-dependencies]
-sp-core = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
-pallet-balances = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = '0f5a858b' }
+sp-core = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+pallet-balances = { version = "3.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
 orml_tokens = { version = "0.4.1-dev", package = "orml-tokens", path = "../orml-tokens" }
 
 [features]
