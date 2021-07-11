@@ -170,6 +170,7 @@ fn testnet_genesis(
 		orml_nft: node_template_runtime::OrmlNFTConfig { tokens: vec![] },
 		nftmart: Default::default(),
 		nftmart_order: Default::default(),
+		nftmart_auction: Default::default(),
 		nftmart_conf: node_template_runtime::NftmartConfConfig {
 			white_list: endowed_accounts,
 			..Default::default()

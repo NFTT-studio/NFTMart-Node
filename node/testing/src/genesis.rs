@@ -117,6 +117,7 @@ pub fn config_endowed(
 		orml_nft: Default::default(),
 		nftmart: Default::default(),
 		nftmart_order: Default::default(),
+		nftmart_auction: Default::default(),
 		nftmart_conf: Default::default(),
 	}
 }

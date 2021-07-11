@@ -1047,8 +1047,18 @@ impl nftmart_order::Config for Runtime {
 	type Event = Event;
 	type MultiCurrency = Currencies;
 	type Currency = Balances;
-	type ClassId = nftmart_traits::constants_types::ClassId;
-	type TokenId = nftmart_traits::constants_types::TokenId;
+	type ClassId = nftmart_traits::ClassId;
+	type TokenId = nftmart_traits::TokenId;
+	type NFT = Nftmart;
+	type ExtraConfig = NftmartConf;
+}
+
+impl nftmart_auction::Config for Runtime {
+	type Event = Event;
+	type MultiCurrency = Currencies;
+	type Currency = Balances;
+	type ClassId = nftmart_traits::ClassId;
+	type TokenId = nftmart_traits::TokenId;
 	type NFT = Nftmart;
 	type ExtraConfig = NftmartConf;
 }
@@ -1095,6 +1105,7 @@ construct_runtime!(
 		NftmartConf: nftmart_config::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Nftmart: nftmart_nft::{Pallet, Call, Storage, Event<T>, Config<T>},
 		NftmartOrder: nftmart_order::{Pallet, Call, Storage, Event<T>, Config<T>},
+		NftmartAuction: nftmart_auction::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 

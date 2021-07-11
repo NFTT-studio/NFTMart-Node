@@ -58,6 +58,7 @@ orml-nft = { path = "../../pallets/orml-nft", default-features = false }
 nftmart-traits = { path = "../../pallets/nftmart-traits", default-features = false }
 nftmart-nft = { path = "../../pallets/nftmart-nft", default-features = false }
 nftmart-order = { path = "../../pallets/nftmart-order", default-features = false }
+nftmart-auction = { path = "../../pallets/nftmart-auction", default-features = false }
 nftmart-config = { path = "../../pallets/nftmart-config", default-features = false }
 nftmart-rpc-runtime-api = { default-features = false, path = "../../pallets/nftmart-nft/rpc/runtime-api" }
 chain-extension = { path = "../chain_extension", default-features = false }
@@ -105,6 +106,7 @@ std = [
 	"nftmart-traits/std",
 	"nftmart-nft/std",
 	"nftmart-order/std",
+	"nftmart-auction/std",
 	"nftmart-config/std",
 	"nftmart-rpc-runtime-api/std",
 ]

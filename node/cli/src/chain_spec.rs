@@ -365,6 +365,7 @@ pub fn testnet_genesis(
 			..Default::default()
 		},
 		nftmart_order: Default::default(),
+		nftmart_auction: Default::default(),
 		nftmart_conf: node_runtime::NftmartConfConfig {
 			white_list: endowed_accounts,
 			..Default::default()
