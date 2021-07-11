@@ -198,7 +198,7 @@ pub mod module {
 			};
 
 			ensure_one_royalty!(items);
-			push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
+			reserve_and_push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
 
 			// add the auction to a category
 			T::ExtraConfig::inc_count_in_category(category_id)?;
@@ -274,7 +274,7 @@ pub mod module {
 					// check deadline
 					ensure!(
 						get_deadline::<T>(true, Zero::zero(), auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
-						Error::<T>::BritishAuctionClosed,
+						Error::<T>::DutchAuctionClosed,
 					);
 					Self::save_dutch_bid(
 						auction_bid,
@@ -388,7 +388,7 @@ pub mod module {
 			};
 
 			ensure_one_royalty!(items);
-			push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
+			reserve_and_push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
 
 			// add the auction to a category
 			T::ExtraConfig::inc_count_in_category(category_id)?;

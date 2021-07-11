@@ -13,7 +13,7 @@ mod tests;
 pub use module::*;
 use nftmart_traits::constants_types::{GlobalId, Balance, ACCURACY};
 use sp_runtime::{traits::{Zero, One}, PerU16};
-use nftmart_traits::{CategoryData, NFTMetadata, NftmartConfig};
+use nftmart_traits::{CategoryData, NFTMetadata, NftmartConfig, time};
 
 #[frame_support::pallet]
 pub mod module {
@@ -69,7 +69,7 @@ pub mod module {
 				max_distribution_reward: PerU16::from_percent(100),
 				min_reference_deposit: ACCURACY,
 				min_order_deposit: ACCURACY,
-				auction_delay: 10u32.into(),
+				auction_delay: time::MINUTES.into(),
 				white_list: vec![],
 				_phantom: Default::default(),
 			}

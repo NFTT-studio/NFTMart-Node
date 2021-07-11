@@ -216,7 +216,7 @@ macro_rules! nft_err {
 	};
 }
 
-pub fn push_tokens<AccountId, ClassId, TokenId, NFT>(
+pub fn reserve_and_push_tokens<AccountId, ClassId, TokenId, NFT>(
 	nft_owner: Option<&AccountId>,
 	items: &[(ClassId, TokenId, TokenId)],
 	push_to: &mut Vec<OrderItem<ClassId, TokenId>>,

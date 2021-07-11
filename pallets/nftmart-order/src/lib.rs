@@ -231,7 +231,7 @@ pub mod module {
 			};
 
 			ensure_one_royalty!(items);
-			push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut order.items)?;
+			reserve_and_push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut order.items)?;
 
 			T::ExtraConfig::inc_count_in_category(category_id)?;
 			let order_id = T::ExtraConfig::get_then_inc_id()?;
@@ -327,7 +327,7 @@ pub mod module {
 			};
 
 			ensure_one_royalty!(items);
-			push_tokens::<_, _, _, T::NFT>(None, &items, &mut offer.items)?;
+			reserve_and_push_tokens::<_, _, _, T::NFT>(None, &items, &mut offer.items)?;
 
 			T::ExtraConfig::inc_count_in_category(category_id)?;
 			let offer_id = T::ExtraConfig::get_then_inc_id()?;
