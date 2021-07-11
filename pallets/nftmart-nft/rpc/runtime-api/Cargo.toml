@@ -12,7 +12,6 @@ sp-api = { version = "3.0.0", default-features = false, git = 'https://github.co
 sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
 sp-core = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
 nftmart-traits = { default-features = false, path = "../../../nftmart-traits" }
-nftmart-nft = { version = "3.0.0", default-features = false, path = "../../../nftmart-nft" }
 
 [features]
 default = ["std"]
@@ -20,6 +19,5 @@ std = [
 	"sp-api/std",
 	"sp-std/std",
 	"sp-core/std",
-	"nftmart-nft/std",
 	"nftmart-traits/std",
 ]

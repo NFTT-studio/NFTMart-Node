@@ -4188,7 +4188,6 @@ dependencies = [
 name = "nftmart-rpc-runtime-api"
 version = "3.0.0"
 dependencies = [
- "nftmart-nft",
  "nftmart-traits",
  "sp-api",
  "sp-core",

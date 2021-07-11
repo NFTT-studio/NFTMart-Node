@@ -5,6 +5,7 @@ use jsonrpc_derive::rpc;
 use sp_runtime::{generic::BlockId, traits::{Block as BlockT}};
 use sp_api::ProvideRuntimeApi;
 pub use nftmart_rpc_runtime_api::NFTMartApi as NFTMartRuntimeApi;
+use nftmart_rpc_runtime_api::*;
 
 #[rpc]
 pub trait NFTMartApi {
@@ -16,6 +17,19 @@ pub trait NFTMartApi {
 
 	#[rpc(name = "nftmart_addClassAdminDeposit")]
 	fn add_class_admin_deposit(&self, admin_count: u32) -> Result<String>;
+
+	#[rpc(name = "nftmart_getDutchAuctionCurrentPrice")]
+	fn get_dutch_auction_current_price(&self,
+		max_price: Balance, min_price: Balance,
+		created_block: BlockNumber,
+		deadline: BlockNumber,
+		current_block: BlockNumber,
+	) -> Result<String>;
+
+	#[rpc(name = "nftmart_getAuctionDeadline")]
+	fn get_auction_deadline(&self,
+		allow_delay: bool, deadline: BlockNumber, last_bid_block: BlockNumber
+	) -> Result<String>;
 }
 
 /// A struct that implements the [`NFTMartApi`].
@@ -99,6 +113,38 @@ where
 			data: Some(format!("{:?}", e).into()),
 		}).map(|deposit|{
 			format!("{}", deposit)
+		})
+	}
+
+	fn get_dutch_auction_current_price(&self,
+		max_price: Balance,
+		min_price: Balance,
+		created_block: BlockNumber,
+		deadline: BlockNumber,
+		current_block: BlockNumber,
+	) -> Result<String> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(self.client.info().best_hash);
+		api.get_dutch_auction_current_price(&at, max_price, min_price, created_block, deadline, current_block).map_err(|e| RpcError {
+			code: ErrorCode::ServerError(Error::RuntimeError.into()),
+			message: "Unable to query dispatch info.".into(),
+			data: Some(format!("{:?}", e).into()),
+		}).map(|x|{
+			format!("{}", x)
+		})
+	}
+
+	fn get_auction_deadline(&self,
+		allow_delay: bool, deadline: BlockNumber, last_bid_block: BlockNumber
+	) -> Result<String> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(self.client.info().best_hash);
+		api.get_auction_deadline(&at, allow_delay, deadline, last_bid_block).map_err(|e| RpcError {
+			code: ErrorCode::ServerError(Error::RuntimeError.into()),
+			message: "Unable to query dispatch info.".into(),
+			data: Some(format!("{:?}", e).into()),
+		}).map(|x|{
+			format!("{}", x)
 		})
 	}
 }

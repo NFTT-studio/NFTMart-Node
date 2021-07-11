@@ -14,7 +14,6 @@ import {bnToBn} from "@polkadot/util";
 import {Command} from "commander";
 
 function perU162Float(x) {
-  x = x.toString().replace(',','');
   return Number(x) / 65535.0;
 }
 
@@ -46,6 +45,27 @@ async function classDeposit(metadata, name, description) {
   try {
     let [_deposit, depositAll] = await Global_Api.ws.call('nftmart_createClassDeposit', [metadata.length, name.length, description.length], 10000);
     return bnToBn(depositAll);
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+async function getAuctionDeadline(allowDelay, deadline, lastBidBlock) {
+  try {
+    let d = await Global_Api.ws.call('nftmart_getAuctionDeadline', [allowDelay, deadline, lastBidBlock], 10000);
+    return bnToBn(d);
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+async function getDutchAuctionCurrentPrice(maxPrice, minPrice, createdBlock, deadline, currentBlock) {
+  // console.log(maxPrice, minPrice, createdBlock, deadline, currentBlock);
+  try {
+    let price = await Global_Api.ws.call('nftmart_getDutchAuctionCurrentPrice', [maxPrice, minPrice, createdBlock, deadline, currentBlock], 10000);
+    return bnToBn(price);
   } catch (e) {
     console.log(e);
     return null;
@@ -321,7 +341,7 @@ async function main() {
 async function show_dutch_auction(ws) {
   await initApi(ws);
   const keyring = getKeyring();
-  const block = (await Global_Api.rpc.chain.getBlock()).block.header.number;
+  const currentBlock = Number((await Global_Api.rpc.chain.getBlock()).block.header.number);
   const auctions = await Global_Api.query.nftmartAuction.dutchAuctions.entries();
   for (const auction of auctions) {
     let key = auction[0];
@@ -330,11 +350,35 @@ async function show_dutch_auction(ws) {
     key = key.buffer.slice(len - 32 - 8 - 8, len - 8 - 8);
     const address = keyring.encodeAddress(new Uint8Array(key));
     let data = auction[1].toHuman();
+    let jsonData = auction[1].toJSON();
     data.creator = address;
-    data.currentBlock = block;
-    data.minRaise = perU162Float(data.minRaise);
+    data.currentBlock = currentBlock;
+    data.minRaise = perU162Float(jsonData.minRaise);
     data.auctionId = auctionId.toString();
-    data.closed = Number(block) > Number(data.deadline);
+
+    {
+      const currentPrice = await getDutchAuctionCurrentPrice(jsonData.maxPrice, jsonData.minPrice, jsonData.createdBlock, jsonData.deadline, currentBlock);
+      data.currentPrice = `${currentPrice / unit} NMT`;
+    }
+
+    let bid = await Global_Api.query.nftmartAuction.dutchAuctionBids(data.auctionId);
+    if (bid.isSome) {
+      bid = bid.unwrap();
+      if (bid.lastBidAccount.isSome) {
+        const actualDeadline = await getAuctionDeadline(true, 0, bid.lastBidBlock);
+        data.actualDeadline = actualDeadline.toString();
+        data.lastBidAccount = bid.lastBidAccount.unwrap();
+        data.lastBidBlock = bid.lastBidBlock;
+        data.lastBidPrice = `${ bid.lastBidPrice / unit} NMT`;
+      } else {
+        data.actualDeadline = jsonData.deadline;
+        data.lastBidAccount = "";
+        data.lastBidBlock = 0;
+        data.lastBidPrice = 0;
+      }
+    }
+
+    data.closed = currentBlock > Number(data.actualDeadline);
     console.log("%s", JSON.stringify(data));
   }
 }

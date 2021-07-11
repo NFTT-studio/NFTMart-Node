@@ -1364,6 +1364,19 @@ impl_runtime_apis! {
 		fn create_class_deposit(metadata_len: u32, name_len: u32, description_len: u32) -> (Balance, Balance) {
 			Nftmart::create_class_deposit(metadata_len, name_len, description_len)
 		}
+		fn get_dutch_auction_current_price(
+			max_price: Balance, min_price: Balance,
+			created_block: BlockNumber,
+			deadline: BlockNumber,
+			current_block: BlockNumber,
+		) -> Balance {
+			nftmart_auction::calc_current_price::<Runtime>(max_price, min_price, created_block, deadline, current_block)
+		}
+		fn get_auction_deadline(
+			allow_delay: bool, deadline: BlockNumber, last_bid_block: BlockNumber
+		) -> BlockNumber {
+			nftmart_auction::get_deadline::<Runtime>(allow_delay, deadline, last_bid_block)
+		}
 	}
 
 	impl sp_session::SessionKeys<Block> for Runtime {
