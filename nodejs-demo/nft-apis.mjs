@@ -1,7 +1,7 @@
 import {
   waitTx, hexToUtf8, unit, ensureAddress,
   Global_Api, Global_ModuleMetadata, initApi,
-  getRandomInt, NativeCurrencyID,
+  getRandomInt, NativeCurrencyID, getKeyring,
 } from "./utils.mjs";
 import {Keyring} from "@polkadot/api";
 import {bnToBn} from "@polkadot/util";
@@ -70,7 +70,7 @@ async function main() {
   const ss58Format = 50;
   const keyring = new Keyring({type: 'sr25519', ss58Format});
   const program = new Command();
-  program.option('--ws <url>', 'node ws addr', 'ws://192.168.0.2:9944');
+  program.option('--ws <url>', 'node ws addr', 'ws://192.168.0.2:9946');
 
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' make_data
   // node nft-apis.mjs make_data
@@ -79,7 +79,7 @@ async function main() {
     const sudo = '//Alice';
     await add_whitelist(ws, keyring, sudo, "//Alice2");
 
-    const classId = 56;
+    const classId = 1;
 
     await create_class(ws, keyring, "//Alice");
     await mint_nft(ws, keyring, "//Alice", classId, 20, true);
@@ -273,7 +273,60 @@ async function main() {
   program.command('remove_offer <account> <offerId>').action(async (account, offerId) => {
     await remove_offer(program.opts().ws, keyring, account, offerId);
   });
+  /*
+    node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_dutch_auction //Alice  true 3
+    node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_dutch_auction //Alice  false 3
+    node nft-apis.mjs submit_dutch_auction //Alice false 3 \
+      --classId 1 --tokenId 0 --quantity 1 \
+      --classId 1 --tokenId 1 --quantity 2 \
+      --classId 1 --tokenId 2 --quantity 3
+  */
+  program.command('submit_dutch_auction <account> <allow_british_auction> <deadline_minute>')
+    .requiredOption('--classId <classIds...>')
+    .requiredOption('--tokenId <tokenIds...>')
+    .requiredOption('--quantity <quantities...>')
+    .action(async (account, allow_british_auction, deadline_minute, {classId, tokenId, quantity}) => {
+      if (classId.length === tokenId.length && tokenId.length === quantity.length) {
+        const tokens = classId.map((e, i) => {
+          return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
+        });
+        await submit_dutch_auction(program.opts().ws, account, allow_british_auction, deadline_minute, tokens);
+      } else {
+        console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
+      }
+  });
+  // node nft-apis.mjs show_dutch_auction
+  program.command('show_dutch_auction').action(async () => {
+    await show_dutch_auction(program.opts().ws);
+  });
   await program.parseAsync(process.argv);
+}
+
+async function show_dutch_auction(ws) {
+  await initApi(ws);
+
+}
+
+async function submit_dutch_auction(ws, account, allow_british_auction, deadline_minute, tokens) {
+  await initApi(ws);
+  const keyring = getKeyring();
+  let blockTimeSec = Global_Api.consts.babe.expectedBlockTime.toNumber() / 1000;
+  let deadlineBlock = deadline_minute * 60 / blockTimeSec;
+  let block = await Global_Api.rpc.chain.getBlock();
+  deadlineBlock += block.block.header.number;
+
+  account = keyring.addFromUri(account);
+
+  let min_deposit = (await Global_Api.query.nftmartConf.minOrderDeposit()).toString();
+
+  const call = Global_Api.tx.nftmartAuction.submitDutchAuction(
+    NativeCurrencyID, 0, min_deposit, 10 * unit, 100 * unit, deadlineBlock, tokens, allow_british_auction, 0.5);
+
+  const feeInfo = await call.paymentInfo(account);
+  console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+  let [a, b] = waitTx(Global_ModuleMetadata);
+  await call.signAndSend(account, a);
+  await b();
 }
 
 async function remove_offer(ws, keyring, account, offerId) {
@@ -637,6 +690,7 @@ async function mint_nft_by_proxy(ws, keyring, admin, classID, quantity, needToCh
 }
 
 async function mint_nft(ws, keyring, admin, classID, quantity, needToChargeRoyalty) {
+  console.log("============== minting nft ==============");
   await initApi(ws);
   admin = keyring.addFromUri(admin);
   const classInfo = await Global_Api.query.ormlNft.classes(classID);

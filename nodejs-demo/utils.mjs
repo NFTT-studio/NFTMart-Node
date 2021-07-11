@@ -1,4 +1,4 @@
-import {ApiPromise, WsProvider} from '@polkadot/api';
+import {ApiPromise, Keyring, WsProvider} from '@polkadot/api';
 import {Client as WebSocket} from 'rpc-websockets';
 import {bnToBn} from "@polkadot/util";
 
@@ -19,6 +19,11 @@ export async function initApi(ws) {
 		Global_Api = await getApi(ws);
 		Global_ModuleMetadata = await getModules(Global_Api);
 	}
+}
+
+export function getKeyring() {
+  const ss58Format = Global_Api.consts.system.ss58Prefix.toNumber();
+  return new Keyring({type: 'sr25519', ss58Format});
 }
 
 export function getRandomInt(max) {
