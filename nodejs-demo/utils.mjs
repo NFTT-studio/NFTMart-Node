@@ -184,6 +184,39 @@ export async function getApi(dest) {
 			categoryId: 'Compact<CategoryId>',
 			items: 'Vec<OrderItem>',
 		},
+
+    BritishAuctionOf: {
+      currencyId: 'Compact<CurrencyId>',
+      hammerPrice: 'Compact<Balance>',
+      minRaise: 'Compact<PerU16>',
+      deposit: 'Compact<Balance>',
+      initPrice: 'Compact<Balance>',
+      deadline: 'Compact<BlockNumberOf>',
+      allowDelay: 'bool',
+      categoryId: 'Compact<CategoryId>',
+      items: 'Vec<OrderItem>',
+    },
+
+    BritishAuctionBidOf: {
+      lastBidPrice: 'Compact<Balance>',
+      lastBidAccount: 'Option<AccountId>',
+      lastBidBlock: 'Compact<BlockNumberOf>',
+    },
+
+    DutchAuctionOf: {
+      currencyId: 'Compact<CurrencyId>',
+      categoryId: 'Compact<CategoryId>',
+      deposit: 'Compact<Balance>',
+      minPrice: 'Compact<Balance>',
+      maxPrice: 'Compact<Balance>',
+      deadline: 'Compact<BlockNumberOf>',
+      createdBlock: 'Compact<BlockNumberOf>',
+      items: 'Vec<OrderItem>',
+      allowBritishAuction: 'bool',
+      minRaise: 'Compact<PerU16>',
+    },
+
+    DutchAuctionBidOf: 'BritishAuctionBidOf',
 	};
 
 	const api = await ApiPromise.create({provider, types});

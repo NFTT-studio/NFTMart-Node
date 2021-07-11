@@ -1,11 +1,26 @@
 import {
-  waitTx, hexToUtf8, unit, ensureAddress,
-  Global_Api, Global_ModuleMetadata, initApi,
-  getRandomInt, NativeCurrencyID, getKeyring,
+  ensureAddress,
+  getKeyring,
+  Global_Api,
+  Global_ModuleMetadata,
+  hexToUtf8,
+  initApi,
+  NativeCurrencyID,
+  unit,
+  waitTx,
 } from "./utils.mjs";
 import {Keyring} from "@polkadot/api";
 import {bnToBn} from "@polkadot/util";
 import {Command} from "commander";
+
+function perU162Float(x) {
+  x = x.toString().replace(',','');
+  return Number(x) / 65535.0;
+}
+
+function float2PerU16(x) {
+  return Math.trunc(x * 65535.0);
+}
 
 async function proxyDeposit(num_proxies) {
   try {
@@ -290,6 +305,7 @@ async function main() {
         const tokens = classId.map((e, i) => {
           return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
         });
+        allow_british_auction = allow_british_auction !== 'false';
         await submit_dutch_auction(program.opts().ws, account, allow_british_auction, deadline_minute, tokens);
       } else {
         console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
@@ -304,7 +320,23 @@ async function main() {
 
 async function show_dutch_auction(ws) {
   await initApi(ws);
-
+  const keyring = getKeyring();
+  const block = (await Global_Api.rpc.chain.getBlock()).block.header.number;
+  const auctions = await Global_Api.query.nftmartAuction.dutchAuctions.entries();
+  for (const auction of auctions) {
+    let key = auction[0];
+    const len = key.length;
+    const auctionId = Buffer.from(key.buffer.slice(len - 8, len)).readBigUInt64LE();
+    key = key.buffer.slice(len - 32 - 8 - 8, len - 8 - 8);
+    const address = keyring.encodeAddress(new Uint8Array(key));
+    let data = auction[1].toHuman();
+    data.creator = address;
+    data.currentBlock = block;
+    data.minRaise = perU162Float(data.minRaise);
+    data.auctionId = auctionId.toString();
+    data.closed = Number(block) > Number(data.deadline);
+    console.log("%s", JSON.stringify(data));
+  }
 }
 
 async function submit_dutch_auction(ws, account, allow_british_auction, deadline_minute, tokens) {
@@ -313,14 +345,16 @@ async function submit_dutch_auction(ws, account, allow_british_auction, deadline
   let blockTimeSec = Global_Api.consts.babe.expectedBlockTime.toNumber() / 1000;
   let deadlineBlock = deadline_minute * 60 / blockTimeSec;
   let block = await Global_Api.rpc.chain.getBlock();
-  deadlineBlock += block.block.header.number;
+  deadlineBlock += Number(block.block.header.number);
 
   account = keyring.addFromUri(account);
 
   let min_deposit = (await Global_Api.query.nftmartConf.minOrderDeposit()).toString();
-
+  const categoryId = 0;
+  const minRaise = float2PerU16(0.5); // 50%
   const call = Global_Api.tx.nftmartAuction.submitDutchAuction(
-    NativeCurrencyID, 0, min_deposit, 10 * unit, 100 * unit, deadlineBlock, tokens, allow_british_auction, 0.5);
+    NativeCurrencyID, categoryId, min_deposit, 10 * unit, 100 * unit,
+    deadlineBlock, tokens, allow_british_auction, minRaise);
 
   const feeInfo = await call.paymentInfo(account);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
