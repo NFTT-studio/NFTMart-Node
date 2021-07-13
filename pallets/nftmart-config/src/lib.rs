@@ -90,7 +90,7 @@ pub mod module {
 			MaxDistributionReward::<T>::put(self.max_distribution_reward);
 			MinReferenceDeposit::<T>::put(self.min_reference_deposit);
 			MinOrderDeposit::<T>::put(self.min_order_deposit);
-			AuctionDelay::<T>::put(self.auction_delay);
+			AuctionCloseDelay::<T>::put(self.auction_delay);
 			for a in &self.white_list {
 				AccountWhitelist::<T>::insert(a, ());
 			}
@@ -99,8 +99,8 @@ pub mod module {
 
 	/// auction delay
 	#[pallet::storage]
-	#[pallet::getter(fn auction_delay)]
-	pub type AuctionDelay<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
+	#[pallet::getter(fn auction_close_delay)]
+	pub type AuctionCloseDelay<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 
 	/// Whitelist for class creation
 	#[pallet::storage]
@@ -219,12 +219,20 @@ pub mod module {
 			}
 			Ok((None, Pays::No).into())
 		}
+
+		#[pallet::weight((100_000, DispatchClass::Operational, Pays::Yes))]
+		#[transactional]
+		pub fn update_auction_close_delay(origin: OriginFor<T>, delay: BlockNumberFor<T>) -> DispatchResultWithPostInfo {
+			ensure_root(origin)?;
+			AuctionCloseDelay::<T>::set(delay);
+			Ok((None, Pays::No).into())
+		}
 	}
 }
 
 impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
-	fn auction_delay() -> BlockNumberFor<T> {
-		AuctionDelay::<T>::get()
+	fn auction_close_delay() -> BlockNumberFor<T> {
+		AuctionCloseDelay::<T>::get()
 	}
 
 	fn is_in_whitelist(who: &T::AccountId) -> bool {

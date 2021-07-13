@@ -16,7 +16,7 @@ pub use log;
 pub type ResultPost<T> = sp_std::result::Result<T, sp_runtime::DispatchErrorWithPostInfo<frame_support::weights::PostDispatchInfo>>;
 
 pub trait NftmartConfig<AccountId, BlockNumber> {
-	fn auction_delay() -> BlockNumber;
+	fn auction_close_delay() -> BlockNumber;
 	fn is_in_whitelist(_who: &AccountId) -> bool;
 	fn get_min_order_deposit() -> Balance;
 	fn get_then_inc_id() -> Result<GlobalId, DispatchError>;
