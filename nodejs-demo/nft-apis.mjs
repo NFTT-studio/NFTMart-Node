@@ -348,10 +348,47 @@ async function main() {
     .action(async (bidder, auctionCreatorAddress, auctionId, price) => {
     await bid_dutch_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId, price);
   });
+  // node nft-apis.mjs redeem_dutch_auction //Bob //Alice 5
+  program.command('redeem_dutch_auction <bidder> <auctionCreatorAddress> <auctionId>')
+    .action(async (bidder, auctionCreatorAddress, auctionId) => {
+      await redeem_dutch_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId);
+  });
+  // node nft-apis.mjs remove_dutch_auction //Alice 5
+  program.command('remove_dutch_auction <auctionCreatorAddress> <auctionId>')
+    .action(async (auctionCreatorAddress, auctionId) => {
+      await remove_dutch_auction(program.opts().ws, auctionCreatorAddress, auctionId);
+  });
   await program.parseAsync(process.argv);
 }
 
+async function remove_dutch_auction(ws, auctionCreatorAddress, auctionId) {
+  console.log("============== remove_dutch_auction ==============");
+  await initApi(ws);
+  const keyring = getKeyring();
+  auctionCreatorAddress = keyring.addFromUri(auctionCreatorAddress);
+  const call = Global_Api.tx.nftmartAuction.removeDutchAuction(auctionId);
+  const feeInfo = await call.paymentInfo(auctionCreatorAddress);
+  console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+  let [a, b] = waitTx(Global_ModuleMetadata);
+  await call.signAndSend(auctionCreatorAddress, a);
+  await b();
+}
+
+async function redeem_dutch_auction(ws, signer, auctionCreatorAddress, auctionId) {
+  console.log("============== redeem_dutch_auction ==============");
+  await initApi(ws);
+  const keyring = getKeyring();
+  signer = keyring.addFromUri(signer);
+  const call = Global_Api.tx.nftmartAuction.redeemDutchAuction(ensureAddress(keyring, auctionCreatorAddress), auctionId);
+  const feeInfo = await call.paymentInfo(signer);
+  console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+  let [a, b] = waitTx(Global_ModuleMetadata);
+  await call.signAndSend(signer, a);
+  await b();
+}
+
 async function bid_dutch_auction(ws, bidder, auctionCreatorAddress, auctionId, price) {
+  console.log("============== bid_dutch_auction ==============");
   await initApi(ws);
   const keyring = getKeyring();
   auctionCreatorAddress = ensureAddress(keyring, auctionCreatorAddress);
@@ -694,7 +731,7 @@ async function update_auction_close_delay(ws) {
   await initApi(ws);
   const keyring = getKeyring();
   const signer = keyring.addFromUri("//Alice");
-  const call = Global_Api.tx.sudo.sudo(Global_Api.tx.nftmartConf.updateAuctionCloseDelay(300));
+  const call = Global_Api.tx.sudo.sudo(Global_Api.tx.nftmartConf.updateAuctionCloseDelay(100));
   const feeInfo = await call.paymentInfo(signer);
   console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
   let [a, b] = waitTx(Global_ModuleMetadata);
