@@ -230,6 +230,7 @@ pub mod module {
 			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
 		) -> DispatchResultWithPostInfo {
+			// Rename to bidder TODO
 			let purchaser: T::AccountId = ensure_signed(origin)?;
 			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
 			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;

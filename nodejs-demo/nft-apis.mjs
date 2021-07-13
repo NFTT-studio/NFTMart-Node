@@ -13,7 +13,7 @@ import {Keyring} from "@polkadot/api";
 import {bnToBn} from "@polkadot/util";
 import {Command} from "commander";
 
-function perU162Float(x) {
+function perU16ToFloat(x) {
   return Number(x) / 65535.0;
 }
 
@@ -311,7 +311,11 @@ async function main() {
   /*
     node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_dutch_auction //Alice  true 3
     node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_dutch_auction //Alice  false 3
-    node nft-apis.mjs submit_dutch_auction //Alice false 3 \
+    node nft-apis.mjs submit_dutch_auction //Alice true 120 \
+      --classId 1 --tokenId 0 --quantity 1 \
+      --classId 1 --tokenId 1 --quantity 2 \
+      --classId 1 --tokenId 2 --quantity 3
+    node nft-apis.mjs submit_dutch_auction //Alice false 120 \
       --classId 1 --tokenId 0 --quantity 1 \
       --classId 1 --tokenId 1 --quantity 2 \
       --classId 1 --tokenId 2 --quantity 3
@@ -335,13 +339,78 @@ async function main() {
   program.command('show_dutch_auction').action(async () => {
     await show_dutch_auction(program.opts().ws);
   });
+  // node nft-apis.mjs bid_dutch_auction //Bob //Alice 5 33
+  program.command('bid_dutch_auction <bidder> <auctionCreatorAddress> <auctionId> <price>')
+    .action(async (bidder, auctionCreatorAddress, auctionId, price) => {
+    await bid_dutch_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId, bnToBn(price) * unit);
+  });
   await program.parseAsync(process.argv);
+}
+
+async function bid_dutch_auction(ws, bidder, auctionCreatorAddress, auctionId, price) {
+  await initApi(ws);
+  const keyring = getKeyring();
+  auctionCreatorAddress = ensureAddress(keyring, auctionCreatorAddress);
+  let [auction, bid, block] = await Promise.all([
+    Global_Api.query.nftmartAuction.dutchAuctions(auctionCreatorAddress, auctionId),
+    Global_Api.query.nftmartAuction.dutchAuctionBids(auctionId),
+    Global_Api.rpc.chain.getBlock(),
+  ]);
+
+  const currentBlock = Number(block.block.header.number);
+  if (auction.isSome && bid.isSome) {
+    auction = auction.unwrap();
+    bid = bid.unwrap();
+    let call;
+    if (bid.lastBidAccount.isNone) {
+      // This is the first bidding.
+      if (currentBlock > auction.deadline) {
+        console.log("auction closed");
+        return;
+      }
+      const uselessPrice = 0; // The real price used will be calculated by Dutch auction logic.
+      call = Global_Api.tx.nftmartAuction.bidDutchAuction(uselessPrice, auctionCreatorAddress, auctionId);
+    } else {
+      // This if branch is at least the second bidding.
+
+      const deadline = await getAuctionDeadline(true, 0, bid.lastBidBlock);
+      if (currentBlock > deadline) {
+        console.log("auction closed");
+        return;
+      }
+
+      const minRaise = perU16ToFloat(auction.minRaise);
+      const lowest = bnToBn(1 + minRaise) * bid.lastBidPrice;
+      if (price > lowest) {
+        call = Global_Api.tx.nftmartAuction.bidDutchAuction(price, auctionCreatorAddress, auctionId);
+      } else {
+        console.log("price %s should be greater than %s NMT", price, lowest / unit);
+        return;
+      }
+    }
+    bidder = keyring.addFromUri(bidder);
+    const feeInfo = await call.paymentInfo(bidder);
+    console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+    let [a, b] = waitTx(Global_ModuleMetadata);
+    await call.signAndSend(bidder, a);
+    await b();
+  } else {
+    console.log("auction %s not found", auctionId);
+  }
 }
 
 async function show_dutch_auction(ws) {
   await initApi(ws);
   const keyring = getKeyring();
   const currentBlock = Number((await Global_Api.rpc.chain.getBlock()).block.header.number);
+  // For querying an auction. If you already have owner and auctionId, you can alternatively
+  // use `Global_Api.query.nftmartAuction.dutchAuctions(auctionCreatorAddress, auctionId)`
+  //
+  // For iterating all auctions of an address:
+  // `Global_Api.query.nftmartAuction.dutchAuctions.entries(auctionCreatorAddress)`
+  //
+  // For iterating all auctions on the nftmart blockchain:
+  // `Global_Api.query.nftmartAuction.dutchAuctions.entries()`
   const auctions = await Global_Api.query.nftmartAuction.dutchAuctions.entries();
   for (const auction of auctions) {
     let key = auction[0];
@@ -353,7 +422,7 @@ async function show_dutch_auction(ws) {
     let jsonData = auction[1].toJSON();
     data.creator = address;
     data.currentBlock = currentBlock;
-    data.minRaise = perU162Float(jsonData.minRaise);
+    data.minRaise = perU16ToFloat(jsonData.minRaise);
     data.auctionId = auctionId.toString();
 
     {
@@ -395,9 +464,15 @@ async function submit_dutch_auction(ws, account, allow_british_auction, deadline
 
   let min_deposit = (await Global_Api.query.nftmartConf.minOrderDeposit()).toString();
   const categoryId = 0;
+  const min_price = 10 * unit;
+  const max_price = 100 * unit;
+  // `float2PerU16(0.5)`:
+  //
+  // For any bidding of an auction,
+  // the second bidding should at least to be 1.5 times of the first relative biding.
   const minRaise = float2PerU16(0.5); // 50%
   const call = Global_Api.tx.nftmartAuction.submitDutchAuction(
-    NativeCurrencyID, categoryId, min_deposit, 10 * unit, 100 * unit,
+    NativeCurrencyID, categoryId, min_deposit, min_price, max_price,
     deadlineBlock, tokens, allow_british_auction, minRaise);
 
   const feeInfo = await call.paymentInfo(account);
