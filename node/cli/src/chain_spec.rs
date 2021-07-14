@@ -288,10 +288,10 @@ pub fn testnet_genesis(
 			endowed_accounts: endowed_accounts.iter()
 				.flat_map(|x|{
 					vec![
-						(x.clone(), 1, 100 * nftmart_traits::constants_types::ACCURACY),
-						(x.clone(), 2, 100 * nftmart_traits::constants_types::ACCURACY),
-						(x.clone(), 3, 100 * nftmart_traits::constants_types::ACCURACY),
-						(x.clone(), 4, 100 * nftmart_traits::constants_types::ACCURACY),
+						(x.clone(), 1, 100 * nftmart_traits::ACCURACY),
+						(x.clone(), 2, 100 * nftmart_traits::ACCURACY),
+						(x.clone(), 3, 100 * nftmart_traits::ACCURACY),
+						(x.clone(), 4, 100 * nftmart_traits::ACCURACY),
 					]
 				}).collect(),
 		},
@@ -370,6 +370,7 @@ pub fn testnet_genesis(
 		nftmart_auction: Default::default(),
 		nftmart_conf: node_runtime::NftmartConfConfig {
 			white_list: endowed_accounts,
+			auction_close_delay: nftmart_traits::time::MINUTES * 10,
 			..Default::default()
 		},
 	}

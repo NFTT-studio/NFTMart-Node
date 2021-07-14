@@ -173,6 +173,7 @@ fn testnet_genesis(
 		nftmart_auction: Default::default(),
 		nftmart_conf: node_template_runtime::NftmartConfConfig {
 			white_list: endowed_accounts,
+			auction_close_delay: nftmart_traits::time::MINUTES * 10,
 			..Default::default()
 		},
 	}

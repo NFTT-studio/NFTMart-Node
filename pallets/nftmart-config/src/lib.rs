@@ -55,7 +55,7 @@ pub mod module {
 		pub max_distribution_reward: PerU16,
 		pub min_reference_deposit: Balance,
 		pub min_order_deposit: Balance,
-		pub auction_delay: BlockNumberFor<T>,
+		pub auction_close_delay: BlockNumberFor<T>,
 		pub white_list: Vec<T::AccountId>,
 		pub _phantom: PhantomData<T>,
 	}
@@ -69,7 +69,7 @@ pub mod module {
 				max_distribution_reward: PerU16::from_percent(100),
 				min_reference_deposit: ACCURACY,
 				min_order_deposit: ACCURACY,
-				auction_delay: time::MINUTES.into(),
+				auction_close_delay: time::MINUTES.into(),
 				white_list: vec![],
 				_phantom: Default::default(),
 			}
@@ -90,7 +90,7 @@ pub mod module {
 			MaxDistributionReward::<T>::put(self.max_distribution_reward);
 			MinReferenceDeposit::<T>::put(self.min_reference_deposit);
 			MinOrderDeposit::<T>::put(self.min_order_deposit);
-			AuctionCloseDelay::<T>::put(self.auction_delay);
+			AuctionCloseDelay::<T>::put(self.auction_close_delay);
 			for a in &self.white_list {
 				AccountWhitelist::<T>::insert(a, ());
 			}
