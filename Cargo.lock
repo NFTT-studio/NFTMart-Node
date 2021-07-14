@@ -4205,6 +4205,7 @@ dependencies = [
  "orml-traits",
  "parity-scale-codec",
  "serde",
+ "smallvec 1.6.1",
  "sp-core",
  "sp-runtime",
  "sp-std",

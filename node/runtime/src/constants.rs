@@ -17,3 +17,4 @@
 
 pub use nftmart_traits::currency;
 pub use nftmart_traits::time;
+pub use nftmart_traits::fee;

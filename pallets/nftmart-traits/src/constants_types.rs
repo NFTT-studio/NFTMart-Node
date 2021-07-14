@@ -104,3 +104,47 @@ pub mod time {
 	pub const HOURS: BlockNumber = MINUTES * 60;
 	pub const DAYS: BlockNumber = HOURS * 24;
 }
+
+pub const TARGET__BLOCK__FULLNESS: u64 = 25;
+
+/// Fee-related.
+pub mod fee {
+	pub use sp_runtime::Perbill;
+	use super::*;
+	use frame_support::weights::{
+		WeightToFeePolynomial, WeightToFeeCoefficient, WeightToFeeCoefficients,
+		constants::ExtrinsicBaseWeight,
+	};
+	use smallvec::smallvec;
+
+	/// The block saturation level. Fees will be updates based on this value.
+	// pub const TARGET_BLOCK_FULLNESS: Perbill = Perbill::from_percent(TARGET__BLOCK__FULLNESS as u32);
+
+	/// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
+	/// node's balance type.
+	///
+	/// This should typically create a mapping between the following ranges:
+	///   - [0, MAXIMUM_BLOCK_WEIGHT]
+	///   - [Balance::min, Balance::max]
+	///
+	/// Yet, it can be used for any other sort of change to weight-fee. Some examples being:
+	///   - Setting it to `0` will essentially disable the weight fee.
+	///   - Setting it to `1` will cause the literal `#[weight = x]` values to be charged.
+	///
+	/// coeff_integer * x^(degree) + coeff_frac * x^(degree)
+	pub struct WeightToFee;
+	impl WeightToFeePolynomial for WeightToFee {
+		type Balance = Balance;
+		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
+			// Extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT:
+			let p = super::currency::CENTS;
+			let q = 10 * Balance::from(ExtrinsicBaseWeight::get());
+			smallvec![WeightToFeeCoefficient {
+				degree: 1,
+				negative: false,
+				coeff_frac: Perbill::from_rational(p % q, q),
+				coeff_integer: p / q,
+			}]
+		}
+	}
+}

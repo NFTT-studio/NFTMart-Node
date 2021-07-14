@@ -18,6 +18,7 @@ orml-traits = { default-features = false, path = "../orml-traits" }
 sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
 contract-types = { path = "contract-types", default-features = false }
 log = { version = "0.4.14", default-features = false }
+smallvec = "1.6.1"
 
 [features]
 default = ['std']
