@@ -114,7 +114,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	// and set impl_version to 0. If only runtime
 	// implementation changes and behavior does not, then leave spec_version as
 	// is and increment impl_version.
-	spec_version: 271,
+	spec_version: 272,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 2,
@@ -728,18 +728,6 @@ type EnsureRootOrHalfCouncil = EnsureOneOf<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>
 >;
-impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
-	type Event = Event;
-	type AddOrigin = EnsureRootOrHalfCouncil;
-	type RemoveOrigin = EnsureRootOrHalfCouncil;
-	type SwapOrigin = EnsureRootOrHalfCouncil;
-	type ResetOrigin = EnsureRootOrHalfCouncil;
-	type PrimeOrigin = EnsureRootOrHalfCouncil;
-	type MembershipInitialized = TechnicalCommittee;
-	type MembershipChanged = TechnicalCommittee;
-	type MaxMembers = TechnicalMaxMembers;
-	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
-}
 
 parameter_types! {
 	pub const ProposalBond: Permill = Permill::from_percent(5);
@@ -1083,7 +1071,6 @@ construct_runtime!(
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		TechnicalCommittee: pallet_collective::<Instance2>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Elections: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>, Config<T>},
-		TechnicalMembership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event, ValidateUnsigned},
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
 		Contracts: pallet_contracts::{Pallet, Call, Storage, Event<T>},
@@ -1451,7 +1438,6 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_identity, Identity);
 			add_benchmark!(params, batches, pallet_im_online, ImOnline);
 			add_benchmark!(params, batches, pallet_indices, Indices);
-			add_benchmark!(params, batches, pallet_membership, TechnicalMembership);
 			add_benchmark!(params, batches, pallet_multisig, Multisig);
 			add_benchmark!(params, batches, pallet_offences, OffencesBench::<Runtime>);
 			add_benchmark!(params, batches, pallet_proxy, Proxy);

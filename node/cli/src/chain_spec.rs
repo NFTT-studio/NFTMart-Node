@@ -282,7 +282,6 @@ pub fn testnet_genesis(
 		grandpa: GrandpaConfig {
 			authorities: vec![],
 		},
-		technical_membership: Default::default(),
 		treasury: Default::default(),
 		tokens: TokensConfig {
 			endowed_accounts: endowed_accounts.iter()

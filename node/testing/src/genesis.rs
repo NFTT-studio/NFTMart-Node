@@ -109,7 +109,6 @@ pub fn config_endowed(
 		democracy: Default::default(),
 		council: Default::default(),
 		technical_committee: Default::default(),
-		technical_membership: Default::default(),
 		elections: Default::default(),
 		sudo: Default::default(),
 		treasury: Default::default(),

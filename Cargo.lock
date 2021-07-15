@@ -4445,7 +4445,6 @@ dependencies = [
  "pallet-identity",
  "pallet-im-online",
  "pallet-indices",
- "pallet-membership",
  "pallet-multisig",
  "pallet-offences",
  "pallet-offences-benchmarking",
@@ -5067,21 +5066,6 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keyring",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-membership"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate.git?rev=deac6324#deac6324a16fc4128b94a7b4c3826eebcb86917f"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "parity-scale-codec",
- "sp-io",
  "sp-runtime",
  "sp-std",
 ]
