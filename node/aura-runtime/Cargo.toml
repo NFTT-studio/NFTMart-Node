@@ -1,6 +1,6 @@
 [package]
 name = "nftmart-aura-node-runtime"
-version = "3.0.0"
+version = "4.0.0-dev"
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
 edition = "2018"
 license = "Unlicense"
@@ -13,46 +13,46 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
 
-pallet-aura = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-balances = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-frame-support = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-grandpa = { version = "3.1.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-randomness-collective-flip = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-sudo = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-frame-system = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-timestamp = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-transaction-payment = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-frame-executive = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-api = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-block-builder = { git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324', default-features = false, version = "3.0.0"}
-sp-consensus-aura = { version = "0.9.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-core = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-inherents = { git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324', default-features = false, version = "3.0.0"}
-sp-offchain = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-runtime = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-session = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-std = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-transaction-pool = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-sp-version = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-utility = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-proxy = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-contracts = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-contracts-primitives = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-contracts-rpc-runtime-api = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+pallet-aura = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-balances = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-grandpa = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-sudo = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+frame-executive = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-block-builder = { git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0', default-features = false, version = "4.0.0-dev"}
+sp-consensus-aura = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-inherents = { git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0', default-features = false, version = "4.0.0-dev"}
+sp-offchain = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-session = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-transaction-pool = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-version = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-utility = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-proxy = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-contracts = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-contracts-primitives = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-contracts-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
 
 # Used for the node template's RPCs
-frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
-pallet-transaction-payment-rpc-runtime-api = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
 
 # Used for runtime benchmarking
-frame-benchmarking = { version = "3.1.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324', optional = true }
-frame-system-benchmarking = { version = "3.0.0", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324', optional = true }
+frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0', optional = true }
+frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0', optional = true }
 hex-literal = { version = "0.3.1", optional = true }
 
 # pallets dependencies
-pallet-template = { version = "3.0.0", default-features = false, path = "../../pallets/template" }
-orml-currencies = { version = "0.4.1-dev", default-features = false, path = "../../pallets/orml-currencies" }
-orml-tokens = { version = "0.4.1-dev", default-features = false, path = "../../pallets/orml-tokens" }
+pallet-template = { default-features = false, path = "../../pallets/template" }
+orml-currencies = { default-features = false, path = "../../pallets/orml-currencies" }
+orml-tokens = { default-features = false, path = "../../pallets/orml-tokens" }
 orml-traits = { path = "../../pallets/orml-traits", default-features = false }
 orml-nft = { path = "../../pallets/orml-nft", default-features = false }
 nftmart-traits = { path = "../../pallets/nftmart-traits", default-features = false }
@@ -64,7 +64,7 @@ nftmart-rpc-runtime-api = { default-features = false, path = "../../pallets/nftm
 chain-extension = { path = "../chain_extension", default-features = false }
 
 [build-dependencies]
-substrate-wasm-builder = { version = "4.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'deac6324' }
+substrate-wasm-builder = { version = "5.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
 
 [features]
 default = ["std"]
