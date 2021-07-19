@@ -113,7 +113,7 @@ async function main() {
     const ws = program.opts().ws;
     const sudo = '//Alice';
     await add_whitelist(ws, keyring, sudo, "//Alice2");
-    await update_auction_close_delay(ws);
+    await update_auction_close_delay(ws, 3);
 
     const classId = 1;
 
@@ -151,8 +151,10 @@ async function main() {
     offerIds = await show_offer(ws, keyring);
     console.log("orderIds", orderIds, "offerIds", offerIds);
 
-    await submit_dutch_auction(ws, "//Alice", true, 120, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
-    await submit_dutch_auction(ws, "//Alice", false, 120, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
+    await submit_dutch_auction(ws, "//Alice", true, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
+    await submit_dutch_auction(ws, "//Alice", false, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
+    await submit_british_auction(ws, "//Alice", true, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
+    await submit_british_auction(ws, "//Alice", false, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
   });
 
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' create_class //Alice
@@ -313,8 +315,6 @@ async function main() {
     await remove_offer(program.opts().ws, keyring, account, offerId);
   });
   /*
-    node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_dutch_auction //Alice  true 3
-    node nft-apis.mjs --ws 'ws://81.70.132.13:9944' submit_dutch_auction //Alice  false 3
     node nft-apis.mjs submit_dutch_auction //Alice true 120 \
       --classId 1 --tokenId 0 --quantity 1 \
       --classId 1 --tokenId 1 --quantity 2 \
@@ -358,7 +358,161 @@ async function main() {
     .action(async (auctionCreatorAddress, auctionId) => {
       await remove_dutch_auction(program.opts().ws, auctionCreatorAddress, auctionId);
   });
+  /*
+    node nft-apis.mjs submit_british_auction //Alice true 10 \
+      --classId 1 --tokenId 0 --quantity 1 \
+      --classId 1 --tokenId 1 --quantity 2 \
+      --classId 1 --tokenId 2 --quantity 3
+  */
+  program.command('submit_british_auction <account> <allow_delay> <deadline_minute>')
+  .requiredOption('--classId <classIds...>')
+  .requiredOption('--tokenId <tokenIds...>')
+  .requiredOption('--quantity <quantities...>')
+  .action(async (account, allow_delay, deadline_minute, {classId, tokenId, quantity}) => {
+    if (classId.length === tokenId.length && tokenId.length === quantity.length) {
+      const tokens = classId.map((e, i) => {
+        return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
+      });
+      allow_delay = allow_delay !== 'false';
+      await submit_british_auction(program.opts().ws, account, allow_delay, deadline_minute, tokens);
+    } else {
+      console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
+    }
+  });
+  // node nft-apis.mjs show_british_auction
+  program.command('show_british_auction').action(async () => {
+    await show_british_auction(program.opts().ws);
+  });
+  // node nft-apis.mjs bid_british_auction //Bob //Alice 8 33
+  program.command('bid_british_auction <bidder> <auctionCreatorAddress> <auctionId> <price>')
+  .action(async (bidder, auctionCreatorAddress, auctionId, price) => {
+    await bid_british_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId, price);
+  });
+  // node nft-apis.mjs redeem_british_auction //Bob //Alice 8
+  program.command('redeem_british_auction <bidder> <auctionCreatorAddress> <auctionId>')
+  .action(async (bidder, auctionCreatorAddress, auctionId) => {
+    await redeem_british_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId);
+  });
+  // node nft-apis.mjs remove_british_auction //Alice 7
+  program.command('remove_british_auction <auctionCreatorAddress> <auctionId>')
+  .action(async (auctionCreatorAddress, auctionId) => {
+    await remove_british_auction(program.opts().ws, auctionCreatorAddress, auctionId);
+  });
   await program.parseAsync(process.argv);
+}
+
+async function remove_british_auction(ws, auctionCreatorAddress, auctionId) {
+  console.log("============== remove_british_auction ==============");
+  await initApi(ws);
+  const keyring = getKeyring();
+  auctionCreatorAddress = keyring.addFromUri(auctionCreatorAddress);
+  const call = Global_Api.tx.nftmartAuction.removeBritishAuction(auctionId);
+  const feeInfo = await call.paymentInfo(auctionCreatorAddress);
+  console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+  let [a, b] = waitTx(Global_ModuleMetadata);
+  await call.signAndSend(auctionCreatorAddress, a);
+  await b();
+}
+
+async function redeem_british_auction(ws, signer, auctionCreatorAddress, auctionId) {
+  console.log("============== redeem_british_auction ==============");
+  await initApi(ws);
+  const keyring = getKeyring();
+  signer = keyring.addFromUri(signer);
+  const call = Global_Api.tx.nftmartAuction.redeemBritishAuction(ensureAddress(keyring, auctionCreatorAddress), auctionId);
+  const feeInfo = await call.paymentInfo(signer);
+  console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+  let [a, b] = waitTx(Global_ModuleMetadata);
+  await call.signAndSend(signer, a);
+  await b();
+}
+
+async function bid_british_auction(ws, bidder, auctionCreatorAddress, auctionId, price) {
+  console.log("============== bid_british_auction ==============");
+  await initApi(ws);
+  const keyring = getKeyring();
+  auctionCreatorAddress = ensureAddress(keyring, auctionCreatorAddress);
+  price = bnToBn(price);
+  let call = Global_Api.tx.nftmartAuction.bidBritishAuction(price.mul(unit), auctionCreatorAddress, auctionId);
+  bidder = keyring.addFromUri(bidder);
+  const feeInfo = await call.paymentInfo(bidder);
+  console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+  let [a, b] = waitTx(Global_ModuleMetadata);
+  await call.signAndSend(bidder, a);
+  await b();
+}
+
+async function show_british_auction(ws) {
+  await initApi(ws);
+  const keyring = getKeyring();
+  const currentBlock = Number((await Global_Api.rpc.chain.getBlock()).block.header.number);
+
+  const auctions = await Global_Api.query.nftmartAuction.britishAuctions.entries();
+  for (const auction of auctions) {
+    let key = auction[0];
+    const len = key.length;
+    const auctionId = Buffer.from(key.buffer.slice(len - 8, len)).readBigUInt64LE();
+    key = key.buffer.slice(len - 32 - 8 - 8, len - 8 - 8);
+    const address = keyring.encodeAddress(new Uint8Array(key));
+    let data = auction[1].toHuman();
+    let jsonData = auction[1].toJSON();
+    data.creator = address;
+    data.currentBlock = currentBlock;
+    data.minRaise = perU16ToFloat(jsonData.minRaise);
+    data.auctionId = auctionId.toString();
+
+    let bid = await Global_Api.query.nftmartAuction.britishAuctionBids(data.auctionId);
+    if (bid.isSome) {
+      bid = bid.unwrap();
+      if (bid.lastBidAccount.isSome) {
+        const actualDeadline = await getAuctionDeadline(jsonData.allowDelay, jsonData.deadline, bid.lastBidBlock);
+        data.actualDeadline = actualDeadline.toString();
+        data.lastBidAccount = bid.lastBidAccount.unwrap();
+        data.lastBidBlock = bid.lastBidBlock;
+        data.lastBidPrice = `${ bid.lastBidPrice / unit} NMT`;
+      } else {
+        data.actualDeadline = jsonData.deadline;
+        data.lastBidAccount = "";
+        data.lastBidBlock = 0;
+        data.lastBidPrice = 0;
+      }
+    }
+
+    data.closed = currentBlock > Number(data.actualDeadline);
+    console.log("%s", JSON.stringify(data));
+  }
+}
+
+async function submit_british_auction(ws, account, allow_delay, deadline_minute, tokens) {
+  console.log("============== submit_british_auction ==============");
+
+  await initApi(ws);
+  const keyring = getKeyring();
+  let blockTimeSec = Global_Api.consts.babe.expectedBlockTime.toNumber() / 1000;
+  let deadlineBlock = deadline_minute * 60 / blockTimeSec;
+  let block = await Global_Api.rpc.chain.getBlock();
+  deadlineBlock += Number(block.block.header.number);
+
+  account = keyring.addFromUri(account);
+
+  let min_deposit = (await Global_Api.query.nftmartConf.minOrderDeposit()).toString();
+  const categoryId = 0;
+  const init_price = 10 * unit;
+  const hammer_price = bnToBn('10000').mul(unit);
+  // `float2PerU16(0.5)`:
+  //
+  // For any bidding of an auction,
+  // the second bidding should at least to be 1.5 times of the first relative biding.
+  const minRaise = float2PerU16(0.5); // 50%
+  const call = Global_Api.tx.nftmartAuction.submitBritishAuction(
+    NativeCurrencyID, hammer_price, minRaise, min_deposit, init_price,
+    deadlineBlock, allow_delay, categoryId, tokens);
+
+  const feeInfo = await call.paymentInfo(account);
+  console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
+  let [a, b] = waitTx(Global_ModuleMetadata);
+  await call.signAndSend(account, a);
+  await b();
 }
 
 async function remove_dutch_auction(ws, auctionCreatorAddress, auctionId) {
@@ -726,12 +880,13 @@ async function create_category(ws, keyring, signer, metadata) {
   await b();
 }
 
-async function update_auction_close_delay(ws) {
+async function update_auction_close_delay(ws, minute) {
   console.log("============== update_auction_close_delay ==============");
   await initApi(ws);
   const keyring = getKeyring();
   const signer = keyring.addFromUri("//Alice");
-  const call = Global_Api.tx.sudo.sudo(Global_Api.tx.nftmartConf.updateAuctionCloseDelay(100));
+  let blockTimeSec = Global_Api.consts.babe.expectedBlockTime.toNumber() / 1000;
+  const call = Global_Api.tx.sudo.sudo(Global_Api.tx.nftmartConf.updateAuctionCloseDelay(Number(minute) * 60 / blockTimeSec));
   const feeInfo = await call.paymentInfo(signer);
   console.log("The fee of the call: %s.", feeInfo.partialFee / unit);
   let [a, b] = waitTx(Global_ModuleMetadata);

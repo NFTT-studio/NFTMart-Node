@@ -77,6 +77,7 @@ pub mod module {
 		DuplicatedBid,
 		MaxPriceShouldBeGreaterThanMinPrice,
 		InvalidDutchMinPrice,
+		SelfBid,
 	}
 
 	#[pallet::event]
@@ -233,6 +234,8 @@ pub mod module {
 			// Rename to bidder TODO
 			let purchaser: T::AccountId = ensure_signed(origin)?;
 			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
+			ensure!(purchaser != auction_owner, Error::<T>::SelfBid);
+
 			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
 			let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
 
@@ -424,6 +427,7 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let purchaser = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
+			ensure!(purchaser != auction_owner, Error::<T>::SelfBid);
 
 			let auction: BritishAuctionOf<T> = Self::british_auctions(&auction_owner, auction_id).ok_or(Error::<T>::BritishAuctionNotFound)?;
 			let auction_bid: BritishAuctionBidOf<T> = Self::british_auction_bids(auction_id).ok_or(Error::<T>::BritishAuctionBidNotFound)?;
