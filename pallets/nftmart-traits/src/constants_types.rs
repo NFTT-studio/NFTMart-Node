@@ -149,3 +149,24 @@ pub mod fee {
 		}
 	}
 }
+
+/// These constants are specific to FRAME, and the current implementation of its various components.
+/// For example: FRAME System, FRAME Executive, our FRAME support libraries, etc...
+pub mod constants {
+	use frame_support::weights::{RuntimeDbWeight, Weight};
+	use frame_support::parameter_types;
+	pub use frame_support::weights::constants::{WEIGHT_PER_SECOND, WEIGHT_PER_MILLIS, WEIGHT_PER_MICROS, WEIGHT_PER_NANOS};
+
+	parameter_types! {
+		/// Importing a block with 0 txs takes ~5 ms
+		pub const BlockExecutionWeight: Weight = 42 * WEIGHT_PER_MILLIS;
+		/// Executing 10,000 System remarks (no-op) txs takes ~1.26 seconds -> ~125 µs per tx
+		pub const ExtrinsicBaseWeight: Weight = 125 * WEIGHT_PER_MICROS;
+		/// By default, Substrate uses RocksDB, so this will be the weight used throughout
+		/// the runtime.
+		pub const RocksDbWeight: RuntimeDbWeight = RuntimeDbWeight {
+			read: 60 * WEIGHT_PER_MICROS,   // ~60 µs @ 200,000 items
+			write: 242 * WEIGHT_PER_MICROS, // ~242 µs @ 200,000 items
+		};
+	}
+}
