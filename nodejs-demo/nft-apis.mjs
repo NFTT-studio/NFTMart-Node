@@ -105,7 +105,7 @@ async function main() {
   const ss58Format = 50;
   const keyring = new Keyring({type: 'sr25519', ss58Format});
   const program = new Command();
-  program.option('--ws <url>', 'node ws addr', 'ws://192.168.0.2:9946');
+  program.option('--ws <url>', 'node ws addr', 'ws://192.168.0.5:9944');
 
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' make_data
   // node nft-apis.mjs make_data

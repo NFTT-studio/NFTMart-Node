@@ -670,6 +670,10 @@ impl<T: Config> Pallet<T> {
 
 impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf<T>> for Pallet<T> {
 
+	fn peek_next_class_id() -> ClassIdOf<T> {
+		orml_nft::NextClassId::<T>::get()
+	}
+
 	fn transfer(from: &T::AccountId, to: &T::AccountId, class_id: ClassIdOf<T>, token_id: TokenIdOf<T>, quantity: TokenIdOf<T>) -> DispatchResult {
 		Self::do_transfer(from, to, class_id, token_id, quantity)
 	}
@@ -690,5 +694,17 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 		let token: TokenInfoOf<T> = orml_nft::Tokens::<T>::get(class_id, token_id).ok_or(Error::<T>::TokenIdNotFound)?;
 		let data: TokenData<T::AccountId, T::BlockNumber> = token.data;
 		Ok(data.royalty)
+	}
+
+	fn create_class(who: &T::AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, properties: Properties) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
+		Self::do_create_class(who, metadata, name, description, properties)
+	}
+
+	#[allow(clippy::type_complexity)]
+	fn proxy_mint(
+		delegate: &T::AccountId, to: &T::AccountId, class_id: ClassIdOf<T>,
+		metadata: NFTMetadata, quantity: TokenIdOf<T>, charge_royalty: Option<bool>,
+	) -> ResultPost<(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)> {
+		Self::do_proxy_mint(delegate, to, class_id, metadata, quantity, charge_royalty)
 	}
 }

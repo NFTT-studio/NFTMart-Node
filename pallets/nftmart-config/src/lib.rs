@@ -165,8 +165,7 @@ pub mod module {
 		#[transactional]
 		pub fn add_whitelist(origin: OriginFor<T>, who: T::AccountId) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
-			AccountWhitelist::<T>::insert(&who, ());
-			Self::deposit_event(Event::AddWhitelist(who));
+			Self::do_add_whitelist(&who);
 			Ok((None, Pays::No).into())
 		}
 
@@ -188,16 +187,7 @@ pub mod module {
 		#[transactional]
 		pub fn create_category(origin: OriginFor<T>, metadata: NFTMetadata) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
-
-			let category_id = <Self as NftmartConfig<T::AccountId, BlockNumberFor<T>>>::get_then_inc_id()?;
-
-			let info = CategoryData {
-				metadata,
-				count: Zero::zero(),
-			};
-			Categories::<T>::insert(category_id, info);
-
-			Self::deposit_event(Event::CreatedCategory(category_id));
+			Self::do_create_category(metadata)?;
 			Ok((None, Pays::No).into())
 		}
 
@@ -237,6 +227,28 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 
 	fn is_in_whitelist(who: &T::AccountId) -> bool {
 		Self::account_whitelist(who).is_some()
+	}
+
+	fn peek_next_gid() -> GlobalId {
+		Self::next_id()
+	}
+
+	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo {
+		let category_id = <Self as NftmartConfig<T::AccountId, BlockNumberFor<T>>>::get_then_inc_id()?;
+
+		let info = CategoryData {
+			metadata,
+			count: Zero::zero(),
+		};
+		Categories::<T>::insert(category_id, info);
+
+		Self::deposit_event(Event::CreatedCategory(category_id));
+		Ok(().into())
+	}
+
+	fn do_add_whitelist(who: &T::AccountId) {
+		AccountWhitelist::<T>::insert(&who, ());
+		Self::deposit_event(Event::AddWhitelist(who.clone()));
 	}
 
 	fn get_min_order_deposit() -> Balance {

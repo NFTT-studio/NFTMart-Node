@@ -468,6 +468,7 @@ impl nftmart_auction::Config for Runtime {
 	type TokenId = nftmart_traits::TokenId;
 	type NFT = Nftmart;
 	type ExtraConfig = NftmartConf;
+	type WeightInfo = ();
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.

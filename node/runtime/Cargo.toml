@@ -195,6 +195,7 @@ runtime-benchmarks = [
 	"pallet-session-benchmarking",
 	"frame-system-benchmarking",
 	"hex-literal",
+	"nftmart-auction/runtime-benchmarks",
 ]
 try-runtime = [
 	"frame-executive/try-runtime",

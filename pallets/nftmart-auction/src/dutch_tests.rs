@@ -8,16 +8,17 @@ use sp_runtime::{PerU16};
 use orml_nft::AccountToken;
 use frame_support::{assert_ok, assert_noop, assert_storage_noop};
 use nftmart_traits::*;
+use crate::utils::test_helper::*;
 
 fn create_auction(allow_british: bool, max_price: Balance) -> GlobalId {
-	add_class(ALICE);
-	add_token(BOB, 20, None);
-	add_token(BOB, 40, Some(false));
+	add_class::<Runtime>(ALICE);
+	add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
+	add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
 
-	let cate_id = current_gid();
-	add_category();
+	let cate_id = current_gid::<Runtime>();
+	add_category::<Runtime>();
 
-	let auction_id = current_gid();
+	let auction_id = current_gid::<Runtime>();
 	assert_ok!(NftmartAuction::submit_dutch_auction(
 			Origin::signed(BOB),
 			NATIVE_CURRENCY_ID,
@@ -31,7 +32,7 @@ fn create_auction(allow_british: bool, max_price: Balance) -> GlobalId {
 			PerU16::from_percent(50),
 		));
 	let event = Event::NftmartAuction(crate::Event::CreatedDutchAuction(BOB, auction_id));
-	assert_eq!(last_event(), event);
+	assert_eq!(last_event::<Runtime>(), event);
 
 	auction_id
 }
@@ -51,14 +52,14 @@ fn submit_dutch_auction_should_work() {
 #[test]
 fn submit_dutch_auction_should_fail() {
 	ExtBuilder::default().build().execute_with(|| {
-		add_class(ALICE);
-		add_token(BOB, 20, Some(true));
-		add_token(BOB, 40, Some(true));
+		add_class::<Runtime>(ALICE);
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, Some(true));
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(true));
 
-		assert_storage_noop!(current_gid());
+		assert_storage_noop!(current_gid::<Runtime>());
 
-		let cate_id = current_gid();
-		add_category();
+		let cate_id = current_gid::<Runtime>();
+		add_category::<Runtime>();
 
 		assert_noop!(NftmartAuction::submit_dutch_auction(
 			Origin::signed(BOB),
@@ -83,7 +84,7 @@ fn bid_dutch_auction_should_work() {
 			Origin::signed(CHARLIE), 0, BOB, auction_id,
 		));
 		let event = Event::NftmartAuction(crate::Event::RedeemedDutchAuction(CHARLIE, auction_id));
-		assert_eq!(last_event(), event);
+		assert_eq!(last_event::<Runtime>(), event);
 
 		assert_eq!(vec![
 			(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 0 }),
@@ -113,7 +114,7 @@ fn bid_dutch_auction_should_work() {
 		let bid: DutchAuctionBidOf<Runtime> = NftmartAuction::dutch_auction_bids(auction_id).unwrap();
 		assert_eq!(bid.last_bid_price, max_price);
 		let event = Event::NftmartAuction(crate::Event::BidDutchAuction(CHARLIE, auction_id));
-		assert_eq!(last_event(), event);
+		assert_eq!(last_event::<Runtime>(), event);
 
 		assert_noop!(
 			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), max_price, BOB, auction_id),

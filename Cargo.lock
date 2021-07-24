@@ -4001,6 +4001,7 @@ dependencies = [
 name = "nftmart-auction"
 version = "3.0.0"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "nftmart-config",

@@ -1059,6 +1059,7 @@ impl nftmart_auction::Config for Runtime {
 	type TokenId = nftmart_traits::TokenId;
 	type NFT = Nftmart;
 	type ExtraConfig = NftmartConf;
+	type WeightInfo = ();
 }
 
 construct_runtime!(
@@ -1459,6 +1460,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
 			add_benchmark!(params, batches, pallet_treasury, Treasury);
 			add_benchmark!(params, batches, pallet_utility, Utility);
+			add_benchmark!(params, batches, nftmart_auction, NftmartAuction);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok((batches, storage_info))

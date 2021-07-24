@@ -16,6 +16,7 @@ pallet-proxy = { version = "4.0.0-dev", default-features = false, git = 'https:/
 pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
 orml-traits = { version = "0.4.1-dev", default-features = false, path = "../orml-traits" }
 nftmart-traits = { default-features = false, path = "../nftmart-traits" }
+frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0', optional = true }
 
 [dev-dependencies]
 sp-io = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
@@ -41,4 +42,6 @@ std = [
 	"pallet-timestamp/std",
 	"nftmart-traits/std",
 	"orml-traits/std",
+	"frame-benchmarking/std",
 ]
+runtime-benchmarks = ["frame-benchmarking"]

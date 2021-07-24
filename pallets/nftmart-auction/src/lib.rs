@@ -20,6 +20,9 @@ use nftmart_traits::*;
 mod mock;
 mod british_tests;
 mod dutch_tests;
+mod benchmarking;
+pub mod weights;
+use crate::weights::WeightInfo;
 
 mod utils;
 pub use utils::*;
@@ -28,6 +31,8 @@ mod types;
 pub use types::*;
 
 pub use module::*;
+
+pub const MAX_TOKEN_PER_AUCTION: u32 = 100;
 
 #[frame_support::pallet]
 pub mod module {
@@ -54,6 +59,9 @@ pub mod module {
 
 		/// Extra Configurations
 		type ExtraConfig: NftmartConfig<Self::AccountId, BlockNumberFor<Self>>;
+
+		/// Weight information for extrinsics in this pallet.
+		type WeightInfo: weights::WeightInfo;
 	}
 
 	#[pallet::error]
@@ -78,6 +86,8 @@ pub mod module {
 		MaxPriceShouldBeGreaterThanMinPrice,
 		InvalidDutchMinPrice,
 		SelfBid,
+		TooManyTokens,
+		EmptyTokenList,
 	}
 
 	#[pallet::event]
@@ -156,9 +166,9 @@ pub mod module {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
-		#[pallet::weight(100_000)]
-		#[transactional]
 		#[allow(clippy::too_many_arguments)]
+		#[transactional]
+		#[pallet::weight(T::WeightInfo::submit_dutch_auction(items.len() as u32))]
 		pub fn submit_dutch_auction(
 			origin: OriginFor<T>,
 			#[pallet::compact] currency_id: CurrencyIdOf<T>,
@@ -172,6 +182,8 @@ pub mod module {
 			#[pallet::compact] min_raise: PerU16,
 		) -> DispatchResultWithPostInfo {
 			let who: T::AccountId = ensure_signed(origin)?;
+			ensure!(items.len() > 0, Error::<T>::EmptyTokenList);
+			ensure!(items.len() as u32 <= MAX_TOKEN_PER_AUCTION, Error::<T>::TooManyTokens);
 
 			// check and reserve `deposit`
 			ensure!(deposit >= T::ExtraConfig::get_min_order_deposit(), Error::<T>::SubmitWithInvalidDeposit);

@@ -22,14 +22,23 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn get_then_inc_id() -> Result<GlobalId, DispatchError>;
 	fn inc_count_in_category (category_id: GlobalId) -> DispatchResult;
 	fn dec_count_in_category (category_id: GlobalId) -> DispatchResult;
+	fn do_add_whitelist(who: &AccountId);
+	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo;
+	fn peek_next_gid() -> GlobalId;
 }
 
 pub trait NftmartNft<AccountId, ClassId, TokenId> {
+	fn peek_next_class_id() -> ClassId;
 	fn transfer(from: &AccountId, to: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
 	fn account_token(_who: &AccountId, _class_id: ClassId, _token_id: TokenId) -> AccountToken<TokenId>;
 	fn reserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
 	fn unreserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
 	fn token_charged_royalty(class_id: ClassId, token_id: TokenId) -> Result<bool, DispatchError>;
+	fn create_class(who: &AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, properties: Properties) -> ResultPost<(AccountId, ClassId)>;
+	fn proxy_mint(
+		delegate: &AccountId, to: &AccountId, class_id: ClassId,
+		metadata: NFTMetadata, quantity: TokenId, charge_royalty: Option<bool>,
+	) -> ResultPost<(AccountId, AccountId, ClassId, TokenId, TokenId)>;
 }
 
 #[repr(u8)]
@@ -198,6 +207,9 @@ macro_rules! ensure_one_royalty {
 #[macro_export]
 macro_rules! nft_dbg {
 	($($msg: expr),+ $(,)?) => {
+		#[cfg(test)]
+		println!($($msg),+);
+		#[cfg(not(test))]
 		log::log!(target: "nftmart", log::Level::Debug, $($msg),+);
 	};
 }
@@ -205,6 +217,9 @@ macro_rules! nft_dbg {
 #[macro_export]
 macro_rules! nft_info {
 	($($msg: expr),+ $(,)?) => {
+		#[cfg(test)]
+		println!($($msg),+);
+		#[cfg(not(test))]
 		log::log!(target: "nftmart", log::Level::Info, $($msg),+);
 	};
 }
@@ -212,6 +227,9 @@ macro_rules! nft_info {
 #[macro_export]
 macro_rules! nft_err {
 	($($msg: expr),+ $(,)?) => {
+		#[cfg(test)]
+		println!($($msg),+);
+		#[cfg(not(test))]
 		log::log!(target: "nftmart", log::Level::Error, $($msg),+);
 	};
 }

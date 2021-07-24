@@ -7,6 +7,7 @@ use orml_nft::AccountToken;
 use nftmart_traits::*;
 use frame_support::{assert_ok};
 use paste::paste;
+use crate::utils::test_helper::*;
 
 macro_rules! submit_british_auction_should_work {
     ( $(#[$attr: meta])* $test_name: ident, $hammer_price: expr) => {
@@ -15,23 +16,23 @@ macro_rules! submit_british_auction_should_work {
 			$(#[$attr])*
 			fn [<submit_british_auction_should_work $test_name>] () {
 				ExtBuilder::default().build().execute_with(|| {
-					add_class(ALICE);
-					add_token(BOB, 20, None);
-					add_token(BOB, 40, Some(false));
+					add_class::<Runtime>(ALICE);
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
 					assert_eq!(vec![
 						(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 20, reserved: 0 }),
 						(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 40, reserved: 0 })
 					], all_tokens_by(BOB));
 
-					let cate_id = current_gid();
-					add_category();
+					let cate_id = current_gid::<Runtime>();
+					add_category::<Runtime>();
 
 					let bob_free = 100;
 					assert_eq!(free_balance(&BOB), bob_free);
 
 					let deposit = 50;
 
-					let auction_id = current_gid();
+					let auction_id = current_gid::<Runtime>();
 					assert_ok!(NftmartAuction::submit_british_auction(
 						Origin::signed(BOB),
 						NATIVE_CURRENCY_ID,
@@ -45,7 +46,7 @@ macro_rules! submit_british_auction_should_work {
 						vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 					));
 					let event = Event::NftmartAuction(crate::Event::CreatedBritishAuction(BOB, auction_id));
-					assert_eq!(last_event(), event);
+					assert_eq!(last_event::<Runtime>(), event);
 
 					assert_eq!(vec![
 						(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 10 }),
@@ -68,12 +69,12 @@ submit_british_auction_should_work!(_3, 201);
 #[test]
 fn bid_british_auction_should_work_hammer_price() {
 	ExtBuilder::default().build().execute_with(|| {
-		add_class(ALICE);
-		add_token(BOB, 20, None);
-		add_token(BOB, 40, Some(false));
-		let cate_id = current_gid();
-		add_category();
-		let auction_id = current_gid();
+		add_class::<Runtime>(ALICE);
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+		let cate_id = current_gid::<Runtime>();
+		add_category::<Runtime>();
+		let auction_id = current_gid::<Runtime>();
 
 		let bob_free = free_balance(&BOB);
 		let hammer = 500;
@@ -93,7 +94,7 @@ fn bid_british_auction_should_work_hammer_price() {
 		let price = 600;
 		assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id));
 		let event = Event::NftmartAuction(crate::Event::HammerBritishAuction(CHARLIE, auction_id));
-		assert_eq!(last_event(), event);
+		assert_eq!(last_event::<Runtime>(), event);
 
 		assert_eq!(vec![
 			(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 0 }),
@@ -111,12 +112,12 @@ macro_rules! bid_british_auction_should_work {
 			$(#[$attr])*
 			fn [<bid_british_auction_should_work $test_name>] () {
 				ExtBuilder::default().build().execute_with(|| {
-					add_class(ALICE);
-					add_token(BOB, 20, None);
-					add_token(BOB, 40, Some(false));
-					let cate_id = current_gid();
-					add_category();
-					let auction_id = current_gid();
+					add_class::<Runtime>(ALICE);
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+					let cate_id = current_gid::<Runtime>();
+					add_category::<Runtime>();
+					let auction_id = current_gid::<Runtime>();
 
 					let raise = PerU16::from_percent(10);
 					assert_ok!(NftmartAuction::submit_british_auction(
@@ -138,7 +139,7 @@ macro_rules! bid_british_auction_should_work {
 					assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT);
 					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id));
 					let event = Event::NftmartAuction(crate::Event::BidBritishAuction(CHARLIE, auction_id));
-					assert_eq!(last_event(), event);
+					assert_eq!(last_event::<Runtime>(), event);
 					assert_eq!(reserved_balance(&CHARLIE), price);
 					assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT - price);
 
@@ -147,7 +148,7 @@ macro_rules! bid_british_auction_should_work {
 					assert_eq!(free_balance(&DAVE), DAVE_INIT);
 					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(DAVE), price, BOB, auction_id));
 					let event = Event::NftmartAuction(crate::Event::BidBritishAuction(DAVE, auction_id));
-					assert_eq!(last_event(), event);
+					assert_eq!(last_event::<Runtime>(), event);
 					assert_eq!(reserved_balance(&DAVE), price);
 					assert_eq!(free_balance(&DAVE), DAVE_INIT - price);
 
@@ -156,7 +157,7 @@ macro_rules! bid_british_auction_should_work {
 					assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT);
 					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id));
 					let event = Event::NftmartAuction(crate::Event::BidBritishAuction(CHARLIE, auction_id));
-					assert_eq!(last_event(), event);
+					assert_eq!(last_event::<Runtime>(), event);
 					assert_eq!(reserved_balance(&CHARLIE), price);
 					assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT - price);
 					assert_eq!(free_balance(&DAVE), DAVE_INIT);
@@ -178,12 +179,12 @@ macro_rules! redeem_british_auction_should_work {
 			$(#[$attr])*
 			fn [<redeem_british_auction_should_work $test_name>] () {
 				ExtBuilder::default().build().execute_with(|| {
-					add_class(ALICE);
-					add_token(BOB, 20, None);
-					add_token(BOB, 40, Some(false));
-					let cate_id = current_gid();
-					add_category();
-					let auction_id = current_gid();
+					add_class::<Runtime>(ALICE);
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+					let cate_id = current_gid::<Runtime>();
+					add_category::<Runtime>();
+					let auction_id = current_gid::<Runtime>();
 					assert_ok!(NftmartAuction::submit_british_auction(
 						Origin::signed(BOB),
 						NATIVE_CURRENCY_ID,
@@ -201,7 +202,7 @@ macro_rules! redeem_british_auction_should_work {
 					System::set_block_number($set_block);
 					assert_ok!(NftmartAuction::redeem_british_auction(Origin::signed(DAVE), BOB, auction_id));
 					let event = Event::NftmartAuction(crate::Event::RedeemedBritishAuction(CHARLIE, auction_id));
-					assert_eq!(last_event(), event);
+					assert_eq!(last_event::<Runtime>(), event);
 					assert!(get_bid(auction_id).is_none());
 					assert!(get_auction(&BOB, auction_id).is_none());
 
@@ -231,12 +232,12 @@ redeem_british_auction_should_work!(_4, allow_delay false, set_block 20);
 #[test]
 fn remove_british_auction_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
-		add_class(ALICE);
-		add_token(BOB, 20, None);
-		add_token(BOB, 40, Some(false));
-		let cate_id = current_gid();
-		add_category();
-		let auction_id = current_gid();
+		add_class::<Runtime>(ALICE);
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+		let cate_id = current_gid::<Runtime>();
+		add_category::<Runtime>();
+		let auction_id = current_gid::<Runtime>();
 
 		let hammer = 500;
 		assert_ok!(NftmartAuction::submit_british_auction(
@@ -253,7 +254,7 @@ fn remove_british_auction_should_work() {
 		));
 		assert_ok!(NftmartAuction::remove_british_auction(Origin::signed(BOB), auction_id));
 		let event = Event::NftmartAuction(crate::Event::RemovedBritishAuction(BOB, auction_id));
-		assert_eq!(last_event(), event);
+		assert_eq!(last_event::<Runtime>(), event);
 		assert!(get_bid(auction_id).is_none());
 		assert!(get_auction(&BOB, auction_id).is_none());
 	});

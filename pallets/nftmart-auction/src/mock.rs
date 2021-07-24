@@ -7,14 +7,13 @@ use codec::{Decode, Encode};
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{Filter, InstanceFilter},
-	RuntimeDebug, assert_ok, PalletId
+	RuntimeDebug, PalletId
 };
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
 	testing::Header,
-	traits::{BlakeTwo256, IdentityLookup, AccountIdConversion},
+	traits::{BlakeTwo256, IdentityLookup},
 };
-use nftmart_traits::{Properties, ClassProperty};
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
@@ -194,6 +193,7 @@ impl nftmart_auction::Config for Runtime {
 	type TokenId = nftmart_traits::constants_types::TokenId;
 	type NFT = Nftmart;
 	type ExtraConfig = NftmartConf;
+	type WeightInfo = ();
 }
 
 use frame_system::Call as SystemCall;
@@ -270,42 +270,15 @@ impl ExtBuilder {
 	}
 }
 
-pub fn last_event() -> Event {
-	frame_system::Pallet::<Runtime>::events()
-		.pop()
-		.expect("Event expected")
-		.event
+#[cfg(feature = "runtime-benchmarks")]
+pub fn new_test_ext() -> sp_io::TestExternalities {
+	ExtBuilder::default().build()
 }
 
-pub fn add_class(who: AccountId) {
-	assert_ok!(Nftmart::create_class(
-		Origin::signed(who),
-		vec![1], vec![1], vec![1],
-		Properties(ClassProperty::Transferable |
-			ClassProperty::Burnable |
-			ClassProperty::RoyaltiesChargeable)
-	));
-}
-
-pub fn class_id0_account() -> AccountId {
-	<Runtime as nftmart_nft::Config>::ModuleId::get().into_sub_account(CLASS_ID0)
-}
-
-pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<bool>) {
-	let deposit = Nftmart::mint_token_deposit(1);
-	assert_eq!(Balances::deposit_into_existing(&class_id0_account(), deposit).is_ok(), true);
-	assert_ok!(Nftmart::mint(
-		Origin::signed(class_id0_account()),
-		who,
-		CLASS_ID0,
-		vec![1],
-		quantity, charge_royalty,
-	));
-}
-
-pub fn add_category() {
-	assert_ok!(NftmartConf::create_category(Origin::root(), vec![1]));
-}
+// pub fn class_id0_account() -> AccountId {
+// 	use sp_runtime:tratis::AccountIdConversion;
+// 	<Runtime as nftmart_nft::Config>::ModuleId::get().into_sub_account(CLASS_ID0)
+// }
 
 pub fn all_tokens_by(who: AccountId) -> Vec<(ClassId, TokenId, orml_nft::AccountToken<TokenId>)> {
 	let v: Vec<_> = orml_nft::TokensByOwner::<Runtime>::iter().filter(|(account, (_c, _t), _data)| {
@@ -314,10 +287,6 @@ pub fn all_tokens_by(who: AccountId) -> Vec<(ClassId, TokenId, orml_nft::Account
 		(c, t, data)
 	}).collect();
 	v.into_iter().rev().collect()
-}
-
-pub fn current_gid() -> GlobalId {
-	nftmart_config::Pallet::<Runtime>::next_id()
 }
 
 pub fn free_balance(who: &AccountId) -> Balance {
