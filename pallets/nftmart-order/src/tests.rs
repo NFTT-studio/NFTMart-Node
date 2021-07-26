@@ -9,13 +9,14 @@ use crate::mock::{add_class, ExtBuilder, ALICE, BOB, free_balance,
 };
 use orml_nft::AccountToken;
 use frame_support::{assert_ok};
+use sp_runtime::PerU16;
 
 #[test]
 fn submit_order_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		add_class(ALICE);
 		add_token(BOB, 20, None);
-		add_token(BOB, 40, Some(false));
+		add_token(BOB, 40, Some(PerU16::zero()));
 		assert_eq!(vec![
 			(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 20, reserved: 0 }),
 			(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 40, reserved: 0 })
@@ -52,7 +53,7 @@ fn take_order_should_work() {
 		assert_eq!(198, free_balance(&ALICE));
 
 		add_token(BOB, 20, None);
-		add_token(BOB, 40, Some(false));
+		add_token(BOB, 40, Some(PerU16::zero()));
 
 		let cate_id = current_gid();
 		add_category();
@@ -89,7 +90,7 @@ fn submit_offer_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		add_class(ALICE);
 		add_token(BOB, 20, None);
-		add_token(BOB, 40, Some(false));
+		add_token(BOB, 40, Some(PerU16::zero()));
 		assert_eq!(100, free_balance(&CHARLIE));
 
 		let cate_id = current_gid();
@@ -119,7 +120,7 @@ fn take_offer_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		add_class(ALICE);
 		add_token(BOB, 20, None);
-		add_token(BOB, 40, Some(false));
+		add_token(BOB, 40, Some(PerU16::zero()));
 
 		let cate_id = current_gid();
 		add_category();

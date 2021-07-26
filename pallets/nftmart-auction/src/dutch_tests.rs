@@ -13,7 +13,7 @@ use crate::utils::test_helper::*;
 fn create_auction(allow_british: bool, max_price: Balance) -> GlobalId {
 	add_class::<Runtime>(ALICE);
 	add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
-	add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+	add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
 
 	let cate_id = current_gid::<Runtime>();
 	add_category::<Runtime>();
@@ -53,8 +53,8 @@ fn submit_dutch_auction_should_work() {
 fn submit_dutch_auction_should_fail() {
 	ExtBuilder::default().build().execute_with(|| {
 		add_class::<Runtime>(ALICE);
-		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, Some(true));
-		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(true));
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, Some(PerU16::from_percent(5)));
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::from_percent(6)));
 
 		assert_storage_noop!(current_gid::<Runtime>());
 

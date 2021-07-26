@@ -7,6 +7,7 @@ use sp_std::vec::Vec;
 use serde::{Serialize, Deserialize};
 pub use enumflags2::BitFlags;
 pub use orml_traits::nft::{TokenInfo, ClassInfo, AccountToken};
+use sp_runtime::{PerU16};
 
 pub mod constants_types;
 pub use crate::constants_types::*;
@@ -25,6 +26,7 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn do_add_whitelist(who: &AccountId);
 	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo;
 	fn peek_next_gid() -> GlobalId;
+	fn get_royalties_rate() -> PerU16;
 }
 
 pub trait NftmartNft<AccountId, ClassId, TokenId> {
@@ -33,11 +35,11 @@ pub trait NftmartNft<AccountId, ClassId, TokenId> {
 	fn account_token(_who: &AccountId, _class_id: ClassId, _token_id: TokenId) -> AccountToken<TokenId>;
 	fn reserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
 	fn unreserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
-	fn token_charged_royalty(class_id: ClassId, token_id: TokenId) -> Result<bool, DispatchError>;
-	fn create_class(who: &AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, properties: Properties) -> ResultPost<(AccountId, ClassId)>;
+	fn token_charged_royalty(class_id: ClassId, token_id: TokenId) -> Result<PerU16, DispatchError>;
+	fn create_class(who: &AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> ResultPost<(AccountId, ClassId)>;
 	fn proxy_mint(
 		delegate: &AccountId, to: &AccountId, class_id: ClassId,
-		metadata: NFTMetadata, quantity: TokenId, charge_royalty: Option<bool>,
+		metadata: NFTMetadata, quantity: TokenId, charge_royalty: Option<PerU16>,
 	) -> ResultPost<(AccountId, AccountId, ClassId, TokenId, TokenId)>;
 }
 
@@ -48,8 +50,6 @@ pub enum ClassProperty {
 	Transferable = 0b00000001,
 	/// Token can be burned
 	Burnable = 0b00000010,
-	/// Need to charge royalties when orders are completed.
-	RoyaltiesChargeable = 0b00000100,
 }
 
 #[derive(Clone, Copy, PartialEq, Default, RuntimeDebug)]
@@ -85,6 +85,7 @@ pub struct ClassData<BlockNumber> {
 	pub description: Vec<u8>,
 	#[codec(compact)]
 	pub create_block: BlockNumber,
+	pub royalty_rate: PerU16,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -96,7 +97,7 @@ pub struct TokenData<AccountId, BlockNumber> {
 	#[codec(compact)]
 	pub create_block: BlockNumber,
 	/// Charge royalty
-	pub royalty: bool,
+	pub royalty: PerU16,
 	/// The token's creator
 	pub creator: AccountId,
 	/// Royalty beneficiary
@@ -144,7 +145,7 @@ pub struct ClassConfig<ClassId, AccountId, TokenId> {
 pub struct TokenConfig<AccountId, TokenId> {
 	pub token_id: TokenId,
 	pub token_metadata: String,
-	pub royalty: bool,
+	pub royalty: PerU16,
 	pub token_owner: AccountId,
 	pub token_creator: AccountId,
 	pub royalty_beneficiary: AccountId,
@@ -159,7 +160,7 @@ pub fn count_charged_royalty<AccountId, ClassId, TokenId, NFT>(items: &[(ClassId
 {
 	let mut count_of_charged_royalty: u32 = 0;
 	for (class_id, token_id, _quantity) in items {
-		if NFT::token_charged_royalty(*class_id, *token_id)? {
+		if !NFT::token_charged_royalty(*class_id, *token_id)?.is_zero() {
 			count_of_charged_royalty = count_of_charged_royalty.saturating_add(1u32);
 		}
 	}

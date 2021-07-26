@@ -11,7 +11,7 @@ use frame_support::{
 };
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
-	testing::Header,
+	testing::Header, PerU16,
 	traits::{BlakeTwo256, IdentityLookup, AccountIdConversion},
 };
 use nftmart_traits::{Properties, ClassProperty};
@@ -187,6 +187,10 @@ impl nftmart_config::Config for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+}
+
 impl nftmart_order::Config for Runtime {
 	type Event = Event;
 	type MultiCurrency = Currencies;
@@ -195,6 +199,7 @@ impl nftmart_order::Config for Runtime {
 	type TokenId = nftmart_traits::constants_types::TokenId;
 	type NFT = Nftmart;
 	type ExtraConfig = NftmartConf;
+	type TreasuryPalletId = TreasuryPalletId;
 }
 
 use frame_system::Call as SystemCall;
@@ -278,10 +283,8 @@ pub fn last_event() -> Event {
 pub fn add_class(who: AccountId) {
 	assert_ok!(Nftmart::create_class(
 		Origin::signed(who),
-		vec![1], vec![1], vec![1],
-		Properties(ClassProperty::Transferable |
-			ClassProperty::Burnable |
-			ClassProperty::RoyaltiesChargeable)
+		vec![1], vec![1], vec![1], PerU16::from_percent(5),
+		Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 	));
 }
 
@@ -289,7 +292,7 @@ pub fn class_id0_account() -> AccountId {
 	<Runtime as nftmart_nft::Config>::ModuleId::get().into_sub_account(CLASS_ID0)
 }
 
-pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<bool>) {
+pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<PerU16>) {
 	let deposit = Nftmart::mint_token_deposit(1);
 	assert_eq!(Balances::deposit_into_existing(&class_id0_account(), deposit).is_ok(), true);
 	assert_ok!(Nftmart::mint(

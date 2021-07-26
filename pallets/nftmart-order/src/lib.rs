@@ -106,6 +106,10 @@ pub mod module {
 
 		/// Extra Configurations
 		type ExtraConfig: NftmartConfig<Self::AccountId, BlockNumberFor<Self>>;
+
+		/// The treasury's pallet id, used for deriving its sovereign account ID.
+		#[pallet::constant]
+		type TreasuryPalletId: Get<frame_support::PalletId>;
 	}
 
 	#[pallet::error]
@@ -399,5 +403,9 @@ impl<T: Config> Pallet<T> {
 			*maybe_offer = None;
 			Ok(offer)
 		})
+	}
+
+	pub fn treasury_account_id() -> T::AccountId {
+		sp_runtime::traits::AccountIdConversion::<T::AccountId>::into_account(&T::TreasuryPalletId::get())
 	}
 }

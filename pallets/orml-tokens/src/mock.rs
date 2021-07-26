@@ -277,9 +277,7 @@ impl ExtBuilder {
 		.unwrap();
 
 		if self.treasury_genesis {
-			pallet_treasury::GenesisConfig::default()
-				.assimilate_storage::<Runtime, _>(&mut t)
-				.unwrap();
+			frame_support::pallet_prelude::GenesisBuild::<Runtime>::assimilate_storage(&pallet_treasury::GenesisConfig, &mut t).unwrap();
 
 			pallet_elections_phragmen::GenesisConfig::<Runtime> {
 				members: vec![(TREASURY_ACCOUNT, 10)],

@@ -15,7 +15,7 @@ use pallet_contracts::chain_extension::{
 	SysConfig,
 	UncheckedFrom,
 };
-use sp_runtime::{DispatchError, AccountId32, traits::Verify};
+use sp_runtime::{DispatchError, AccountId32, traits::Verify, PerU16};
 use nftmart_traits::{Properties, BitFlags, ClassProperty, Signature, ClassId, TokenId};
 use core::convert::TryFrom;
 use sp_std::vec::Vec;
@@ -69,7 +69,7 @@ impl<Runtime> ChainExtension<Runtime> for NftmartExtension<Runtime> where
 				let caller: <Runtime as SysConfig>::AccountId = to_account_id(caller.as_ref())?;
 				let (metadata, name, description, properties): (_, _, _, u8) = env.read_as_unbounded(env.in_len())?;
 				let p = Properties(<BitFlags<ClassProperty>>::from_bits(properties).map_err(|_| "invalid class properties value")?);
-				let (owner, class_id) = nftmart_nft::Pallet::<Runtime>::do_create_class(&caller, metadata, name, description, p).map_err(|e| e.error)?;
+				let (owner, class_id) = nftmart_nft::Pallet::<Runtime>::do_create_class(&caller, metadata, name, description, PerU16::zero(), p).map_err(|e| e.error)?;
 				let r = (owner, class_id).encode();
 				env.write(&r, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to return result from do_create_class"))?;

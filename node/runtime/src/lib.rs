@@ -1049,6 +1049,7 @@ impl nftmart_order::Config for Runtime {
 	type TokenId = nftmart_traits::TokenId;
 	type NFT = Nftmart;
 	type ExtraConfig = NftmartConf;
+	type TreasuryPalletId = TreasuryPalletId;
 }
 
 impl nftmart_auction::Config for Runtime {

@@ -28,10 +28,10 @@ benchmarks! {
 		add_class::<T>(alice.clone());
 
 		let mut tokens = Vec::new();
-		add_token::<T>(alice.clone(), bob.clone(), class_id, into!(20), Some(true));
+		add_token::<T>(alice.clone(), bob.clone(), class_id, into!(20), Some(PerU16::from_percent(5)));
 		tokens.push((class_id, into!(0), into!(10)));
 		for i in 0..(c-1) {
-			add_token::<T>(alice.clone(), bob.clone(), class_id, into!(40), Some(false));
+			add_token::<T>(alice.clone(), bob.clone(), class_id, into!(40), Some(PerU16::zero()));
 			tokens.push((class_id, into!(i+1), into!(10)));
 		}
 

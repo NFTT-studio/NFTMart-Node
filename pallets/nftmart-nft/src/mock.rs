@@ -234,9 +234,9 @@ impl ExtBuilder {
 
 		pallet_balances::GenesisConfig::<Runtime> {
 			balances: vec![(ALICE, 100000)],
-		}
-		.assimilate_storage(&mut t)
-		.unwrap();
+		}.assimilate_storage(&mut t).unwrap();
+
+		nftmart_config::GenesisConfig::<Runtime>::default().assimilate_storage(&mut t).unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| {
@@ -280,12 +280,12 @@ pub fn add_class(who: AccountId) {
 	let metadata = vec![1];
 	assert_ok!(Nftmart::create_class(
 		Origin::signed(who),
-		metadata.clone(), vec![1], vec![1],
+		metadata.clone(), vec![1], vec![1], PerU16::from_percent(5),
 		Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 	));
 }
 
-pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<bool>) {
+pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<PerU16>) {
 	let deposit = Nftmart::mint_token_deposit(METADATA.len() as u32);
 	assert_eq!(Balances::deposit_into_existing(&class_id_account(), deposit).is_ok(), true);
 	assert_ok!(Nftmart::mint(

@@ -65,7 +65,7 @@ pub mod module {
 		fn default() -> Self {
 			Self {
 				platform_fee_rate: PerU16::from_rational(1u32, 10000u32),
-				royalties_rate: PerU16::from_percent(5),
+				royalties_rate: PerU16::from_percent(20),
 				max_distribution_reward: PerU16::from_percent(100),
 				min_reference_deposit: ACCURACY,
 				min_order_deposit: ACCURACY,
@@ -229,28 +229,6 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 		Self::account_whitelist(who).is_some()
 	}
 
-	fn peek_next_gid() -> GlobalId {
-		Self::next_id()
-	}
-
-	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo {
-		let category_id = <Self as NftmartConfig<T::AccountId, BlockNumberFor<T>>>::get_then_inc_id()?;
-
-		let info = CategoryData {
-			metadata,
-			count: Zero::zero(),
-		};
-		Categories::<T>::insert(category_id, info);
-
-		Self::deposit_event(Event::CreatedCategory(category_id));
-		Ok(().into())
-	}
-
-	fn do_add_whitelist(who: &T::AccountId) {
-		AccountWhitelist::<T>::insert(&who, ());
-		Self::deposit_event(Event::AddWhitelist(who.clone()));
-	}
-
 	fn get_min_order_deposit() -> Balance {
 		Self::min_order_deposit()
 	}
@@ -277,5 +255,31 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 			category.count = category.count.saturating_sub(One::one());
 			Ok(())
 		})
+	}
+
+	fn do_add_whitelist(who: &T::AccountId) {
+		AccountWhitelist::<T>::insert(&who, ());
+		Self::deposit_event(Event::AddWhitelist(who.clone()));
+	}
+
+	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo {
+		let category_id = <Self as NftmartConfig<T::AccountId, BlockNumberFor<T>>>::get_then_inc_id()?;
+
+		let info = CategoryData {
+			metadata,
+			count: Zero::zero(),
+		};
+		Categories::<T>::insert(category_id, info);
+
+		Self::deposit_event(Event::CreatedCategory(category_id));
+		Ok(().into())
+	}
+
+	fn peek_next_gid() -> GlobalId {
+		Self::next_id()
+	}
+
+	fn get_royalties_rate() -> PerU16 {
+		Self::royalties_rate()
 	}
 }

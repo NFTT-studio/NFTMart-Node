@@ -45,42 +45,42 @@ fn update_token_royalty() {
 		ensure_bob_balances(ACCURACY * 4);
 		add_class(ALICE);
 		add_token(BOB, 1, None);
-		add_token(BOB, 2, Some(false)); // erc1155
+		add_token(BOB, 2, Some(PerU16::zero())); // erc1155
 		assert_noop!(
-			Nftmart::update_token_royalty(Origin::signed(ALICE), CLASS_ID, TOKEN_ID_NOT_EXIST, Some(true)),
+			Nftmart::update_token_royalty(Origin::signed(ALICE), CLASS_ID, TOKEN_ID_NOT_EXIST, Some(PerU16::from_percent(5))),
 			Error::<Runtime>::TokenIdNotFound,
 		);
 		assert_noop!(
-			Nftmart::update_token_royalty(Origin::signed(ALICE), CLASS_ID, TOKEN_ID, Some(true)),
+			Nftmart::update_token_royalty(Origin::signed(ALICE), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))),
 			Error::<Runtime>::NoPermission,
 		);
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, false);
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
 
-		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(true)));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, true);
+		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
 
-		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(false)));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, false);
+		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
 
-		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(true)));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, true);
+		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
 
 		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, None));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, false);
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
 
 		assert_ok!(Nftmart::update_token_royalty_beneficiary(Origin::signed(BOB), CLASS_ID, TOKEN_ID, ALICE));
 		assert_noop!(
-			Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(true)),
+			Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))),
 			Error::<Runtime>::NoPermission,
 		);
 
 		// erc1155
 		assert_noop!(
-			Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID2, Some(true)),
+			Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID2, Some(PerU16::from_percent(5))),
 			Error::<Runtime>::NotSupportedForNow,
 		);
 		// erc1155
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID2).unwrap().data.royalty, false);
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID2).unwrap().data.royalty, PerU16::from_percent(0));
 	});
 	// royalty beneficiary erc1155
 	ExtBuilder::default().build().execute_with(|| {
@@ -105,7 +105,7 @@ fn update_token_royalty() {
 fn create_class_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		assert_ok!(Nftmart::create_class(Origin::signed(ALICE), METADATA.to_vec(), METADATA.to_vec(), METADATA.to_vec(),
-			Properties(ClassProperty::Transferable | ClassProperty::Burnable | ClassProperty::RoyaltiesChargeable)));
+			PerU16::from_percent(5), Properties(ClassProperty::Transferable | ClassProperty::Burnable)));
 
 		let event = Event::Nftmart(crate::Event::CreatedClass(class_id_account(), CLASS_ID));
 		assert_eq!(last_event(), event);
@@ -116,7 +116,6 @@ fn create_class_should_work() {
 		let class: ClassInfoOf<Runtime> = OrmlNFT::classes(CLASS_ID).unwrap();
 		assert!(class.data.properties.0.contains(ClassProperty::Transferable));
 		assert!(class.data.properties.0.contains(ClassProperty::Burnable));
-		assert!(class.data.properties.0.contains(ClassProperty::RoyaltiesChargeable));
 	});
 }
 
@@ -127,6 +126,7 @@ fn create_class_should_fail() {
 			Nftmart::create_class(
 				Origin::signed(BOB),
 				METADATA.to_vec(), METADATA.to_vec(), METADATA.to_vec(),
+				PerU16::from_percent(5),
 				Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 			),
 			pallet_balances::Error::<Runtime, _>::InsufficientBalance
@@ -141,6 +141,7 @@ fn mint_should_work() {
 			assert_ok!(Nftmart::create_class(
 				Origin::signed(ALICE),
 				METADATA.to_vec(), METADATA.to_vec(), METADATA.to_vec(),
+				PerU16::from_percent(5),
 				Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 			));
 			let event = Event::Nftmart(crate::Event::CreatedClass(class_id_account(), CLASS_ID));
@@ -261,7 +262,7 @@ fn transfer_should_fail() {
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
 			METADATA.to_vec(), METADATA.to_vec(), METADATA.to_vec(),
-			Default::default()
+			PerU16::from_percent(5), Default::default()
 		));
 		let deposit = Nftmart::mint_token_deposit(METADATA.len() as u32);
 		assert_eq!(Balances::deposit_into_existing(&class_id_account(), deposit).is_ok(), true);
@@ -289,7 +290,7 @@ fn burn_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
-			metadata, name, description,
+			metadata, name, description, PerU16::from_percent(5),
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 		));
 		assert_eq!(Balances::deposit_into_existing(&class_id_account(), deposit_token).is_ok(), true);
@@ -360,7 +361,7 @@ fn burn_should_fail() {
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
 			METADATA.to_vec(), METADATA.to_vec(), METADATA.to_vec(),
-			Default::default()
+			PerU16::from_percent(5), Default::default()
 		));
 		add_token(BOB, 1, None);
 		assert_noop!(
@@ -384,7 +385,7 @@ fn destroy_class_should_work() {
 
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
-			metadata, name, description,
+			metadata, name, description, PerU16::from_percent(5),
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 		));
 		assert_eq!(free_balance(&ALICE), 100000 - deposit_class);

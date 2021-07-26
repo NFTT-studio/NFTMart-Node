@@ -10,7 +10,7 @@ use frame_system::pallet_prelude::*;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
 use sp_runtime::{
 	traits::{Bounded, AccountIdConversion, StaticLookup, Zero, One, AtLeast32BitUnsigned, CheckedAdd},
-	RuntimeDebug, SaturatedConversion,
+	RuntimeDebug, SaturatedConversion, PerU16,
 };
 
 mod mock;
@@ -71,6 +71,7 @@ pub mod migrations {
 				properties: self.properties,
 				name: self.name,
 				description: self.description,
+				royalty_rate: PerU16::zero(),
 			}
 		}
 	}
@@ -82,7 +83,7 @@ pub mod migrations {
 			TokenData {
 				create_block: create_block * 3u32.into(),
 				deposit: self.deposit,
-				royalty: false,
+				royalty: PerU16::from_percent(0),
 				creator: who.clone(),
 				royalty_beneficiary: who,
 			}
@@ -185,6 +186,7 @@ pub mod module {
 		AccountNotInWhitelist,
 		/// Not supported for now
 		NotSupportedForNow,
+		RoyaltyRateTooHigh,
 	}
 
 	#[pallet::event]
@@ -266,6 +268,7 @@ pub mod module {
 					name: name.clone(),
 					description: description.clone(),
 					create_block: <frame_system::Pallet<T>>::block_number(),
+					royalty_rate: PerU16::zero(),
 				};
 				orml_nft::Pallet::<T>::create_class(&owner, class_metadata.clone(), data).unwrap();
 
@@ -315,9 +318,9 @@ pub mod module {
 		/// - `description`: class description, with len limitation.
 		#[pallet::weight(100_000)]
 		#[transactional]
-		pub fn create_class(origin: OriginFor<T>, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, properties: Properties) -> DispatchResultWithPostInfo {
+		pub fn create_class(origin: OriginFor<T>, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			Self::do_create_class(&who, metadata, name, description, properties)?;
+			Self::do_create_class(&who, metadata, name, description, royalty_rate, properties)?;
 			Ok(().into())
 		}
 
@@ -328,7 +331,7 @@ pub mod module {
 			origin: OriginFor<T>,
 			#[pallet::compact] class_id: ClassIdOf<T>,
 			#[pallet::compact] token_id: TokenIdOf<T>,
-			charge_royalty: Option<bool>,
+			charge_royalty: Option<PerU16>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			orml_nft::Tokens::<T>::try_mutate(class_id, token_id, |maybe_token| -> DispatchResultWithPostInfo {
@@ -339,10 +342,9 @@ pub mod module {
 				// TODO: Get rid of this limitation.
 				ensure!(token_info.quantity == One::one(), Error::<T>::NotSupportedForNow);
 
-				token_info.data.royalty = charge_royalty.ok_or_else(|| -> Result<bool,DispatchError> {
+				token_info.data.royalty = charge_royalty.ok_or_else(|| -> Result<PerU16, DispatchError> {
 					let class_info: ClassInfoOf<T> = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
-					let data: ClassData<T::BlockNumber> = class_info.data;
-					Ok(data.properties.0.contains(ClassProperty::RoyaltiesChargeable))
+					Ok(class_info.data.royalty_rate)
 				}).or_else(core::convert::identity)?;
 				Ok(().into())
 			})
@@ -381,7 +383,7 @@ pub mod module {
 			#[pallet::compact] class_id: ClassIdOf<T>,
 			metadata: NFTMetadata,
 			#[pallet::compact] quantity: TokenIdOf<T>,
-			charge_royalty: Option<bool>,
+			charge_royalty: Option<PerU16>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(to)?;
@@ -401,7 +403,7 @@ pub mod module {
 			#[pallet::compact] class_id: ClassIdOf<T>,
 			metadata: NFTMetadata,
 			#[pallet::compact] quantity: TokenIdOf<T>,
-			charge_royalty: Option<bool>,
+			charge_royalty: Option<PerU16>,
 		) -> DispatchResultWithPostInfo {
 			let delegate = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(to)?;
@@ -508,7 +510,7 @@ impl<T: Config> Pallet<T> {
 	#[allow(clippy::type_complexity)]
 	pub fn do_proxy_mint(
 		delegate: &T::AccountId, to: &T::AccountId, class_id: ClassIdOf<T>,
-		metadata: NFTMetadata, quantity: TokenIdOf<T>, charge_royalty: Option<bool>,
+		metadata: NFTMetadata, quantity: TokenIdOf<T>, charge_royalty: Option<PerU16>,
 	) -> ResultPost<(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)> {
 		let class_info: ClassInfoOf<T> = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 
@@ -521,9 +523,9 @@ impl<T: Config> Pallet<T> {
 
 	#[allow(clippy::type_complexity)]
 	fn do_mint(who: &T::AccountId, to: &T::AccountId,
-				   class_info: &ClassInfoOf<T>, class_id: ClassIdOf<T>,
-				   metadata: NFTMetadata, quantity: TokenIdOf<T>,
-				   charge_royalty: Option<bool>
+		class_info: &ClassInfoOf<T>, class_id: ClassIdOf<T>,
+		metadata: NFTMetadata, quantity: TokenIdOf<T>,
+		charge_royalty: Option<PerU16>,
 	) -> ResultPost<(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)> {
 		ensure!(T::ExtraConfig::is_in_whitelist(&to), Error::<T>::AccountNotInWhitelist);
 
@@ -535,10 +537,12 @@ impl<T: Config> Pallet<T> {
 		let data: TokenData<T::AccountId, BlockNumberOf<T>> = TokenData {
 			deposit,
 			create_block: <frame_system::Pallet<T>>::block_number(),
-			royalty: charge_royalty.unwrap_or_else(|| class_info.data.properties.0.contains(ClassProperty::RoyaltiesChargeable)),
+			royalty: charge_royalty.unwrap_or(class_info.data.royalty_rate),
 			creator: to.clone(),
 			royalty_beneficiary: to.clone(),
 		};
+
+		ensure!(T::ExtraConfig::get_royalties_rate() >= data.royalty, Error::<T>::RoyaltyRateTooHigh);
 
 		let token_id: TokenIdOf<T> = orml_nft::Pallet::<T>::mint(&to, class_id, metadata, data, quantity)?;
 
@@ -547,11 +551,13 @@ impl<T: Config> Pallet<T> {
 	}
 
 	#[transactional]
-	pub fn do_create_class(who: &T::AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, properties: Properties) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
+	pub fn do_create_class(who: &T::AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
 		ensure!(T::ExtraConfig::is_in_whitelist(who), Error::<T>::AccountNotInWhitelist);
 
 		ensure!(name.len() <= 20, Error::<T>::NameTooLong);// TODO: pass configurations from runtime configuration.
 		ensure!(description.len() <= 256, Error::<T>::DescriptionTooLong);// TODO: pass configurations from runtime configuration.
+
+		ensure!(T::ExtraConfig::get_royalties_rate() >= royalty_rate, Error::<T>::RoyaltyRateTooHigh);
 
 		let next_id = orml_nft::Pallet::<T>::next_class_id();
 		let owner: T::AccountId = T::ModuleId::get().into_sub_account(next_id);
@@ -572,6 +578,7 @@ impl<T: Config> Pallet<T> {
 			name,
 			description,
 			create_block: <frame_system::Pallet<T>>::block_number(),
+			royalty_rate,
 		};
 		orml_nft::Pallet::<T>::create_class(&owner, metadata, data)?;
 
@@ -601,7 +608,7 @@ impl<T: Config> Pallet<T> {
 				data: nftmart_traits::ContractTokenData {
 					deposit: t.data.deposit.saturated_into(),
 					create_block: t.data.create_block.saturated_into(),
-					royalty: t.data.royalty,
+					royalty: t.data.royalty.deconstruct(),
 					creator: t.data.creator,
 					royalty_beneficiary: t.data.royalty_beneficiary,
 				}
@@ -690,20 +697,20 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 		orml_nft::Pallet::<T>::unreserve(who, (class_id, token_id), quantity)
 	}
 
-	fn token_charged_royalty(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Result<bool, DispatchError> {
+	fn token_charged_royalty(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Result<PerU16, DispatchError> {
 		let token: TokenInfoOf<T> = orml_nft::Tokens::<T>::get(class_id, token_id).ok_or(Error::<T>::TokenIdNotFound)?;
 		let data: TokenData<T::AccountId, T::BlockNumber> = token.data;
 		Ok(data.royalty)
 	}
 
-	fn create_class(who: &T::AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, properties: Properties) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
-		Self::do_create_class(who, metadata, name, description, properties)
+	fn create_class(who: &T::AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
+		Self::do_create_class(who, metadata, name, description, royalty_rate, properties)
 	}
 
 	#[allow(clippy::type_complexity)]
 	fn proxy_mint(
 		delegate: &T::AccountId, to: &T::AccountId, class_id: ClassIdOf<T>,
-		metadata: NFTMetadata, quantity: TokenIdOf<T>, charge_royalty: Option<bool>,
+		metadata: NFTMetadata, quantity: TokenIdOf<T>, charge_royalty: Option<PerU16>,
 	) -> ResultPost<(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)> {
 		Self::do_proxy_mint(delegate, to, class_id, metadata, quantity, charge_royalty)
 	}

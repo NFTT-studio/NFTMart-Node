@@ -18,7 +18,7 @@ macro_rules! submit_british_auction_should_work {
 				ExtBuilder::default().build().execute_with(|| {
 					add_class::<Runtime>(ALICE);
 					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
-					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
 					assert_eq!(vec![
 						(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 20, reserved: 0 }),
 						(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 40, reserved: 0 })
@@ -71,7 +71,7 @@ fn bid_british_auction_should_work_hammer_price() {
 	ExtBuilder::default().build().execute_with(|| {
 		add_class::<Runtime>(ALICE);
 		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
-		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
 		let cate_id = current_gid::<Runtime>();
 		add_category::<Runtime>();
 		let auction_id = current_gid::<Runtime>();
@@ -114,7 +114,7 @@ macro_rules! bid_british_auction_should_work {
 				ExtBuilder::default().build().execute_with(|| {
 					add_class::<Runtime>(ALICE);
 					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
-					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
 					let cate_id = current_gid::<Runtime>();
 					add_category::<Runtime>();
 					let auction_id = current_gid::<Runtime>();
@@ -181,7 +181,7 @@ macro_rules! redeem_british_auction_should_work {
 				ExtBuilder::default().build().execute_with(|| {
 					add_class::<Runtime>(ALICE);
 					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
-					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
 					let cate_id = current_gid::<Runtime>();
 					add_category::<Runtime>();
 					let auction_id = current_gid::<Runtime>();
@@ -234,7 +234,7 @@ fn remove_british_auction_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		add_class::<Runtime>(ALICE);
 		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
-		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(false));
+		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
 		let cate_id = current_gid::<Runtime>();
 		add_category::<Runtime>();
 		let auction_id = current_gid::<Runtime>();

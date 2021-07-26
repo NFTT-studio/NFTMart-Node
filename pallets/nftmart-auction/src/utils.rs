@@ -142,10 +142,8 @@ pub mod test_helper {
 	pub fn add_class<Runtime>(who: Runtime::AccountId) where Runtime: crate::Config {
 		assert_ok!(Runtime::NFT::create_class(
 			&who,
-			Vec::from("1"),Vec::from("1"), Vec::from("1"),
-			Properties(ClassProperty::Transferable |
-				ClassProperty::Burnable |
-				ClassProperty::RoyaltiesChargeable)
+			Vec::from("1"),Vec::from("1"), Vec::from("1"), PerU16::from_percent(5),
+			Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 		));
 	}
 
@@ -161,7 +159,7 @@ pub mod test_helper {
 	}
 
 	pub fn add_token<Runtime>(
-		who: Runtime::AccountId, to: Runtime::AccountId, class_id: Runtime::ClassId, quantity: Runtime::TokenId, charge_royalty: Option<bool>
+		who: Runtime::AccountId, to: Runtime::AccountId, class_id: Runtime::ClassId, quantity: Runtime::TokenId, charge_royalty: Option<PerU16>
 	) where Runtime: crate::Config {
 		assert_ok!(Runtime::NFT::proxy_mint(&who, &to, class_id, Vec::from("1"), quantity, charge_royalty));
 	}
