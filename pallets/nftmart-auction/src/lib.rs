@@ -60,6 +60,10 @@ pub mod module {
 		/// Extra Configurations
 		type ExtraConfig: NftmartConfig<Self::AccountId, BlockNumberFor<Self>>;
 
+		/// The treasury's pallet id, used for deriving its sovereign account ID.
+		#[pallet::constant]
+		type TreasuryPalletId: Get<frame_support::PalletId>;
+
 		/// Weight information for extrinsics in this pallet.
 		type WeightInfo: weights::WeightInfo;
 	}
@@ -280,9 +284,11 @@ pub mod module {
 					Self::delete_dutch_auction(&auction_owner, auction_id)?;
 					// swap
 					let items = to_item_vec!(auction);
-					ensure_one_royalty!(items);
+					let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 					swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 						&purchaser, &auction_owner, auction.currency_id, current_price, &items,
+						&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
+						&beneficiary, royalty_rate,
 					)?;
 					Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
 				}
@@ -328,9 +334,11 @@ pub mod module {
 			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
 
 			let items = to_item_vec!(auction);
-			ensure_one_royalty!(items);
+			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_bid_price, &items,
+				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary, royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
@@ -456,9 +464,11 @@ pub mod module {
 				Self::delete_british_auction(&auction_owner, auction_id)?;
 
 				let items = to_item_vec!(auction);
-				ensure_one_royalty!(items);
+				let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 				swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 					&purchaser, &auction_owner, auction.currency_id, auction.hammer_price, &items,
+					&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
+					&beneficiary, royalty_rate,
 				)?;
 
 				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id));
@@ -500,9 +510,11 @@ pub mod module {
 			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
 
 			let items = to_item_vec!(auction);
-			ensure_one_royalty!(items);
+			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_bid_price, &items,
+				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary, royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id));
@@ -526,6 +538,10 @@ pub mod module {
 }
 
 impl<T: Config> Pallet<T> {
+	pub fn treasury_account_id() -> T::AccountId {
+		sp_runtime::traits::AccountIdConversion::<T::AccountId>::into_account(&T::TreasuryPalletId::get())
+	}
+
 	fn delete_british_auction(
 		who: &T::AccountId, auction_id: GlobalId
 	) -> Result<(BritishAuctionOf<T>, BritishAuctionBidOf<T>), DispatchError> {

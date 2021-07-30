@@ -697,10 +697,10 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 		orml_nft::Pallet::<T>::unreserve(who, (class_id, token_id), quantity)
 	}
 
-	fn token_charged_royalty(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Result<PerU16, DispatchError> {
+	fn token_charged_royalty(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Result<(T::AccountId, PerU16), DispatchError> {
 		let token: TokenInfoOf<T> = orml_nft::Tokens::<T>::get(class_id, token_id).ok_or(Error::<T>::TokenIdNotFound)?;
 		let data: TokenData<T::AccountId, T::BlockNumber> = token.data;
-		Ok(data.royalty)
+		Ok((data.royalty_beneficiary, data.royalty))
 	}
 
 	fn create_class(who: &T::AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {

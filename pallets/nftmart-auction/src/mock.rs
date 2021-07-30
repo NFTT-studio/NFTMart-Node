@@ -185,6 +185,10 @@ impl nftmart_config::Config for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+}
+
 impl nftmart_auction::Config for Runtime {
 	type Event = Event;
 	type MultiCurrency = Currencies;
@@ -193,6 +197,7 @@ impl nftmart_auction::Config for Runtime {
 	type TokenId = nftmart_traits::constants_types::TokenId;
 	type NFT = Nftmart;
 	type ExtraConfig = NftmartConf;
+	type TreasuryPalletId = TreasuryPalletId;
 	type WeightInfo = ();
 }
 

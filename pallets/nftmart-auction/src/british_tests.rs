@@ -101,7 +101,7 @@ fn bid_british_auction_should_work_hammer_price() {
 			(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 20, reserved: 0 })
 		], all_tokens_by(CHARLIE));
 		assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT - hammer);
-		assert_eq!(free_balance(&BOB), bob_free + hammer);
+		assert_eq!(free_balance(&BOB), bob_free + hammer - 1);
 	});
 }
 
@@ -207,7 +207,7 @@ macro_rules! redeem_british_auction_should_work {
 					assert!(get_auction(&BOB, auction_id).is_none());
 
 					assert_eq!(free_balance(&DAVE), DAVE_INIT);
-					assert_eq!(free_balance(&BOB), BOB_INIT + price);
+					assert_eq!(free_balance(&BOB), BOB_INIT + price - 1);
 					assert_eq!(vec![
 						(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 0 }),
 						(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 20, reserved: 0 })

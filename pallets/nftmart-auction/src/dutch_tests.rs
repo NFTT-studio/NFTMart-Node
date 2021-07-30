@@ -91,7 +91,7 @@ fn bid_dutch_auction_should_work() {
 			(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 20, reserved: 0 }),
 		], all_tokens_by(BOB));
 
-		assert_eq!(free_balance(&BOB), BOB_INIT + 500);
+		assert_eq!(free_balance(&BOB), BOB_INIT + 500 - 1);
 
 		assert_eq!(vec![
 			(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 0 }),
@@ -153,7 +153,7 @@ fn bid_dutch_auction_should_work() {
 			(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 0 }),
 			(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 20, reserved: 0 }),
 		], all_tokens_by(DAVE));
-		assert_eq!(free_balance(&BOB), BOB_INIT + bid_price);
+		assert_eq!(free_balance(&BOB), BOB_INIT + bid_price - 1);
 	});
 }
 

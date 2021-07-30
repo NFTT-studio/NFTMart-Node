@@ -27,6 +27,7 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo;
 	fn peek_next_gid() -> GlobalId;
 	fn get_royalties_rate() -> PerU16;
+	fn get_platform_fee_rate() -> PerU16;
 }
 
 pub trait NftmartNft<AccountId, ClassId, TokenId> {
@@ -35,7 +36,7 @@ pub trait NftmartNft<AccountId, ClassId, TokenId> {
 	fn account_token(_who: &AccountId, _class_id: ClassId, _token_id: TokenId) -> AccountToken<TokenId>;
 	fn reserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
 	fn unreserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
-	fn token_charged_royalty(class_id: ClassId, token_id: TokenId) -> Result<PerU16, DispatchError>;
+	fn token_charged_royalty(class_id: ClassId, token_id: TokenId) -> Result<(AccountId, PerU16), DispatchError>;
 	fn create_class(who: &AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> ResultPost<(AccountId, ClassId)>;
 	fn proxy_mint(
 		delegate: &AccountId, to: &AccountId, class_id: ClassId,
@@ -154,17 +155,23 @@ pub struct TokenConfig<AccountId, TokenId> {
 
 /// Check only one royalty constrains.
 pub fn count_charged_royalty<AccountId, ClassId, TokenId, NFT>(items: &[(ClassId, TokenId, TokenId)])
-	-> ResultPost<u32> where
-	NFT: NftmartNft<AccountId, ClassId, TokenId>,
-	ClassId: Copy, TokenId: Copy,
+	-> ResultPost<(u32, AccountId, PerU16)>
+	where
+		NFT: NftmartNft<AccountId, ClassId, TokenId>,
+		ClassId: Copy, TokenId: Copy, AccountId: Default,
 {
 	let mut count_of_charged_royalty: u32 = 0;
+	let mut royalty_rate = PerU16::zero();
+	let mut who = AccountId::default();
 	for (class_id, token_id, _quantity) in items {
-		if !NFT::token_charged_royalty(*class_id, *token_id)?.is_zero() {
+		let (id, rate) = NFT::token_charged_royalty(*class_id, *token_id)?;
+		if !rate.is_zero() {
 			count_of_charged_royalty = count_of_charged_royalty.saturating_add(1u32);
+			royalty_rate = rate;
+			who = id;
 		}
 	}
-	Ok(count_of_charged_royalty)
+	Ok((count_of_charged_royalty, who, royalty_rate))
 }
 
 /// Swap assets between nfts owner and nfts purchaser.
@@ -174,12 +181,17 @@ pub fn swap_assets<MultiCurrency, NFT, AccountId, ClassId, TokenId, CurrencyId>(
 	currency_id: CurrencyId,
 	price: Balance,
 	items: &[(ClassId, TokenId, TokenId)],
+	treasury: &AccountId, platform_fee_rate: PerU16,
+	beneficiary: &AccountId, royalty_rate: PerU16,
 ) -> ResultPost<()> where
 	MultiCurrency: orml_traits::MultiCurrency<AccountId, CurrencyId = CurrencyId, Balance = Balance>,
 	NFT: NftmartNft<AccountId, ClassId, TokenId>,
-	ClassId: Copy, TokenId: Copy,
+	ClassId: Copy, TokenId: Copy, CurrencyId: Copy,
 {
 	MultiCurrency::transfer(currency_id, pay_currency, pay_nfts, price)?;
+	MultiCurrency::transfer(currency_id, pay_nfts, treasury, platform_fee_rate.mul_ceil(price))?;
+	MultiCurrency::transfer(currency_id, pay_nfts, beneficiary, royalty_rate.mul_ceil(price))?;
+
 	for (class_id, token_id, quantity) in items {
 		NFT::transfer(pay_nfts, pay_currency, *class_id, *token_id, *quantity)?;
 	}
@@ -197,12 +209,11 @@ macro_rules! to_item_vec {
 
 #[macro_export]
 macro_rules! ensure_one_royalty {
-	($items: ident) => {
-		ensure!(
-			count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&$items)? <= 1,
-			Error::<T>::TooManyTokenChargedRoyalty,
-		);
-	}
+	($items: ident) => {{
+		let (c, id, r) = count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&$items)?;
+		ensure!(c <= 1,Error::<T>::TooManyTokenChargedRoyalty);
+		(id, r)
+	}}
 }
 
 #[macro_export]

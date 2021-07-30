@@ -282,4 +282,8 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 	fn get_royalties_rate() -> PerU16 {
 		Self::royalties_rate()
 	}
+
+	fn get_platform_fee_rate() -> PerU16 {
+		Self::platform_fee_rate()
+	}
 }

@@ -5,7 +5,7 @@ use crate::mock::{add_class, ExtBuilder, ALICE, BOB, free_balance,
 				  Origin, add_token, all_tokens_by, add_category,
 				  NftmartOrder, CLASS_ID0, TOKEN_ID1, TOKEN_ID0,
 				  last_event, Event, current_gid, ensure_account,
-				  CHARLIE, all_orders, all_offers,
+				  CHARLIE, all_orders, all_offers, Nftmart,
 };
 use orml_nft::AccountToken;
 use frame_support::{assert_ok};
@@ -52,8 +52,10 @@ fn take_order_should_work() {
 		add_class(ALICE);
 		assert_eq!(198, free_balance(&ALICE));
 
-		add_token(BOB, 20, None);
+		add_token(BOB, 20, Some(PerU16::from_percent(20)));
 		add_token(BOB, 40, Some(PerU16::zero()));
+
+		assert_ok!(Nftmart::update_token_royalty_beneficiary(Origin::signed(BOB), CLASS_ID0, TOKEN_ID0, CHARLIE));
 
 		let cate_id = current_gid();
 		add_category();
@@ -72,7 +74,8 @@ fn take_order_should_work() {
 		assert_eq!(0, all_orders().len());
 
 		assert_eq!(98, free_balance(&ALICE));
-		assert_eq!(200, free_balance(&BOB));
+		assert_eq!(100 + 20, free_balance(&CHARLIE));
+		assert_eq!(200 - 1 - 20, free_balance(&BOB));
 		ensure_account(&BOB, CLASS_ID0, TOKEN_ID0, 0, 10);
 		ensure_account(&BOB, CLASS_ID0, TOKEN_ID1, 0, 20);
 		ensure_account(&ALICE, CLASS_ID0, TOKEN_ID0, 0, 10);
@@ -148,7 +151,7 @@ fn take_offer_should_work() {
 		);
 
 		assert_eq!(0, free_balance(&CHARLIE));
-		assert_eq!(200, free_balance(&BOB));
+		assert_eq!(199, free_balance(&BOB));
 
 		ensure_account(&BOB, CLASS_ID0, TOKEN_ID0, 0, 10);
 		ensure_account(&BOB, CLASS_ID0, TOKEN_ID1, 0, 20);

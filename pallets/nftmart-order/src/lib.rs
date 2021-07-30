@@ -267,9 +267,11 @@ pub mod module {
 			ensure!(frame_system::Pallet::<T>::block_number() < order.deadline, Error::<T>::TakeExpiredOrderOrOffer);
 
 			let items = to_item_vec!(order);
-			ensure_one_royalty!(items);
+			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&purchaser, &order_owner, order.currency_id, order.price, &items,
+				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary, royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::TakenOrder(purchaser, order_owner, order_id));
@@ -363,9 +365,11 @@ pub mod module {
 			ensure!(frame_system::Pallet::<T>::block_number() < offer.deadline, Error::<T>::TakeExpiredOrderOrOffer);
 
 			let items = to_item_vec!(offer);
-			ensure_one_royalty!(items);
+			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&offer_owner, &token_owner, offer.currency_id, offer.price, &items,
+				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary, royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::TakenOffer(token_owner, offer_owner, offer_id));
