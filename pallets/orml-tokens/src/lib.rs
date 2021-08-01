@@ -282,7 +282,7 @@ pub mod module {
 				.iter()
 				.for_each(|(account_id, currency_id, initial_balance)| {
 					assert!(
-						*initial_balance >= T::ExistentialDeposits::get(&currency_id),
+						*initial_balance >= T::ExistentialDeposits::get(currency_id),
 						"the balance of any account should always be more than existential deposit.",
 					);
 					Pallet::<T>::mutate_account(account_id, *currency_id, |account_data, _| {
@@ -885,7 +885,7 @@ where
 		value: Self::Balance,
 		_existence_requirement: ExistenceRequirement,
 	) -> DispatchResult {
-		<Pallet<T> as MultiCurrency<T::AccountId>>::transfer(GetCurrencyId::get(), &source, &dest, value)
+		<Pallet<T> as MultiCurrency<T::AccountId>>::transfer(GetCurrencyId::get(), source, dest, value)
 	}
 
 	fn slash(who: &T::AccountId, value: Self::Balance) -> (Self::NegativeImbalance, Self::Balance) {

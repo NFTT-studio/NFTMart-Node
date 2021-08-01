@@ -175,6 +175,7 @@ pub fn count_charged_royalty<AccountId, ClassId, TokenId, NFT>(items: &[(ClassId
 }
 
 /// Swap assets between nfts owner and nfts purchaser.
+#[allow(clippy::too_many_arguments)]
 pub fn swap_assets<MultiCurrency, NFT, AccountId, ClassId, TokenId, CurrencyId>(
 	pay_currency: &AccountId,
 	pay_nfts: &AccountId,

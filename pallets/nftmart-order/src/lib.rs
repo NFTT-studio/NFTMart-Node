@@ -384,7 +384,7 @@ impl<T: Config> Pallet<T> {
 			let order: OrderOf<T> = maybe_order.as_mut().ok_or(Error::<T>::OrderNotFound)?.clone();
 
 			// Can we safely ignore this remain value?
-			let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(&who, order.deposit.saturated_into());
+			let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(who, order.deposit.saturated_into());
 
 			for item in &order.items {
 				T::NFT::unreserve_tokens(who, item.class_id, item.token_id, item.quantity)?;

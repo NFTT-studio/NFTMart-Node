@@ -186,7 +186,7 @@ pub mod module {
 			#[pallet::compact] min_raise: PerU16,
 		) -> DispatchResultWithPostInfo {
 			let who: T::AccountId = ensure_signed(origin)?;
-			ensure!(items.len() > 0, Error::<T>::EmptyTokenList);
+			ensure!(!items.is_empty(), Error::<T>::EmptyTokenList);
 			ensure!(items.len() as u32 <= MAX_TOKEN_PER_AUCTION, Error::<T>::TooManyTokens);
 
 			// check and reserve `deposit`

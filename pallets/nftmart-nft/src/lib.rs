@@ -527,7 +527,7 @@ impl<T: Config> Pallet<T> {
 		metadata: NFTMetadata, quantity: TokenIdOf<T>,
 		charge_royalty: Option<PerU16>,
 	) -> ResultPost<(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)> {
-		ensure!(T::ExtraConfig::is_in_whitelist(&to), Error::<T>::AccountNotInWhitelist);
+		ensure!(T::ExtraConfig::is_in_whitelist(to), Error::<T>::AccountNotInWhitelist);
 
 		ensure!(quantity >= One::one(), Error::<T>::InvalidQuantity);
 		ensure!(who == &class_info.owner, Error::<T>::NoPermission);
@@ -544,7 +544,7 @@ impl<T: Config> Pallet<T> {
 
 		ensure!(T::ExtraConfig::get_royalties_rate() >= data.royalty, Error::<T>::RoyaltyRateTooHigh);
 
-		let token_id: TokenIdOf<T> = orml_nft::Pallet::<T>::mint(&to, class_id, metadata, data, quantity)?;
+		let token_id: TokenIdOf<T> = orml_nft::Pallet::<T>::mint(to, class_id, metadata, data, quantity)?;
 
 		Self::deposit_event(Event::MintedToken(who.clone(), to.clone(), class_id, token_id, quantity));
 		Ok((who.clone(), to.clone(), class_id, token_id, quantity))
