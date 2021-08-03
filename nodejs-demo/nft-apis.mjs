@@ -81,6 +81,7 @@ function print_nft(classID, tokenID, nft, accountToken) {
       nft.metadata = JSON.parse(nft.metadata);
     } catch (_e) {
     }
+    nft.data.royalty_rate = `${perU16ToFloat(nft.data.royalty_rate) * 100}%`;
     if (!!accountToken) {
       console.log(`classID ${classID} tokenID ${tokenID} accountToken ${accountToken} tokenInfo ${JSON.stringify(nft)}`);
     } else {
@@ -118,9 +119,9 @@ async function main() {
     const classId = 1;
 
     await create_class(ws, keyring, "//Alice");
-    await mint_nft(ws, keyring, "//Alice", classId, 20, true);
-    await mint_nft(ws, keyring, "//Alice", classId, 21, false);
-    await mint_nft(ws, keyring, "//Alice", classId, 22, false);
+    await mint_nft(ws, keyring, "//Alice", classId, 20, 0.14);
+    await mint_nft(ws, keyring, "//Alice", classId, 21, 0.17);
+    await mint_nft(ws, keyring, "//Alice", classId, 22, 0.11);
     await transfer_nfts(ws, keyring, [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]], "//Alice", "//Alice2");
 
     await add_class_admin(ws, keyring, "//Alice", classId, "//Bob");
@@ -1206,7 +1207,7 @@ async function create_class(ws, keyring, signer) {
   const name = 'demo class name';
   const description = 'demo class description';
   const metadata = 'demo class metadata';
-  const royalty_rate = float2PerU16(0.2);
+  const royalty_rate = float2PerU16(0.21);
 
   const deposit = await classDeposit(metadata, name, description);
   console.log("create class deposit %s", deposit);
