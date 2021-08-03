@@ -138,6 +138,7 @@ pub struct ClassConfig<ClassId, AccountId, TokenId> {
 	pub class_metadata: String,
 	pub name: String,
 	pub description: String,
+	pub royalty_rate: PerU16,
 	pub properties: u8,
 	pub admins: Vec<AccountId>,
 	pub tokens: Vec<TokenConfig<AccountId, TokenId>>,
@@ -148,7 +149,7 @@ pub struct ClassConfig<ClassId, AccountId, TokenId> {
 pub struct TokenConfig<AccountId, TokenId> {
 	pub token_id: TokenId,
 	pub token_metadata: String,
-	pub royalty: PerU16,
+	pub royalty_rate: PerU16,
 	pub token_owner: AccountId,
 	pub token_creator: AccountId,
 	pub royalty_beneficiary: AccountId,

@@ -96,6 +96,7 @@ async function display_nft_by(classID, tokenID) {
 }
 
 async function transfer(keyring, from, to, amount) {
+  console.log("============== transfer ==============");
   from = keyring.addFromUri(from);
   let [a, b] = waitTx(Global_ModuleMetadata);
   await Global_Api.tx.balances.transfer(ensureAddress(keyring, to), bnToBn(amount).mul(unit)).signAndSend(from, a);
@@ -116,7 +117,7 @@ async function main() {
     await add_whitelist(ws, keyring, sudo, "//Alice2");
     await update_auction_close_delay(ws, 3);
 
-    const classId = 1;
+    const classId = 56;
 
     await create_class(ws, keyring, "//Alice");
     await mint_nft(ws, keyring, "//Alice", classId, 20, 0.14);
@@ -127,7 +128,7 @@ async function main() {
     await add_class_admin(ws, keyring, "//Alice", classId, "//Bob");
 
     await create_class(ws, keyring, "//Bob");
-    await mint_nft_by_proxy(ws, keyring, "//Bob", classId + 1, 20, true);
+    await mint_nft_by_proxy(ws, keyring, "//Bob", classId + 1, 20, 0.19);
     await burn_nft(ws, keyring, "//Bob", classId + 1, 0, 20);
     await destroy_class(ws, keyring, "//Bob", classId + 1);
 
@@ -137,8 +138,8 @@ async function main() {
     await submit_offer(ws, keyring, "//Bob", [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
     await submit_offer(ws, keyring, "//Bob", [[classId, 0, 3], [classId, 1, 3], [classId, 2, 3]]);
 
-    let orderIds = await show_order(ws, keyring);
-    let offerIds = await show_offer(ws, keyring);
+    let orderIds = await show_order(ws, keyring, false);
+    let offerIds = await show_offer(ws, keyring, false);
 
     await transfer(keyring, "//Alice", "//Alice2", "100000");
 
@@ -148,14 +149,17 @@ async function main() {
     await remove_order(ws, keyring, "//Alice", orderIds[1]);
     await remove_offer(ws, keyring, "//Bob", offerIds[1]);
 
-    orderIds = await show_order(ws, keyring);
-    offerIds = await show_offer(ws, keyring);
+    orderIds = await show_order(ws, keyring, false);
+    offerIds = await show_offer(ws, keyring, false);
     console.log("orderIds", orderIds, "offerIds", offerIds);
 
     await submit_dutch_auction(ws, "//Alice", true, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
     await submit_dutch_auction(ws, "//Alice", false, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
     await submit_british_auction(ws, "//Alice", true, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
     await submit_british_auction(ws, "//Alice", false, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
+
+    await remove_dutch_auction(ws, "//Alice", 5);
+    await remove_british_auction(ws, "//Alice", 7);
   });
 
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' create_class //Alice
@@ -273,7 +277,7 @@ async function main() {
     });
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_order
   program.command('show_order').action(async () => {
-    await show_order(program.opts().ws, keyring);
+    await show_order(program.opts().ws, keyring, true);
   });
   // 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_order //Bob 1 //Alice
   // 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_order //Bob 1 65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB
@@ -304,7 +308,7 @@ async function main() {
     });
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' show_offer
   program.command('show_offer').action(async () => {
-    await show_offer(program.opts().ws, keyring);
+    await show_offer(program.opts().ws, keyring, true);
   });
   // 1. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_offer //Alice 1 //Bob
   // 2. node nft-apis.mjs --ws 'ws://81.70.132.13:9944' take_offer //Alice 1 63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw
@@ -711,7 +715,7 @@ async function take_offer(ws, keyring, account, offerId, offerOwner) {
   // await show_nft_by_account(ws, keyring, account.address);
 }
 
-async function show_offer(ws, keyring) {
+async function show_offer(ws, keyring, show) {
   await initApi(ws);
   const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
   let offerCount = 0;
@@ -729,13 +733,17 @@ async function show_offer(ws, keyring) {
     data.offerOwner = offerOwner;
     data.offerId = offerId.toString();
 
-    console.log("\n\noffer: %s", JSON.stringify(data));
-    for (const item of data.items) {
-      await display_nft_by(item.classId, item.tokenId);
+    if (show) {
+      console.log("\n\noffer: %s", JSON.stringify(data));
+      for (const item of data.items) {
+        await display_nft_by(item.classId, item.tokenId);
+      }
     }
     offerCount++;
   }
-  console.log(`offer count is ${offerCount}. current block is ${currentBlockNumber}`);
+  if (show) {
+    console.log(`offer count is ${offerCount}. current block is ${currentBlockNumber}`);
+  }
   return offerIds;
 }
 
@@ -795,7 +803,7 @@ async function take_order(ws, keyring, account, orderId, orderOwner) {
   // await show_nft_by_account(ws, keyring, account.address);
 }
 
-async function show_order(ws, keyring) {
+async function show_order(ws, keyring, show) {
   await initApi(ws);
   const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
   let orderCount = 0;
@@ -813,13 +821,17 @@ async function show_order(ws, keyring) {
     data.orderOwner = orderOwner;
     data.orderId = orderId.toString();
 
-    console.log("\n\norder %s", JSON.stringify(data));
-    for (const item of data.items) {
-      await display_nft_by(item.classId, item.tokenId);
+    if (show) {
+      console.log("\n\norder %s", JSON.stringify(data));
+      for (const item of data.items) {
+        await display_nft_by(item.classId, item.tokenId);
+      }
     }
     orderCount++;
   }
-  console.log(`order count is ${orderCount}. current block is ${currentBlockNumber}`);
+  if (show) {
+    console.log(`order count is ${orderCount}. current block is ${currentBlockNumber}`);
+  }
   return orderIds;
 }
 
@@ -899,7 +911,7 @@ async function destroy_class(ws, keyring, signer, classID) {
   console.log("============== destroy_class ==============");
 
   await initApi(ws);
-  await show_class_by_account(ws, keyring, signer);
+  // await show_class_by_account(ws, keyring, signer);
   const sk = keyring.addFromUri(signer);
   let classInfo = await Global_Api.query.ormlNft.classes(classID);
   if (classInfo.isSome) {
@@ -911,7 +923,7 @@ async function destroy_class(ws, keyring, signer, classID) {
     await call.signAndSend(sk, a);
     await b();
   }
-  await show_class_by_account(ws, keyring, signer);
+  // await show_class_by_account(ws, keyring, signer);
 }
 
 async function burn_nft(ws, keyring, signer, classID, tokenID, quantity) {
@@ -1207,7 +1219,7 @@ async function create_class(ws, keyring, signer) {
   const name = 'demo class name';
   const description = 'demo class description';
   const metadata = 'demo class metadata';
-  const royalty_rate = float2PerU16(0.21);
+  const royalty_rate = float2PerU16(0.20);
 
   const deposit = await classDeposit(metadata, name, description);
   console.log("create class deposit %s", deposit);

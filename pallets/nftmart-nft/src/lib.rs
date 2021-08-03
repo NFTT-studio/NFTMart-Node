@@ -243,7 +243,7 @@ pub mod module {
 			<StorageVersion<T>>::put(Releases::default());
 			let mut max_class_id = Zero::zero();
 			// Initialize classes.
-			for ClassConfig { class_id, class_metadata, name, description, properties, admins, tokens } in &self.classes {
+			for ClassConfig { class_id, class_metadata, name, description, royalty_rate, properties, admins, tokens } in &self.classes {
 				let class_metadata: NFTMetadata = class_metadata.as_bytes().to_vec();
 				let name: NFTMetadata = name.as_bytes().to_vec();
 				let description: NFTMetadata = description.as_bytes().to_vec();
@@ -268,7 +268,7 @@ pub mod module {
 					name: name.clone(),
 					description: description.clone(),
 					create_block: <frame_system::Pallet<T>>::block_number(),
-					royalty_rate: PerU16::zero(),
+					royalty_rate: *royalty_rate,
 				};
 				orml_nft::Pallet::<T>::create_class(&owner, class_metadata.clone(), data).unwrap();
 
@@ -277,7 +277,7 @@ pub mod module {
 				}
 
 				let mut max_token_id = Zero::zero();
-				for TokenConfig { token_id, token_metadata, royalty, token_owner, token_creator, royalty_beneficiary, quantity } in tokens {
+				for TokenConfig { token_id, token_metadata, royalty_rate, token_owner, token_creator, royalty_beneficiary, quantity } in tokens {
 					assert!(orml_nft::Tokens::<T>::get(*class_id, *token_id).is_none(), "Dup token id");
 					let token_metadata: NFTMetadata = token_metadata.as_bytes().to_vec();
 					let deposit = Pallet::<T>::mint_token_deposit(token_metadata.len().saturated_into());
@@ -286,7 +286,7 @@ pub mod module {
 					let data: TokenData<T::AccountId, BlockNumberOf<T>> = TokenData {
 						deposit,
 						create_block: <frame_system::Pallet<T>>::block_number(),
-						royalty_rate: *royalty,
+						royalty_rate: *royalty_rate,
 						creator: token_creator.clone(),
 						royalty_beneficiary: royalty_beneficiary.clone(),
 					};

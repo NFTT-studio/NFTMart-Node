@@ -36,7 +36,7 @@ use grandpa_primitives::{AuthorityId as GrandpaId};
 use sp_consensus_babe::{AuthorityId as BabeId};
 use pallet_im_online::sr25519::{AuthorityId as ImOnlineId};
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
-use sp_runtime::{Perbill, traits::{Verify, IdentifyAccount}};
+use sp_runtime::{Perbill, traits::{Verify, IdentifyAccount}, PerU16};
 use sp_std::vec::Vec;
 
 pub use node_primitives::{AccountId, Balance, Signature};
@@ -217,7 +217,7 @@ pub fn testnet_genesis(
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
 	const STASH: Balance = ENDOWMENT / 1000;
 
-	// use sp_core::crypto::Ss58Codec;
+	use sp_core::crypto::Ss58Codec;
 
 	GenesisConfig {
 		system: SystemConfig {
@@ -295,76 +295,78 @@ pub fn testnet_genesis(
 				}).collect(),
 		},
 		orml_nft: Default::default(),
-		nftmart: Default::default(),
-		// nftmart: node_runtime::NftmartConfig {
-		// 	classes: vec![
-		// 		nftmart_traits::ClassConfig {
-		// 			class_id: 31,
-		// 			class_metadata: String::from_utf8(br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec()).unwrap(),
-		// 			name: String::from_utf8(b"class name31".to_vec()).unwrap(),
-		// 			description: String::from_utf8(b"class description31".to_vec()).unwrap(),
-		// 			properties: 7,
-		// 			admins: vec![
-		// 				AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-		// 				AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 				AccountId::from_ss58check("63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P").unwrap(),
-		// 			],
-		// 			tokens: vec![
-		// 				nftmart_traits::TokenConfig {
-		// 					token_id: 4,
-		// 					token_metadata: String::from_utf8(br#"{"a":"token metadata4", "e":"ff4"}"#.to_vec()).unwrap(),
-		// 					royalty: true,
-		// 					token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-		// 					token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					quantity: 11,
-		// 				},
-		// 				nftmart_traits::TokenConfig {
-		// 					token_id: 5,
-		// 					token_metadata: String::from_utf8(br#"{"a":"token metadata5", "e":"ff5"}"#.to_vec()).unwrap(),
-		// 					royalty: false,
-		// 					token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-		// 					token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					quantity: 12,
-		// 				}
-		// 			],
-		// 		},
-		// 		nftmart_traits::ClassConfig {
-		// 			class_id: 55,
-		// 			class_metadata: String::from_utf8(br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec()).unwrap(),
-		// 			name: String::from_utf8(b"class name55".to_vec()).unwrap(),
-		// 			description: String::from_utf8(b"class description55".to_vec()).unwrap(),
-		// 			properties: 7,
-		// 			admins: vec![
-		// 				AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-		// 				AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 				AccountId::from_ss58check("63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P").unwrap(),
-		// 			],
-		// 			tokens: vec![
-		// 				nftmart_traits::TokenConfig {
-		// 					token_id: 41,
-		// 					token_metadata: String::from_utf8(br#"{"a":"token metadata41", "e":"ff41"}"#.to_vec()).unwrap(),
-		// 					royalty: true,
-		// 					token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-		// 					token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					quantity: 21,
-		// 				},
-		// 				nftmart_traits::TokenConfig {
-		// 					token_id: 51,
-		// 					token_metadata: String::from_utf8(br#"{"a":"token metadata51", "e":"ff51"}"#.to_vec()).unwrap(),
-		// 					royalty: false,
-		// 					token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-		// 					token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-		// 					quantity: 22,
-		// 				}
-		// 			],
-		// 		},
-		// 	],
-		// 	..Default::default()
-		// },
+		// nftmart: Default::default(),
+		nftmart: node_runtime::NftmartConfig {
+			classes: vec![
+				nftmart_traits::ClassConfig {
+					class_id: 31,
+					class_metadata: String::from_utf8(br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec()).unwrap(),
+					name: String::from_utf8(b"class name31".to_vec()).unwrap(),
+					description: String::from_utf8(b"class description31".to_vec()).unwrap(),
+					properties: 1 | 2,
+					royalty_rate: PerU16::from_percent(20),
+					admins: vec![
+						AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
+						AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+						AccountId::from_ss58check("63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P").unwrap(),
+					],
+					tokens: vec![
+						nftmart_traits::TokenConfig {
+							token_id: 4,
+							token_metadata: String::from_utf8(br#"{"a":"token metadata4", "e":"ff4"}"#.to_vec()).unwrap(),
+							royalty_rate: PerU16::from_percent(10),
+							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
+							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							quantity: 11,
+						},
+						nftmart_traits::TokenConfig {
+							token_id: 5,
+							token_metadata: String::from_utf8(br#"{"a":"token metadata5", "e":"ff5"}"#.to_vec()).unwrap(),
+							royalty_rate: PerU16::zero(),
+							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
+							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							quantity: 12,
+						}
+					],
+				},
+				nftmart_traits::ClassConfig {
+					class_id: 55,
+					class_metadata: String::from_utf8(br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec()).unwrap(),
+					name: String::from_utf8(b"class name55".to_vec()).unwrap(),
+					description: String::from_utf8(b"class description55".to_vec()).unwrap(),
+					properties: 1 | 2,
+					royalty_rate: PerU16::from_percent(15),
+					admins: vec![
+						AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
+						AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+						AccountId::from_ss58check("63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P").unwrap(),
+					],
+					tokens: vec![
+						nftmart_traits::TokenConfig {
+							token_id: 41,
+							token_metadata: String::from_utf8(br#"{"a":"token metadata41", "e":"ff41"}"#.to_vec()).unwrap(),
+							royalty_rate: PerU16::from_percent(10),
+							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
+							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							quantity: 21,
+						},
+						nftmart_traits::TokenConfig {
+							token_id: 51,
+							token_metadata: String::from_utf8(br#"{"a":"token metadata51", "e":"ff51"}"#.to_vec()).unwrap(),
+							royalty_rate: PerU16::zero(),
+							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
+							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							quantity: 22,
+						}
+					],
+				},
+			],
+			..Default::default()
+		},
 		nftmart_order: Default::default(),
 		nftmart_auction: Default::default(),
 		nftmart_conf: node_runtime::NftmartConfConfig {
