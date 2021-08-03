@@ -1153,12 +1153,14 @@ async function show_class(ws) {
     const len = key.length;
     key = key.buffer.slice(len - 4, len);
     const classID = new Uint32Array(key)[0];
-    let clazz = c[1].toJSON();
-    clazz.metadata = hexToUtf8(clazz.metadata.slice(2));
+    let clazz = c[1].toHuman();
+    let clazzJson = c[1].toJSON();
+    clazz.metadata = hexToUtf8(clazzJson.metadata.slice(2));
     try {
-      clazz.metadata = JSON.parse(clazz.metadata);
+      clazz.metadata = JSON.parse(clazzJson.metadata);
     } catch (_e) {
     }
+    clazz.data.royalty_rate = perU16ToFloat(clazzJson.data.royalty_rate);
     clazz.classID = classID;
     clazz.adminList = await Global_Api.query.proxy.proxies(clazz.owner);
     all.push(JSON.stringify(clazz));
