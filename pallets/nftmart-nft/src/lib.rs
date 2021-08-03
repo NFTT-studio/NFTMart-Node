@@ -83,7 +83,7 @@ pub mod migrations {
 			TokenData {
 				create_block: create_block * 3u32.into(),
 				deposit: self.deposit,
-				royalty: PerU16::from_percent(0),
+				royalty_rate: PerU16::from_percent(0),
 				creator: who.clone(),
 				royalty_beneficiary: who,
 			}
@@ -286,7 +286,7 @@ pub mod module {
 					let data: TokenData<T::AccountId, BlockNumberOf<T>> = TokenData {
 						deposit,
 						create_block: <frame_system::Pallet<T>>::block_number(),
-						royalty: *royalty,
+						royalty_rate: *royalty,
 						creator: token_creator.clone(),
 						royalty_beneficiary: royalty_beneficiary.clone(),
 					};
@@ -342,7 +342,7 @@ pub mod module {
 				// TODO: Get rid of this limitation.
 				ensure!(token_info.quantity == One::one(), Error::<T>::NotSupportedForNow);
 
-				token_info.data.royalty = charge_royalty.ok_or_else(|| -> Result<PerU16, DispatchError> {
+				token_info.data.royalty_rate = charge_royalty.ok_or_else(|| -> Result<PerU16, DispatchError> {
 					let class_info: ClassInfoOf<T> = orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
 					Ok(class_info.data.royalty_rate)
 				}).or_else(core::convert::identity)?;
@@ -537,12 +537,12 @@ impl<T: Config> Pallet<T> {
 		let data: TokenData<T::AccountId, BlockNumberOf<T>> = TokenData {
 			deposit,
 			create_block: <frame_system::Pallet<T>>::block_number(),
-			royalty: charge_royalty.unwrap_or(class_info.data.royalty_rate),
+			royalty_rate: charge_royalty.unwrap_or(class_info.data.royalty_rate),
 			creator: to.clone(),
 			royalty_beneficiary: to.clone(),
 		};
 
-		ensure!(T::ExtraConfig::get_royalties_rate() >= data.royalty, Error::<T>::RoyaltyRateTooHigh);
+		ensure!(T::ExtraConfig::get_royalties_rate() >= data.royalty_rate, Error::<T>::RoyaltyRateTooHigh);
 
 		let token_id: TokenIdOf<T> = orml_nft::Pallet::<T>::mint(to, class_id, metadata, data, quantity)?;
 
@@ -608,7 +608,7 @@ impl<T: Config> Pallet<T> {
 				data: nftmart_traits::ContractTokenData {
 					deposit: t.data.deposit.saturated_into(),
 					create_block: t.data.create_block.saturated_into(),
-					royalty: t.data.royalty.deconstruct(),
+					royalty_rate: t.data.royalty_rate.deconstruct(),
 					creator: t.data.creator,
 					royalty_beneficiary: t.data.royalty_beneficiary,
 				}
@@ -700,7 +700,7 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 	fn token_charged_royalty(class_id: ClassIdOf<T>, token_id: TokenIdOf<T>) -> Result<(T::AccountId, PerU16), DispatchError> {
 		let token: TokenInfoOf<T> = orml_nft::Tokens::<T>::get(class_id, token_id).ok_or(Error::<T>::TokenIdNotFound)?;
 		let data: TokenData<T::AccountId, T::BlockNumber> = token.data;
-		Ok((data.royalty_beneficiary, data.royalty))
+		Ok((data.royalty_beneficiary, data.royalty_rate))
 	}
 
 	fn create_class(who: &T::AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {

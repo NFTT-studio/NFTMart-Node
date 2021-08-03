@@ -13,7 +13,7 @@ pub struct ContractTokenInfo<NFTMetadata, Quantity, Balance, BlockNumber, Accoun
 pub struct ContractTokenData<Balance, BlockNumber, AccountId> {
 	pub deposit: Balance,
 	pub create_block: BlockNumber,
-	pub royalty: u16,
+	pub royalty_rate: u16,
 	pub creator: AccountId,
 	pub royalty_beneficiary: AccountId,
 }

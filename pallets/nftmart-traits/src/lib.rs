@@ -86,6 +86,7 @@ pub struct ClassData<BlockNumber> {
 	pub description: Vec<u8>,
 	#[codec(compact)]
 	pub create_block: BlockNumber,
+	#[codec(compact)]
 	pub royalty_rate: PerU16,
 }
 
@@ -98,7 +99,8 @@ pub struct TokenData<AccountId, BlockNumber> {
 	#[codec(compact)]
 	pub create_block: BlockNumber,
 	/// Charge royalty
-	pub royalty: PerU16,
+	#[codec(compact)]
+	pub royalty_rate: PerU16,
 	/// The token's creator
 	pub creator: AccountId,
 	/// Royalty beneficiary

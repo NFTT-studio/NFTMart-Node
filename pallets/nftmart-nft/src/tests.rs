@@ -54,19 +54,19 @@ fn update_token_royalty() {
 			Nftmart::update_token_royalty(Origin::signed(ALICE), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))),
 			Error::<Runtime>::NoPermission,
 		);
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty_rate, PerU16::from_percent(5));
 
 		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty_rate, PerU16::from_percent(5));
 
 		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty_rate, PerU16::from_percent(5));
 
 		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, Some(PerU16::from_percent(5))));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty_rate, PerU16::from_percent(5));
 
 		assert_ok!(Nftmart::update_token_royalty(Origin::signed(BOB), CLASS_ID, TOKEN_ID, None));
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty, PerU16::from_percent(5));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID).unwrap().data.royalty_rate, PerU16::from_percent(5));
 
 		assert_ok!(Nftmart::update_token_royalty_beneficiary(Origin::signed(BOB), CLASS_ID, TOKEN_ID, ALICE));
 		assert_noop!(
@@ -80,7 +80,7 @@ fn update_token_royalty() {
 			Error::<Runtime>::NotSupportedForNow,
 		);
 		// erc1155
-		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID2).unwrap().data.royalty, PerU16::from_percent(0));
+		assert_eq!(orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID2).unwrap().data.royalty_rate, PerU16::from_percent(0));
 	});
 	// royalty beneficiary erc1155
 	ExtBuilder::default().build().execute_with(|| {

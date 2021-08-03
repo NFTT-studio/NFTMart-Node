@@ -135,7 +135,8 @@ export async function getApi(dest) {
 			properties: 'Properties',
 			name: 'Vec<u8>',
 			description: 'Vec<u8>',
-			createBlock: 'Compact<BlockNumberOf>'
+			createBlock: 'Compact<BlockNumberOf>',
+      royalty_rate: 'Compact<PerU16>',
 		},
 
 		TokenInfoOf: {
@@ -147,7 +148,7 @@ export async function getApi(dest) {
 		TokenData: {
 			deposit: 'Compact<Balance>',
 			createBlock: 'Compact<BlockNumberOf>',
-			royalty: 'bool',
+      royalty_rate: 'Compact<PerU16>',
 			creator: 'AccountId',
 			royalty_beneficiary: 'AccountId',
 		},
