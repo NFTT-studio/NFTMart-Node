@@ -133,8 +133,8 @@ async function main() {
     await create_category(ws, keyring, "//Alice", "my category");
     await submit_order(ws, keyring, "//Alice", [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
     await submit_order(ws, keyring, "//Alice", [[classId, 0, 3], [classId, 1, 3], [classId, 2, 3]]);
-    await submit_offer(ws, keyring, "//Bob",   [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
-    await submit_offer(ws, keyring, "//Bob",   [[classId, 0, 3], [classId, 1, 3], [classId, 2, 3]]);
+    await submit_offer(ws, keyring, "//Bob", [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
+    await submit_offer(ws, keyring, "//Bob", [[classId, 0, 3], [classId, 1, 3], [classId, 2, 3]]);
 
     let orderIds = await show_order(ws, keyring);
     let offerIds = await show_offer(ws, keyring);
@@ -338,7 +338,7 @@ async function main() {
       } else {
         console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
       }
-  });
+    });
   // node nft-apis.mjs show_dutch_auction
   program.command('show_dutch_auction').action(async () => {
     await show_dutch_auction(program.opts().ws);
@@ -346,18 +346,18 @@ async function main() {
   // node nft-apis.mjs bid_dutch_auction //Bob //Alice 5 33
   program.command('bid_dutch_auction <bidder> <auctionCreatorAddress> <auctionId> <price>')
     .action(async (bidder, auctionCreatorAddress, auctionId, price) => {
-    await bid_dutch_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId, price);
-  });
+      await bid_dutch_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId, price);
+    });
   // node nft-apis.mjs redeem_dutch_auction //Bob //Alice 5
   program.command('redeem_dutch_auction <bidder> <auctionCreatorAddress> <auctionId>')
     .action(async (bidder, auctionCreatorAddress, auctionId) => {
       await redeem_dutch_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId);
-  });
+    });
   // node nft-apis.mjs remove_dutch_auction //Alice 5
   program.command('remove_dutch_auction <auctionCreatorAddress> <auctionId>')
     .action(async (auctionCreatorAddress, auctionId) => {
       await remove_dutch_auction(program.opts().ws, auctionCreatorAddress, auctionId);
-  });
+    });
   /*
     node nft-apis.mjs submit_british_auction //Alice true 10 \
       --classId 1 --tokenId 0 --quantity 1 \
@@ -365,39 +365,39 @@ async function main() {
       --classId 1 --tokenId 2 --quantity 3
   */
   program.command('submit_british_auction <account> <allow_delay> <deadline_minute>')
-  .requiredOption('--classId <classIds...>')
-  .requiredOption('--tokenId <tokenIds...>')
-  .requiredOption('--quantity <quantities...>')
-  .action(async (account, allow_delay, deadline_minute, {classId, tokenId, quantity}) => {
-    if (classId.length === tokenId.length && tokenId.length === quantity.length) {
-      const tokens = classId.map((e, i) => {
-        return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
-      });
-      allow_delay = allow_delay !== 'false';
-      await submit_british_auction(program.opts().ws, account, allow_delay, deadline_minute, tokens);
-    } else {
-      console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
-    }
-  });
+    .requiredOption('--classId <classIds...>')
+    .requiredOption('--tokenId <tokenIds...>')
+    .requiredOption('--quantity <quantities...>')
+    .action(async (account, allow_delay, deadline_minute, {classId, tokenId, quantity}) => {
+      if (classId.length === tokenId.length && tokenId.length === quantity.length) {
+        const tokens = classId.map((e, i) => {
+          return [BigInt(e), BigInt(tokenId[i]), BigInt(quantity[i])];
+        });
+        allow_delay = allow_delay !== 'false';
+        await submit_british_auction(program.opts().ws, account, allow_delay, deadline_minute, tokens);
+      } else {
+        console.log("Invalid options, maybe the length of classIds mismatches with the length of tokenIds.");
+      }
+    });
   // node nft-apis.mjs show_british_auction
   program.command('show_british_auction').action(async () => {
     await show_british_auction(program.opts().ws);
   });
   // node nft-apis.mjs bid_british_auction //Bob //Alice 8 33
   program.command('bid_british_auction <bidder> <auctionCreatorAddress> <auctionId> <price>')
-  .action(async (bidder, auctionCreatorAddress, auctionId, price) => {
-    await bid_british_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId, price);
-  });
+    .action(async (bidder, auctionCreatorAddress, auctionId, price) => {
+      await bid_british_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId, price);
+    });
   // node nft-apis.mjs redeem_british_auction //Bob //Alice 8
   program.command('redeem_british_auction <bidder> <auctionCreatorAddress> <auctionId>')
-  .action(async (bidder, auctionCreatorAddress, auctionId) => {
-    await redeem_british_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId);
-  });
+    .action(async (bidder, auctionCreatorAddress, auctionId) => {
+      await redeem_british_auction(program.opts().ws, bidder, auctionCreatorAddress, auctionId);
+    });
   // node nft-apis.mjs remove_british_auction //Alice 7
   program.command('remove_british_auction <auctionCreatorAddress> <auctionId>')
-  .action(async (auctionCreatorAddress, auctionId) => {
-    await remove_british_auction(program.opts().ws, auctionCreatorAddress, auctionId);
-  });
+    .action(async (auctionCreatorAddress, auctionId) => {
+      await remove_british_auction(program.opts().ws, auctionCreatorAddress, auctionId);
+    });
   await program.parseAsync(process.argv);
 }
 
@@ -469,7 +469,7 @@ async function show_british_auction(ws) {
         data.actualDeadline = actualDeadline.toString();
         data.lastBidAccount = bid.lastBidAccount.unwrap();
         data.lastBidBlock = bid.lastBidBlock;
-        data.lastBidPrice = `${ bid.lastBidPrice / unit} NMT`;
+        data.lastBidPrice = `${bid.lastBidPrice / unit} NMT`;
       } else {
         data.actualDeadline = jsonData.deadline;
         data.lastBidAccount = "";
@@ -633,7 +633,7 @@ async function show_dutch_auction(ws) {
         data.actualDeadline = actualDeadline.toString();
         data.lastBidAccount = bid.lastBidAccount.unwrap();
         data.lastBidBlock = bid.lastBidBlock;
-        data.lastBidPrice = `${ bid.lastBidPrice / unit} NMT`;
+        data.lastBidPrice = `${bid.lastBidPrice / unit} NMT`;
       } else {
         data.actualDeadline = jsonData.deadline;
         data.lastBidAccount = "";
@@ -1015,16 +1015,19 @@ async function display_nft(classID) {
     try {
       classInfo.metadata = hexToUtf8(classInfo.metadata.slice(2));
       classInfo.metadata = JSON.parse(classInfo.metadata);
-    } catch (e) {}
+    } catch (e) {
+    }
 
     try {
       classInfo.data.name = hexToUtf8(classInfo.data.name.slice(2));
       classInfo.data.name = JSON.parse(classInfo.data.name);
-    } catch (e) {}
+    } catch (e) {
+    }
     try {
       classInfo.data.description = hexToUtf8(classInfo.data.description.slice(2));
       classInfo.data.description = JSON.parse(classInfo.data.description);
-    } catch (e) {}
+    } catch (e) {
+    }
 
     const accountInfo = await Global_Api.query.system.account(classInfo.owner);
     console.log("classInfo: %s", JSON.stringify(classInfo));
