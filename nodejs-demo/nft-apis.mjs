@@ -1201,15 +1201,15 @@ async function create_class(ws, keyring, signer) {
   const name = 'demo class name';
   const description = 'demo class description';
   const metadata = 'demo class metadata';
+  const royalty_rate = float2PerU16(0.2);
 
   const deposit = await classDeposit(metadata, name, description);
   console.log("create class deposit %s", deposit);
 
   // 	Transferable = 0b00000001,
   // 	Burnable = 0b00000010,
-  // 	RoyaltiesChargeable = 0b00000100,
   let [a, b] = waitTx(Global_ModuleMetadata);
-  await Global_Api.tx.nftmart.createClass(metadata, name, description, 1 | 2 | 4).signAndSend(signer, a);
+  await Global_Api.tx.nftmart.createClass(metadata, name, description, royalty_rate, 1 | 2).signAndSend(signer, a);
   await b();
 }
 
