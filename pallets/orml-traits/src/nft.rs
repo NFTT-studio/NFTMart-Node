@@ -1,9 +1,9 @@
+use codec::{Decode, Encode, FullCodec};
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Zero},
 	DispatchResult, RuntimeDebug,
 };
 use sp_std::{fmt::Debug, vec::Vec};
-use codec::{Decode, Encode, FullCodec};
 
 /// Abstraction over a non-fungible token system.
 #[allow(clippy::upper_case_acronyms)]
@@ -15,7 +15,12 @@ pub trait NFT<AccountId> {
 	type TokenId: Default + Copy;
 
 	/// The balance of account.
-	type Balance: AtLeast32BitUnsigned + FullCodec + Copy + MaybeSerializeDeserialize + Debug + Default;
+	type Balance: AtLeast32BitUnsigned
+		+ FullCodec
+		+ Copy
+		+ MaybeSerializeDeserialize
+		+ Debug
+		+ Default;
 
 	/// The number of NFTs assigned to `who`.
 	fn balance(who: &AccountId) -> Self::Balance;
@@ -25,7 +30,11 @@ pub trait NFT<AccountId> {
 	fn owner(token: (Self::ClassId, Self::TokenId)) -> Option<AccountId>;
 
 	/// Transfer the given token ID from one account to another.
-	fn transfer(from: &AccountId, to: &AccountId, token: (Self::ClassId, Self::TokenId)) -> DispatchResult;
+	fn transfer(
+		from: &AccountId,
+		to: &AccountId,
+		token: (Self::ClassId, Self::TokenId),
+	) -> DispatchResult;
 }
 
 /// Class info
@@ -65,25 +74,25 @@ pub struct AccountToken<TokenId> {
 	pub reserved: TokenId,
 }
 
-impl<TokenId> Default for AccountToken<TokenId> where TokenId: AtLeast32BitUnsigned {
+impl<TokenId> Default for AccountToken<TokenId>
+where
+	TokenId: AtLeast32BitUnsigned,
+{
 	fn default() -> Self {
-		Self {
-			quantity: Zero::zero(),
-			reserved: Zero::zero(),
-		}
+		Self { quantity: Zero::zero(), reserved: Zero::zero() }
 	}
 }
 
-impl<TokenId> AccountToken<TokenId> where TokenId: AtLeast32BitUnsigned + Copy {
+impl<TokenId> AccountToken<TokenId>
+where
+	TokenId: AtLeast32BitUnsigned + Copy,
+{
 	pub fn is_zero(&self) -> bool {
 		self.quantity.is_zero() && self.reserved.is_zero()
 	}
 
 	pub fn new(quantity: TokenId) -> Self {
-		Self{
-			quantity,
-			..Self::default()
-		}
+		Self { quantity, ..Self::default() }
 	}
 
 	pub fn total(&self) -> TokenId {

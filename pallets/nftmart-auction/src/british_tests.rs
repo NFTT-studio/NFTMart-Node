@@ -1,13 +1,12 @@
 #![cfg(test)]
 
-use super::{NATIVE_CURRENCY_ID};
-use crate::mock::*;
-use sp_runtime::{PerU16, SaturatedConversion};
-use orml_nft::AccountToken;
+use super::NATIVE_CURRENCY_ID;
+use crate::{mock::*, utils::test_helper::*};
+use frame_support::assert_ok;
 use nftmart_traits::*;
-use frame_support::{assert_ok};
+use orml_nft::AccountToken;
 use paste::paste;
-use crate::utils::test_helper::*;
+use sp_runtime::{PerU16, SaturatedConversion};
 
 macro_rules! submit_british_auction_should_work {
     ( $(#[$attr: meta])* $test_name: ident, $hammer_price: expr) => {
@@ -81,25 +80,33 @@ fn bid_british_auction_should_work_hammer_price() {
 		assert_ok!(NftmartAuction::submit_british_auction(
 			Origin::signed(BOB),
 			NATIVE_CURRENCY_ID,
-			hammer, // hammer_price
+			hammer,                   // hammer_price
 			PerU16::from_percent(50), // min_raise
-			50, // deposit
-			200, // init_price
-			10, // deadline
-			true, // allow_delay
-			cate_id, // category_id
+			50,                       // deposit
+			200,                      // init_price
+			10,                       // deadline
+			true,                     // allow_delay
+			cate_id,                  // category_id
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 		));
 
 		let price = 600;
-		assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id));
+		assert_ok!(NftmartAuction::bid_british_auction(
+			Origin::signed(CHARLIE),
+			price,
+			BOB,
+			auction_id
+		));
 		let event = Event::NftmartAuction(crate::Event::HammerBritishAuction(CHARLIE, auction_id));
 		assert_eq!(last_event::<Runtime>(), event);
 
-		assert_eq!(vec![
-			(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 0 }),
-			(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 20, reserved: 0 })
-		], all_tokens_by(CHARLIE));
+		assert_eq!(
+			vec![
+				(CLASS_ID0, TOKEN_ID0, AccountToken { quantity: 10, reserved: 0 }),
+				(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 20, reserved: 0 })
+			],
+			all_tokens_by(CHARLIE)
+		);
 		assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT - hammer);
 		assert_eq!(free_balance(&BOB), bob_free + hammer - 1);
 	});
@@ -228,7 +235,6 @@ redeem_british_auction_should_work!(_2, allow_delay true, set_block 20);
 redeem_british_auction_should_work!(_3, allow_delay false, set_block 11);
 redeem_british_auction_should_work!(_4, allow_delay false, set_block 20);
 
-
 #[test]
 fn remove_british_auction_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
@@ -243,13 +249,13 @@ fn remove_british_auction_should_work() {
 		assert_ok!(NftmartAuction::submit_british_auction(
 			Origin::signed(BOB),
 			NATIVE_CURRENCY_ID,
-			hammer, // hammer_price
+			hammer,                   // hammer_price
 			PerU16::from_percent(50), // min_raise
-			50, // deposit
-			200, // init_price
-			10, // deadline
-			true, // allow_delay
-			cate_id, // category_id
+			50,                       // deposit
+			200,                      // init_price
+			10,                       // deadline
+			true,                     // allow_delay
+			cate_id,                  // category_id
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 		));
 		assert_ok!(NftmartAuction::remove_british_auction(Origin::signed(BOB), auction_id));
@@ -263,47 +269,78 @@ fn remove_british_auction_should_work() {
 #[test]
 fn calc_current_price_should_work() {
 	for (x, y) in vec![
-		(0, 10000), (1, 10000), (29, 10000),
-		(30, 7525), (31, 7525), (59, 7525),
-		(60, 5050), (61, 5050), (89, 5050),
-		(90, 2575), (91, 2575), (119, 2575),
-		(120, 100), (121, 100), (149, 100),
-		(150, 100), (151, 100),  (1511, 100), (15111, 100),
+		(0, 10000),
+		(1, 10000),
+		(29, 10000),
+		(30, 7525),
+		(31, 7525),
+		(59, 7525),
+		(60, 5050),
+		(61, 5050),
+		(89, 5050),
+		(90, 2575),
+		(91, 2575),
+		(119, 2575),
+		(120, 100),
+		(121, 100),
+		(149, 100),
+		(150, 100),
+		(151, 100),
+		(1511, 100),
+		(15111, 100),
 	] {
 		assert_eq!(
 			crate::calc_current_price::<Runtime>(
-				10000 * ACCURACY, 100 * ACCURACY, 0,
+				10000 * ACCURACY,
+				100 * ACCURACY,
+				0,
 				(time::MINUTES * 120).saturated_into(),
 				(time::MINUTES * x).saturated_into()
 			),
 			y * ACCURACY,
-			"x={}, y={}", x, y,
+			"x={}, y={}",
+			x,
+			y,
 		);
 	}
 	for (x, y) in vec![
-		(0, 10000), (1, 10000), (2, 100), (29*time::MINUTES, 100),
-		(29*time::MINUTES + 9, 100), (29*time::MINUTES + 10, 100), (30*time::MINUTES, 100),
+		(0, 10000),
+		(1, 10000),
+		(2, 100),
+		(29 * time::MINUTES, 100),
+		(29 * time::MINUTES + 9, 100),
+		(29 * time::MINUTES + 10, 100),
+		(30 * time::MINUTES, 100),
 	] {
 		assert_eq!(
 			crate::calc_current_price::<Runtime>(
-				10000 * ACCURACY, 100 * ACCURACY, 0, 1,
+				10000 * ACCURACY,
+				100 * ACCURACY,
+				0,
+				1,
 				x.saturated_into(),
 			),
 			y * ACCURACY,
-			"x={}, y={}", x, y,
+			"x={}, y={}",
+			x,
+			y,
 		);
 	}
 	for (x, y) in vec![
-		(0, 101), (1, 101), (2, 100), (29*time::MINUTES, 100),
-		(29*time::MINUTES + 9, 100), (29*time::MINUTES + 10, 100), (30*time::MINUTES, 100),
+		(0, 101),
+		(1, 101),
+		(2, 100),
+		(29 * time::MINUTES, 100),
+		(29 * time::MINUTES + 9, 100),
+		(29 * time::MINUTES + 10, 100),
+		(30 * time::MINUTES, 100),
 	] {
 		assert_eq!(
-			crate::calc_current_price::<Runtime>(
-				101, 100, 0, 1,
-				x.saturated_into(),
-			),
+			crate::calc_current_price::<Runtime>(101, 100, 0, 1, x.saturated_into(),),
 			y,
-			"x={}, y={}", x, y,
+			"x={}, y={}",
+			x,
+			y,
 		);
 	}
 }

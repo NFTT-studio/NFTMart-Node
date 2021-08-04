@@ -84,12 +84,17 @@ impl Default for Releases {
 
 pub type TokenIdOf<T> = <T as module::Config>::TokenId;
 pub type ClassIdOf<T> = <T as module::Config>::ClassId;
-pub type BalanceOf<T> = <<T as module::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrency<<T as frame_system::Config>::AccountId>>::CurrencyId;
+pub type BalanceOf<T> =
+	<<T as module::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrency<
+	<T as frame_system::Config>::AccountId,
+>>::CurrencyId;
 pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
-pub type BritishAuctionOf<T> = BritishAuction<CurrencyIdOf<T>,BlockNumberFor<T>,GlobalId,ClassIdOf<T>,TokenIdOf<T>>;
-pub type BritishAuctionBidOf<T> = BritishAuctionBid<AccountIdOf<T>,BlockNumberFor<T>>;
-pub type DutchAuctionOf<T> = DutchAuction<CurrencyIdOf<T>,BlockNumberFor<T>,GlobalId,ClassIdOf<T>,TokenIdOf<T>>;
-pub type DutchAuctionBidOf<T> = DutchAuctionBid<AccountIdOf<T>,BlockNumberFor<T>>;
+pub type BritishAuctionOf<T> =
+	BritishAuction<CurrencyIdOf<T>, BlockNumberFor<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
+pub type BritishAuctionBidOf<T> = BritishAuctionBid<AccountIdOf<T>, BlockNumberFor<T>>;
+pub type DutchAuctionOf<T> =
+	DutchAuction<CurrencyIdOf<T>, BlockNumberFor<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
+pub type DutchAuctionBidOf<T> = DutchAuctionBid<AccountIdOf<T>, BlockNumberFor<T>>;
 pub const DESC_INTERVAL: BlockNumber = time::MINUTES * 30;

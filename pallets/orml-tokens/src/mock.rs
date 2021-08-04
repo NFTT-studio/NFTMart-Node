@@ -152,10 +152,7 @@ impl ChangeMembers<AccountId> for TestChangeMembers {
 		new_plus_outgoing.extend_from_slice(outgoing);
 		new_plus_outgoing.sort();
 
-		assert_eq!(
-			old_plus_incoming, new_plus_outgoing,
-			"change members call is incorrect!"
-		);
+		assert_eq!(old_plus_incoming, new_plus_outgoing, "change members call is incorrect!");
 
 		MEMBERS.with(|m| *m.borrow_mut() = new.to_vec());
 		PRIME.with(|p| *p.borrow_mut() = None);
@@ -243,10 +240,7 @@ pub struct ExtBuilder {
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self {
-			endowed_accounts: vec![],
-			treasury_genesis: false,
-		}
+		Self { endowed_accounts: vec![], treasury_genesis: false }
 	}
 }
 
@@ -266,18 +260,18 @@ impl ExtBuilder {
 	}
 
 	pub fn build(self) -> sp_io::TestExternalities {
-		let mut t = frame_system::GenesisConfig::default()
-			.build_storage::<Runtime>()
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+
+		tokens::GenesisConfig::<Runtime> { endowed_accounts: self.endowed_accounts }
+			.assimilate_storage(&mut t)
 			.unwrap();
 
-		tokens::GenesisConfig::<Runtime> {
-			endowed_accounts: self.endowed_accounts,
-		}
-		.assimilate_storage(&mut t)
-		.unwrap();
-
 		if self.treasury_genesis {
-			frame_support::pallet_prelude::GenesisBuild::<Runtime>::assimilate_storage(&pallet_treasury::GenesisConfig, &mut t).unwrap();
+			frame_support::pallet_prelude::GenesisBuild::<Runtime>::assimilate_storage(
+				&pallet_treasury::GenesisConfig,
+				&mut t,
+			)
+			.unwrap();
 
 			pallet_elections_phragmen::GenesisConfig::<Runtime> {
 				members: vec![(TREASURY_ACCOUNT, 10)],

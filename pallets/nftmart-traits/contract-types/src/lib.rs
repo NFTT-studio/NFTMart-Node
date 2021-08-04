@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Default)]
 pub struct ContractTokenInfo<NFTMetadata, Quantity, Balance, BlockNumber, AccountId> {

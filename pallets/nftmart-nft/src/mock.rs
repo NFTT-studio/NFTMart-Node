@@ -1,16 +1,15 @@
 #![cfg(test)]
 
 use super::*;
-use frame_support::{assert_ok};
-use orml_currencies::BasicCurrencyAdapter;
-use nftmart_traits::constants_types::*;
 use crate as nftmart_nft;
 use codec::{Decode, Encode};
 use frame_support::{
-	construct_runtime, parameter_types,
+	assert_ok, construct_runtime, parameter_types,
 	traits::{Filter, InstanceFilter},
 	RuntimeDebug,
 };
+use nftmart_traits::constants_types::*;
+use orml_currencies::BasicCurrencyAdapter;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
 	testing::Header,
@@ -75,7 +74,9 @@ parameter_types! {
 	pub const AnnouncementDepositBase: u64 = 1;
 	pub const AnnouncementDepositFactor: u64 = 1;
 }
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen)]
+#[derive(
+	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
+)]
 pub enum ProxyType {
 	Any,
 	JustTransfer,
@@ -90,7 +91,9 @@ impl InstanceFilter<Call> for ProxyType {
 	fn filter(&self, c: &Call) -> bool {
 		match self {
 			ProxyType::Any => true,
-			ProxyType::JustTransfer => matches!(c, Call::Balances(pallet_balances::Call::transfer(..))),
+			ProxyType::JustTransfer => {
+				matches!(c, Call::Balances(pallet_balances::Call::transfer(..)))
+			},
 			ProxyType::JustUtility => matches!(c, Call::Utility(..)),
 		}
 	}
@@ -148,7 +151,12 @@ parameter_types! {
 	pub const GetNativeCurrencyId: nftmart_traits::constants_types::CurrencyId = nftmart_traits::constants_types::NATIVE_CURRENCY_ID;
 }
 
-pub type AdaptedBasicCurrency = BasicCurrencyAdapter<Runtime, Balances, nftmart_traits::constants_types::Amount, nftmart_traits::constants_types::Moment>;
+pub type AdaptedBasicCurrency = BasicCurrencyAdapter<
+	Runtime,
+	Balances,
+	nftmart_traits::constants_types::Amount,
+	nftmart_traits::constants_types::Moment,
+>;
 
 impl orml_currencies::Config for Runtime {
 	type Event = Event;
@@ -162,7 +170,8 @@ impl orml_nft::Config for Runtime {
 	type ClassId = nftmart_traits::constants_types::ClassId;
 	type TokenId = nftmart_traits::constants_types::TokenId;
 	type ClassData = nftmart_nft::ClassData<BlockNumberOf<Self>>;
-	type TokenData = nftmart_nft::TokenData<<Self as frame_system::Config>::AccountId, BlockNumberOf<Self>>;
+	type TokenData =
+		nftmart_nft::TokenData<<Self as frame_system::Config>::AccountId, BlockNumberOf<Self>>;
 }
 
 parameter_types! {
@@ -228,15 +237,15 @@ impl Default for ExtBuilder {
 
 impl ExtBuilder {
 	pub fn build(self) -> sp_io::TestExternalities {
-		let mut t = frame_system::GenesisConfig::default()
-			.build_storage::<Runtime>()
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+
+		pallet_balances::GenesisConfig::<Runtime> { balances: vec![(ALICE, 100000)] }
+			.assimilate_storage(&mut t)
 			.unwrap();
 
-		pallet_balances::GenesisConfig::<Runtime> {
-			balances: vec![(ALICE, 100000)],
-		}.assimilate_storage(&mut t).unwrap();
-
-		nftmart_config::GenesisConfig::<Runtime>::default().assimilate_storage(&mut t).unwrap();
+		nftmart_config::GenesisConfig::<Runtime>::default()
+			.assimilate_storage(&mut t)
+			.unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| {
@@ -249,10 +258,7 @@ impl ExtBuilder {
 }
 
 pub fn last_event() -> Event {
-	frame_system::Pallet::<Runtime>::events()
-		.pop()
-		.expect("Event expected")
-		.event
+	frame_system::Pallet::<Runtime>::events().pop().expect("Event expected").event
 }
 
 pub fn free_balance(who: &AccountId) -> Balance {
@@ -280,7 +286,10 @@ pub fn add_class(who: AccountId) {
 	let metadata = vec![1];
 	assert_ok!(Nftmart::create_class(
 		Origin::signed(who),
-		metadata.clone(), vec![1], vec![1], PerU16::from_percent(5),
+		metadata.clone(),
+		vec![1],
+		vec![1],
+		PerU16::from_percent(5),
 		Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 	));
 }
@@ -289,10 +298,11 @@ pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<PerU1
 	let deposit = Nftmart::mint_token_deposit(METADATA.len() as u32);
 	assert_eq!(Balances::deposit_into_existing(&class_id_account(), deposit).is_ok(), true);
 	assert_ok!(Nftmart::mint(
-			Origin::signed(class_id_account()),
-			who,
-			CLASS_ID,
-			METADATA.to_vec(),
-			quantity, charge_royalty,
-		));
+		Origin::signed(class_id_account()),
+		who,
+		CLASS_ID,
+		METADATA.to_vec(),
+		quantity,
+		charge_royalty,
+	));
 }

@@ -1,8 +1,11 @@
 use crate::arithmetic;
 use codec::{Codec, FullCodec};
-pub use frame_support::{Parameter, traits::{BalanceStatus, LockIdentifier}};
+pub use frame_support::{
+	traits::{BalanceStatus, LockIdentifier},
+	Parameter,
+};
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Bounded, Member},
+	traits::{AtLeast32BitUnsigned, Bounded, MaybeSerializeDeserialize, Member},
 	DispatchError, DispatchResult,
 };
 use sp_std::{
@@ -15,10 +18,24 @@ use sp_std::{
 /// Abstraction over a fungible multi-currency system.
 pub trait MultiCurrency<AccountId> {
 	/// The currency identifier.
-	type CurrencyId: Parameter + Member + FullCodec + Eq + PartialEq + Copy + MaybeSerializeDeserialize + Debug + Bounded + AtLeast32BitUnsigned;
+	type CurrencyId: Parameter
+		+ Member
+		+ FullCodec
+		+ Eq
+		+ PartialEq
+		+ Copy
+		+ MaybeSerializeDeserialize
+		+ Debug
+		+ Bounded
+		+ AtLeast32BitUnsigned;
 
 	/// The balance of an account.
-	type Balance: AtLeast32BitUnsigned + FullCodec + Copy + MaybeSerializeDeserialize + Debug + Default;
+	type Balance: AtLeast32BitUnsigned
+		+ FullCodec
+		+ Copy
+		+ MaybeSerializeDeserialize
+		+ Debug
+		+ Default;
 
 	// Public immutables
 
@@ -36,7 +53,11 @@ pub trait MultiCurrency<AccountId> {
 
 	/// A dry-run of `withdraw`. Returns `Ok` iff the account is able to make a
 	/// withdrawal of the given amount.
-	fn ensure_can_withdraw(currency_id: Self::CurrencyId, who: &AccountId, amount: Self::Balance) -> DispatchResult;
+	fn ensure_can_withdraw(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		amount: Self::Balance,
+	) -> DispatchResult;
 
 	// Public mutables
 
@@ -50,11 +71,19 @@ pub trait MultiCurrency<AccountId> {
 
 	/// Add `amount` to the balance of `who` under `currency_id` and increase
 	/// total issuance.
-	fn deposit(currency_id: Self::CurrencyId, who: &AccountId, amount: Self::Balance) -> DispatchResult;
+	fn deposit(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		amount: Self::Balance,
+	) -> DispatchResult;
 
 	/// Remove `amount` from the balance of `who` under `currency_id` and reduce
 	/// total issuance.
-	fn withdraw(currency_id: Self::CurrencyId, who: &AccountId, amount: Self::Balance) -> DispatchResult;
+	fn withdraw(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		amount: Self::Balance,
+	) -> DispatchResult;
 
 	/// Same result as `slash(currency_id, who, value)` (but without the
 	/// side-effects) assuming there are no balance changes in the meantime and
@@ -65,7 +94,11 @@ pub trait MultiCurrency<AccountId> {
 	///
 	/// As much funds up to `amount` will be deducted as possible.  If this is
 	/// less than `amount`,then a non-zero value will be returned.
-	fn slash(currency_id: Self::CurrencyId, who: &AccountId, amount: Self::Balance) -> Self::Balance;
+	fn slash(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		amount: Self::Balance,
+	) -> Self::Balance;
 }
 
 /// Extended `MultiCurrency` with additional helper types and methods.
@@ -83,7 +116,11 @@ pub trait MultiCurrencyExtended<AccountId>: MultiCurrency<AccountId> {
 
 	/// Add or remove abs(`by_amount`) from the balance of `who` under
 	/// `currency_id`. If positive `by_amount`, do add, else do remove.
-	fn update_balance(currency_id: Self::CurrencyId, who: &AccountId, by_amount: Self::Amount) -> DispatchResult;
+	fn update_balance(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		by_amount: Self::Amount,
+	) -> DispatchResult;
 }
 
 /// A fungible multi-currency system whose accounts can have liquidity
@@ -122,7 +159,11 @@ pub trait MultiLockableCurrency<AccountId>: MultiCurrency<AccountId> {
 	) -> DispatchResult;
 
 	/// Remove an existing lock.
-	fn remove_lock(lock_id: LockIdentifier, currency_id: Self::CurrencyId, who: &AccountId) -> DispatchResult;
+	fn remove_lock(
+		lock_id: LockIdentifier,
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+	) -> DispatchResult;
 }
 
 /// A fungible multi-currency system where funds can be reserved from the user.
@@ -137,7 +178,11 @@ pub trait MultiReservableCurrency<AccountId>: MultiCurrency<AccountId> {
 	/// As much funds up to `value` will be deducted as possible. If the reserve
 	/// balance of `who` is less than `value`, then a non-zero second item will
 	/// be returned.
-	fn slash_reserved(currency_id: Self::CurrencyId, who: &AccountId, value: Self::Balance) -> Self::Balance;
+	fn slash_reserved(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		value: Self::Balance,
+	) -> Self::Balance;
 
 	/// The amount of the balance of a given account that is externally
 	/// reserved; this can still get slashed, but gets slashed last of all.
@@ -152,7 +197,11 @@ pub trait MultiReservableCurrency<AccountId>: MultiCurrency<AccountId> {
 	/// If the free balance is lower than `value`, then no funds will be moved
 	/// and an `Err` will be returned to notify of this. This is different
 	/// behavior than `unreserve`.
-	fn reserve(currency_id: Self::CurrencyId, who: &AccountId, value: Self::Balance) -> DispatchResult;
+	fn reserve(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		value: Self::Balance,
+	) -> DispatchResult;
 
 	/// Moves up to `value` from reserved balance to free balance. This function
 	/// cannot fail.
@@ -164,7 +213,11 @@ pub trait MultiReservableCurrency<AccountId>: MultiCurrency<AccountId> {
 	/// # NOTES
 	///
 	/// - This is different from `reserve`.
-	fn unreserve(currency_id: Self::CurrencyId, who: &AccountId, value: Self::Balance) -> Self::Balance;
+	fn unreserve(
+		currency_id: Self::CurrencyId,
+		who: &AccountId,
+		value: Self::Balance,
+	) -> Self::Balance;
 
 	/// Moves up to `value` from reserved balance of account `slashed` to
 	/// balance of account `beneficiary`. `beneficiary` must exist for this to
@@ -186,7 +239,12 @@ pub trait MultiReservableCurrency<AccountId>: MultiCurrency<AccountId> {
 /// Abstraction over a fungible (single) currency system.
 pub trait BasicCurrency<AccountId> {
 	/// The balance of an account.
-	type Balance: AtLeast32BitUnsigned + FullCodec + Copy + MaybeSerializeDeserialize + Debug + Default;
+	type Balance: AtLeast32BitUnsigned
+		+ FullCodec
+		+ Copy
+		+ MaybeSerializeDeserialize
+		+ Debug
+		+ Default;
 
 	// Public immutables
 
@@ -270,7 +328,11 @@ pub trait BasicLockableCurrency<AccountId>: BasicCurrency<AccountId> {
 	/// while `set_lock` replaces the lock with the new parameters. As in,
 	/// `extend_lock` will set:
 	/// - maximum `amount`
-	fn extend_lock(lock_id: LockIdentifier, who: &AccountId, amount: Self::Balance) -> DispatchResult;
+	fn extend_lock(
+		lock_id: LockIdentifier,
+		who: &AccountId,
+		amount: Self::Balance,
+	) -> DispatchResult;
 
 	/// Remove an existing lock.
 	fn remove_lock(lock_id: LockIdentifier, who: &AccountId) -> DispatchResult;

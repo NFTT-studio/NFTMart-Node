@@ -18,25 +18,26 @@
 
 //! Substrate chain configurations.
 
-use sc_chain_spec::ChainSpecExtension;
-use sp_core::{Pair, Public, crypto::UncheckedInto, sr25519};
-use serde::{Serialize, Deserialize};
-use node_runtime::{
-	AuthorityDiscoveryConfig, BabeConfig, BalancesConfig, CouncilConfig,
-	DemocracyConfig, GrandpaConfig, ImOnlineConfig, SessionConfig, SessionKeys, StakerStatus,
-	StakingConfig, ElectionsConfig, IndicesConfig, SudoConfig, SystemConfig,
-	TechnicalCommitteeConfig, wasm_binary_unwrap, MAX_NOMINATIONS, TokensConfig,
-};
-use node_runtime::Block;
-use node_runtime::constants::currency::*;
-use sc_service::ChainType;
+use grandpa_primitives::AuthorityId as GrandpaId;
 use hex_literal::hex;
+use node_runtime::{
+	constants::currency::*, wasm_binary_unwrap, AuthorityDiscoveryConfig, BabeConfig,
+	BalancesConfig, Block, CouncilConfig, DemocracyConfig, ElectionsConfig, GrandpaConfig,
+	ImOnlineConfig, IndicesConfig, SessionConfig, SessionKeys, StakerStatus, StakingConfig,
+	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig, MAX_NOMINATIONS,
+};
+use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
+use sc_chain_spec::ChainSpecExtension;
+use sc_service::ChainType;
 use sc_telemetry::TelemetryEndpoints;
-use grandpa_primitives::{AuthorityId as GrandpaId};
-use sp_consensus_babe::{AuthorityId as BabeId};
-use pallet_im_online::sr25519::{AuthorityId as ImOnlineId};
+use serde::{Deserialize, Serialize};
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
-use sp_runtime::{Perbill, traits::{Verify, IdentifyAccount}, PerU16};
+use sp_consensus_babe::AuthorityId as BabeId;
+use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
+use sp_runtime::{
+	traits::{IdentifyAccount, Verify},
+	PerU16, Perbill,
+};
 use sp_std::vec::Vec;
 
 pub use node_primitives::{AccountId, Balance, Signature};
@@ -60,10 +61,7 @@ pub struct Extensions {
 }
 
 /// Specialized `ChainSpec`.
-pub type ChainSpec = sc_service::GenericChainSpec<
-	GenesisConfig,
-	Extensions,
->;
+pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
 fn session_keys(
 	grandpa: GrandpaId,
@@ -82,25 +80,41 @@ fn get_properties() -> sc_service::Properties {
 }
 
 fn staging_testnet_config_genesis() -> GenesisConfig {
-  let root_key: AccountId = hex!["12970155d02df21b7e39e289593065d0bbb67d5d38f36dd1b9d617614a006d00"].into(); // 5znMeMdGsDrENMFg9wvLMveuYdCSVCCGdaXE6HAU4UwTksei
-  let initial_authorities: Vec<(AccountId, AccountId, GrandpaId, BabeId, ImOnlineId, AuthorityDiscoveryId)> = vec![
-    (
-      hex!["d0a9b0c9ac0a3dc0432cb66f288c1ffc9bd159ca52739d994f789003b08b6630"].into(),              // 655aHzD3sX1QpZVxStEHPV4TVCqKVcfwfxrsX8spZndPfabe
-      hex!["c43b6cda18d09359fe32ea27014601c6d723e17e2cc8ca14496f210595f95a26"].into(),              // 64oGxqAX2AW26AWQDx9vNNb7aTF741QMTn1n35qFRty6FaLc
-      hex!["184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f"].unchecked_into(),    // 5zureDa91LCdspDmqxkPUnGg9WLHPJQLs1XZ9uqmkUEcK3Ca
-      hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"].unchecked_into(),    // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
-      hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"].unchecked_into(),    // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
-      hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"].unchecked_into(),    // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
-    ),
-    (
-      hex!["5e7704ab35a8a08fda1ca9ddca87013849daf02744e81cc5fb03d7395030744c"].into(),              // 62VqnJu5Xwc5qaNsQoeS8UAEA8rFFf8U6UeyeKgYQGfi23us
-      hex!["c23b0e2abab64d27c630028830d5a3afc4785f0dd02ce069af8b3f2118bc682c"].into(),              // 64kekuPLYqkAHwwbeYjVUDkPFoc27VNGib3ezJrXCTY2qWSm
-      hex!["b46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e"].unchecked_into(),    // 64SYg4L1MbtsREC8Qcrd42bMidA8bXq9jmNBYDwAg1fcuBm4
-      hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"].unchecked_into(),    // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
-      hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"].unchecked_into(),    // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
-      hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"].unchecked_into(),    // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
-    ),
-  ];
+	let root_key: AccountId =
+		hex!["12970155d02df21b7e39e289593065d0bbb67d5d38f36dd1b9d617614a006d00"].into(); // 5znMeMdGsDrENMFg9wvLMveuYdCSVCCGdaXE6HAU4UwTksei
+	let initial_authorities: Vec<(
+		AccountId,
+		AccountId,
+		GrandpaId,
+		BabeId,
+		ImOnlineId,
+		AuthorityDiscoveryId,
+	)> = vec![
+		(
+			hex!["d0a9b0c9ac0a3dc0432cb66f288c1ffc9bd159ca52739d994f789003b08b6630"].into(), // 655aHzD3sX1QpZVxStEHPV4TVCqKVcfwfxrsX8spZndPfabe
+			hex!["c43b6cda18d09359fe32ea27014601c6d723e17e2cc8ca14496f210595f95a26"].into(), // 64oGxqAX2AW26AWQDx9vNNb7aTF741QMTn1n35qFRty6FaLc
+			hex!["184f5672c5f405f12476c29ba35ab22fdf44f4e50d671802cb271f06adb5cb3f"]
+				.unchecked_into(), // 5zureDa91LCdspDmqxkPUnGg9WLHPJQLs1XZ9uqmkUEcK3Ca
+			hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]
+				.unchecked_into(), // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
+			hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]
+				.unchecked_into(), // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
+			hex!["2020fdf7ad624a75cb35367c68782984cd28e9d9cb93f37397b34602da766b60"]
+				.unchecked_into(), // 6167FvHPZP7MrPZbJKkwXbxZSupoRmDcAt5RhC1B2NuC2D6G
+		),
+		(
+			hex!["5e7704ab35a8a08fda1ca9ddca87013849daf02744e81cc5fb03d7395030744c"].into(), // 62VqnJu5Xwc5qaNsQoeS8UAEA8rFFf8U6UeyeKgYQGfi23us
+			hex!["c23b0e2abab64d27c630028830d5a3afc4785f0dd02ce069af8b3f2118bc682c"].into(), // 64kekuPLYqkAHwwbeYjVUDkPFoc27VNGib3ezJrXCTY2qWSm
+			hex!["b46c28b4f0db186814fe579e63d2e9b7c3dbb6c1f28dfe541a6cc11ccfc5fa3e"]
+				.unchecked_into(), // 64SYg4L1MbtsREC8Qcrd42bMidA8bXq9jmNBYDwAg1fcuBm4
+			hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]
+				.unchecked_into(), // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
+			hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]
+				.unchecked_into(), // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
+			hex!["0478a4baa1b4a9b85470a4070738abf190734a2bb2af77dad6ae5fda182da773"]
+				.unchecked_into(), // 5zTqxMT5SG1gsH7SrM5dn8nmi1Cp8R3U9sBU6E1jBKfLLzrv
+		),
+	];
 
 	let endowed_accounts: Vec<AccountId> = vec![root_key.clone()];
 
@@ -115,8 +129,10 @@ pub fn staging_testnet_config() -> ChainSpec {
 		ChainType::Live,
 		staging_testnet_config_genesis,
 		vec![],
-		Some(TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])
-			.expect("Staging telemetry url is valid; qed")),
+		Some(
+			TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])
+				.expect("Staging telemetry url is valid; qed"),
+		),
 		Some("nftmart"),
 		Some(get_properties()),
 		Default::default(),
@@ -131,21 +147,17 @@ pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Pu
 }
 
 /// Helper function to generate an account ID from seed
-pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId where
-	AccountPublic: From<<TPublic::Pair as Pair>::Public>
+pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId
+where
+	AccountPublic: From<<TPublic::Pair as Pair>::Public>,
 {
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
 
 /// Helper function to generate stash, controller and session key from seed
-pub fn authority_keys_from_seed(seed: &str) -> (
-	AccountId,
-	AccountId,
-	GrandpaId,
-	BabeId,
-	ImOnlineId,
-	AuthorityDiscoveryId,
-) {
+pub fn authority_keys_from_seed(
+	seed: &str,
+) -> (AccountId, AccountId, GrandpaId, BabeId, ImOnlineId, AuthorityDiscoveryId) {
 	(
 		get_account_id_from_seed::<sr25519::Public>(&format!("{}//stash", seed)),
 		get_account_id_from_seed::<sr25519::Public>(seed),
@@ -187,11 +199,15 @@ pub fn testnet_genesis(
 		]
 	});
 	// endow all authorities and nominators.
-	initial_authorities.iter().map(|x| &x.0).chain(initial_nominators.iter()).for_each(|x| {
-		if !endowed_accounts.contains(&x) {
-			endowed_accounts.push(x.clone())
-		}
-	});
+	initial_authorities
+		.iter()
+		.map(|x| &x.0)
+		.chain(initial_nominators.iter())
+		.for_each(|x| {
+			if !endowed_accounts.contains(&x) {
+				endowed_accounts.push(x.clone())
+			}
+		});
 
 	// stakers: all validators and nominators.
 	let mut rng = rand::thread_rng();
@@ -225,22 +241,20 @@ pub fn testnet_genesis(
 			changes_trie_config: Default::default(),
 		},
 		balances: BalancesConfig {
-			balances: endowed_accounts.iter().cloned()
-				.map(|x| (x, ENDOWMENT))
-				.collect()
+			balances: endowed_accounts.iter().cloned().map(|x| (x, ENDOWMENT)).collect(),
 		},
-		indices: IndicesConfig {
-			indices: vec![],
-		},
+		indices: IndicesConfig { indices: vec![] },
 		session: SessionConfig {
-			keys: initial_authorities.iter().map(|x| {
-				(x.0.clone(), x.0.clone(), session_keys(
-					x.2.clone(),
-					x.3.clone(),
-					x.4.clone(),
-					x.5.clone(),
-				))
-			}).collect::<Vec<_>>(),
+			keys: initial_authorities
+				.iter()
+				.map(|x| {
+					(
+						x.0.clone(),
+						x.0.clone(),
+						session_keys(x.2.clone(), x.3.clone(), x.4.clone(), x.5.clone()),
+					)
+				})
+				.collect::<Vec<_>>(),
 		},
 		staking: StakingConfig {
 			validator_count: initial_authorities.len() as u32 + 1,
@@ -248,51 +262,47 @@ pub fn testnet_genesis(
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			slash_reward_fraction: Perbill::from_percent(10),
 			stakers,
-			.. Default::default()
+			..Default::default()
 		},
 		democracy: DemocracyConfig::default(),
 		elections: ElectionsConfig {
-			members: endowed_accounts.iter()
-						.take((num_endowed_accounts + 1) / 2)
-						.cloned()
-						.map(|member| (member, STASH))
-						.collect(),
+			members: endowed_accounts
+				.iter()
+				.take((num_endowed_accounts + 1) / 2)
+				.cloned()
+				.map(|member| (member, STASH))
+				.collect(),
 		},
 		council: CouncilConfig::default(),
 		technical_committee: TechnicalCommitteeConfig {
-			members: endowed_accounts.iter()
-						.take((num_endowed_accounts + 1) / 2)
-						.cloned()
-						.collect(),
+			members: endowed_accounts
+				.iter()
+				.take((num_endowed_accounts + 1) / 2)
+				.cloned()
+				.collect(),
 			phantom: Default::default(),
 		},
-		sudo: SudoConfig {
-			key: root_key,
-		},
+		sudo: SudoConfig { key: root_key },
 		babe: BabeConfig {
 			authorities: vec![],
 			epoch_config: Some(node_runtime::BABE_GENESIS_EPOCH_CONFIG),
 		},
-		im_online: ImOnlineConfig {
-			keys: vec![],
-		},
-		authority_discovery: AuthorityDiscoveryConfig {
-			keys: vec![],
-		},
-		grandpa: GrandpaConfig {
-			authorities: vec![],
-		},
+		im_online: ImOnlineConfig { keys: vec![] },
+		authority_discovery: AuthorityDiscoveryConfig { keys: vec![] },
+		grandpa: GrandpaConfig { authorities: vec![] },
 		treasury: Default::default(),
 		tokens: TokensConfig {
-			endowed_accounts: endowed_accounts.iter()
-				.flat_map(|x|{
+			endowed_accounts: endowed_accounts
+				.iter()
+				.flat_map(|x| {
 					vec![
 						(x.clone(), 1, 100 * nftmart_traits::ACCURACY),
 						(x.clone(), 2, 100 * nftmart_traits::ACCURACY),
 						(x.clone(), 3, 100 * nftmart_traits::ACCURACY),
 						(x.clone(), 4, 100 * nftmart_traits::ACCURACY),
 					]
-				}).collect(),
+				})
+				.collect(),
 		},
 		orml_nft: Default::default(),
 		// nftmart: Default::default(),
@@ -300,68 +310,140 @@ pub fn testnet_genesis(
 			classes: vec![
 				nftmart_traits::ClassConfig {
 					class_id: 31,
-					class_metadata: String::from_utf8(br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec()).unwrap(),
+					class_metadata: String::from_utf8(
+						br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec(),
+					)
+					.unwrap(),
 					name: String::from_utf8(b"class name31".to_vec()).unwrap(),
 					description: String::from_utf8(b"class description31".to_vec()).unwrap(),
 					properties: 1 | 2,
 					royalty_rate: PerU16::from_percent(20),
 					admins: vec![
-						AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-						AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-						AccountId::from_ss58check("63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P").unwrap(),
+						AccountId::from_ss58check(
+							"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+						)
+						.unwrap(),
+						AccountId::from_ss58check(
+							"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+						)
+						.unwrap(),
+						AccountId::from_ss58check(
+							"63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P",
+						)
+						.unwrap(),
 					],
 					tokens: vec![
 						nftmart_traits::TokenConfig {
 							token_id: 4,
-							token_metadata: String::from_utf8(br#"{"a":"token metadata4", "e":"ff4"}"#.to_vec()).unwrap(),
+							token_metadata: String::from_utf8(
+								br#"{"a":"token metadata4", "e":"ff4"}"#.to_vec(),
+							)
+							.unwrap(),
 							royalty_rate: PerU16::from_percent(10),
-							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							token_owner: AccountId::from_ss58check(
+								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+							)
+							.unwrap(),
+							token_creator: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
 							quantity: 11,
 						},
 						nftmart_traits::TokenConfig {
 							token_id: 5,
-							token_metadata: String::from_utf8(br#"{"a":"token metadata5", "e":"ff5"}"#.to_vec()).unwrap(),
+							token_metadata: String::from_utf8(
+								br#"{"a":"token metadata5", "e":"ff5"}"#.to_vec(),
+							)
+							.unwrap(),
 							royalty_rate: PerU16::zero(),
-							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							token_owner: AccountId::from_ss58check(
+								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+							)
+							.unwrap(),
+							token_creator: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
 							quantity: 12,
-						}
+						},
 					],
 				},
 				nftmart_traits::ClassConfig {
 					class_id: 55,
-					class_metadata: String::from_utf8(br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec()).unwrap(),
+					class_metadata: String::from_utf8(
+						br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec(),
+					)
+					.unwrap(),
 					name: String::from_utf8(b"class name55".to_vec()).unwrap(),
 					description: String::from_utf8(b"class description55".to_vec()).unwrap(),
 					properties: 1 | 2,
 					royalty_rate: PerU16::from_percent(15),
 					admins: vec![
-						AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-						AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-						AccountId::from_ss58check("63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P").unwrap(),
+						AccountId::from_ss58check(
+							"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+						)
+						.unwrap(),
+						AccountId::from_ss58check(
+							"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+						)
+						.unwrap(),
+						AccountId::from_ss58check(
+							"63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P",
+						)
+						.unwrap(),
 					],
 					tokens: vec![
 						nftmart_traits::TokenConfig {
 							token_id: 41,
-							token_metadata: String::from_utf8(br#"{"a":"token metadata41", "e":"ff41"}"#.to_vec()).unwrap(),
+							token_metadata: String::from_utf8(
+								br#"{"a":"token metadata41", "e":"ff41"}"#.to_vec(),
+							)
+							.unwrap(),
 							royalty_rate: PerU16::from_percent(10),
-							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							token_owner: AccountId::from_ss58check(
+								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+							)
+							.unwrap(),
+							token_creator: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
 							quantity: 21,
 						},
 						nftmart_traits::TokenConfig {
 							token_id: 51,
-							token_metadata: String::from_utf8(br#"{"a":"token metadata51", "e":"ff51"}"#.to_vec()).unwrap(),
+							token_metadata: String::from_utf8(
+								br#"{"a":"token metadata51", "e":"ff51"}"#.to_vec(),
+							)
+							.unwrap(),
 							royalty_rate: PerU16::zero(),
-							token_owner: AccountId::from_ss58check("65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB").unwrap(),
-							token_creator: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check("63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw").unwrap(),
+							token_owner: AccountId::from_ss58check(
+								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+							)
+							.unwrap(),
+							token_creator: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
+							royalty_beneficiary: AccountId::from_ss58check(
+								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							)
+							.unwrap(),
 							quantity: 22,
-						}
+						},
 					],
 				},
 			],
@@ -379,9 +461,7 @@ pub fn testnet_genesis(
 
 fn development_config_genesis() -> GenesisConfig {
 	testnet_genesis(
-		vec![
-			authority_keys_from_seed("Alice"),
-		],
+		vec![authority_keys_from_seed("Alice")],
 		vec![],
 		get_account_id_from_seed::<sr25519::Public>("Alice"),
 		None,
@@ -405,10 +485,7 @@ pub fn development_config() -> ChainSpec {
 
 fn local_testnet_genesis() -> GenesisConfig {
 	testnet_genesis(
-		vec![
-			authority_keys_from_seed("Alice"),
-			authority_keys_from_seed("Bob"),
-		],
+		vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 		vec![],
 		get_account_id_from_seed::<sr25519::Public>("Alice"),
 		None,
@@ -423,8 +500,10 @@ pub fn local_testnet_config() -> ChainSpec {
 		ChainType::Local,
 		local_testnet_genesis,
 		vec![],
-		Some(TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])
-			.expect("Local Testnet telemetry url is valid; qed")),
+		Some(
+			TelemetryEndpoints::new(vec![(STAGING_TELEMETRY_URL.to_string(), 0)])
+				.expect("Local Testnet telemetry url is valid; qed"),
+		),
 		Some("nftmart"),
 		Some(get_properties()),
 		Default::default(),
@@ -440,9 +519,7 @@ pub(crate) mod tests {
 
 	fn local_testnet_genesis_instant_single() -> GenesisConfig {
 		testnet_genesis(
-			vec![
-				authority_keys_from_seed("Alice"),
-			],
+			vec![authority_keys_from_seed("Alice")],
 			vec![],
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 			None,
@@ -485,14 +562,24 @@ pub(crate) mod tests {
 		sc_service_test::connectivity(
 			integration_test_config_with_two_authorities(),
 			|config| {
-				let NewFullBase { task_manager, client, network, transaction_pool, .. }
-					= new_full_base(config,|_, _| ())?;
-				Ok(sc_service_test::TestNetComponents::new(task_manager, client, network, transaction_pool))
+				let NewFullBase { task_manager, client, network, transaction_pool, .. } =
+					new_full_base(config, |_, _| ())?;
+				Ok(sc_service_test::TestNetComponents::new(
+					task_manager,
+					client,
+					network,
+					transaction_pool,
+				))
 			},
 			|config| {
 				let (keep_alive, _, client, network, transaction_pool) = new_light_base(config)?;
-				Ok(sc_service_test::TestNetComponents::new(keep_alive, client, network, transaction_pool))
-			}
+				Ok(sc_service_test::TestNetComponents::new(
+					keep_alive,
+					client,
+					network,
+					transaction_pool,
+				))
+			},
 		);
 	}
 

@@ -5,16 +5,16 @@ use frame_support::{
 	traits::{Currency, ReservableCurrency},
 	transactional,
 };
-use sp_std::vec::Vec;
 use frame_system::pallet_prelude::*;
 pub use nftmart_traits::*;
+use orml_traits::{MultiCurrency, MultiReservableCurrency};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, StaticLookup},
 	RuntimeDebug, SaturatedConversion,
 };
-use orml_traits::{MultiCurrency, MultiReservableCurrency};
+use sp_std::vec::Vec;
 
 mod mock;
 mod tests;
@@ -75,11 +75,16 @@ impl Default for Releases {
 
 pub type TokenIdOf<T> = <T as module::Config>::TokenId;
 pub type ClassIdOf<T> = <T as module::Config>::ClassId;
-pub type BalanceOf<T> = <<T as module::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrency<<T as frame_system::Config>::AccountId>>::CurrencyId;
+pub type BalanceOf<T> =
+	<<T as module::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrency<
+	<T as frame_system::Config>::AccountId,
+>>::CurrencyId;
 pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
-pub type OrderOf<T> = Order<CurrencyIdOf<T>, BlockNumberOf<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
-pub type OfferOf<T> = Offer<CurrencyIdOf<T>, BlockNumberOf<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
+pub type OrderOf<T> =
+	Order<CurrencyIdOf<T>, BlockNumberOf<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
+pub type OfferOf<T> =
+	Offer<CurrencyIdOf<T>, BlockNumberOf<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
 
 #[frame_support::pallet]
 pub mod module {
@@ -96,10 +101,22 @@ pub mod module {
 		type Currency: ReservableCurrency<Self::AccountId>;
 
 		/// The class ID type
-		type ClassId: Parameter + Member + AtLeast32BitUnsigned + Default + Copy + MaybeSerializeDeserialize + codec::FullCodec;
+		type ClassId: Parameter
+			+ Member
+			+ AtLeast32BitUnsigned
+			+ Default
+			+ Copy
+			+ MaybeSerializeDeserialize
+			+ codec::FullCodec;
 
 		/// The token ID type
-		type TokenId: Parameter + Member + AtLeast32BitUnsigned + Default + Copy + MaybeSerializeDeserialize + codec::FullCodec;
+		type TokenId: Parameter
+			+ Member
+			+ AtLeast32BitUnsigned
+			+ Default
+			+ Copy
+			+ MaybeSerializeDeserialize
+			+ codec::FullCodec;
 
 		/// NFTMart nft
 		type NFT: NftmartNft<Self::AccountId, Self::ClassId, Self::TokenId>;
@@ -155,7 +172,7 @@ pub mod module {
 			0
 		}
 
-		fn integrity_test () {}
+		fn integrity_test() {}
 	}
 
 	#[pallet::genesis_config]
@@ -166,9 +183,7 @@ pub mod module {
 	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
-			Self {
-				_phantom: Default::default(),
-			}
+			Self { _phantom: Default::default() }
 		}
 	}
 
@@ -191,12 +206,14 @@ pub mod module {
 	/// Index/store orders by account as primary key and order id as secondary key.
 	#[pallet::storage]
 	#[pallet::getter(fn orders)]
-	pub type Orders<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Twox64Concat, GlobalId, OrderOf<T>>;
+	pub type Orders<T: Config> =
+		StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Twox64Concat, GlobalId, OrderOf<T>>;
 
 	/// Index/store offers by account as primary key and order id as secondary key.
 	#[pallet::storage]
 	#[pallet::getter(fn offers)]
-	pub type Offers<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Twox64Concat, GlobalId, OfferOf<T>>;
+	pub type Offers<T: Config> =
+		StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Twox64Concat, GlobalId, OfferOf<T>>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -221,10 +238,16 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
-			ensure!(deposit >= T::ExtraConfig::get_min_order_deposit(), Error::<T>::SubmitWithInvalidDeposit);
+			ensure!(
+				deposit >= T::ExtraConfig::get_min_order_deposit(),
+				Error::<T>::SubmitWithInvalidDeposit
+			);
 			<T as Config>::Currency::reserve(&who, deposit.saturated_into())?;
 
-			ensure!(frame_system::Pallet::<T>::block_number() < deadline, Error::<T>::SubmitWithInvalidDeadline);
+			ensure!(
+				frame_system::Pallet::<T>::block_number() < deadline,
+				Error::<T>::SubmitWithInvalidDeadline
+			);
 			let mut order = Order {
 				currency_id,
 				deposit,
@@ -250,7 +273,7 @@ pub mod module {
 		/// - `order_owner`: token owner
 		#[pallet::weight(100_000)]
 		#[transactional]
-		pub fn take_order (
+		pub fn take_order(
 			origin: OriginFor<T>,
 			#[pallet::compact] order_id: GlobalId,
 			order_owner: <T::Lookup as StaticLookup>::Source,
@@ -264,14 +287,23 @@ pub mod module {
 			let order: OrderOf<T> = Self::delete_order(&order_owner, order_id)?;
 
 			// Check deadline of this order
-			ensure!(frame_system::Pallet::<T>::block_number() < order.deadline, Error::<T>::TakeExpiredOrderOrOffer);
+			ensure!(
+				frame_system::Pallet::<T>::block_number() < order.deadline,
+				Error::<T>::TakeExpiredOrderOrOffer
+			);
 
 			let items = to_item_vec!(order);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-				&purchaser, &order_owner, order.currency_id, order.price, &items,
-				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
-				&beneficiary, royalty_rate,
+				&purchaser,
+				&order_owner,
+				order.currency_id,
+				order.price,
+				&items,
+				&Self::treasury_account_id(),
+				T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary,
+				royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::TakenOrder(purchaser, order_owner, order_id));
@@ -319,7 +351,10 @@ pub mod module {
 			items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
 		) -> DispatchResultWithPostInfo {
 			let purchaser = ensure_signed(origin)?;
-			ensure!(frame_system::Pallet::<T>::block_number() < deadline, Error::<T>::SubmitWithInvalidDeadline);
+			ensure!(
+				frame_system::Pallet::<T>::block_number() < deadline,
+				Error::<T>::SubmitWithInvalidDeadline
+			);
 
 			// Reserve balances of `currency_id` for tokenOwner to accept this offer.
 			T::MultiCurrency::reserve(currency_id, &purchaser, price)?;
@@ -348,7 +383,7 @@ pub mod module {
 		/// - `offer_owner`: token owner
 		#[pallet::weight(100_000)]
 		#[transactional]
-		pub fn take_offer (
+		pub fn take_offer(
 			origin: OriginFor<T>,
 			#[pallet::compact] offer_id: GlobalId,
 			offer_owner: <T::Lookup as StaticLookup>::Source,
@@ -362,14 +397,23 @@ pub mod module {
 			let offer: OfferOf<T> = Self::delete_offer(&offer_owner, offer_id)?;
 
 			// Check deadline of this offer
-			ensure!(frame_system::Pallet::<T>::block_number() < offer.deadline, Error::<T>::TakeExpiredOrderOrOffer);
+			ensure!(
+				frame_system::Pallet::<T>::block_number() < offer.deadline,
+				Error::<T>::TakeExpiredOrderOrOffer
+			);
 
 			let items = to_item_vec!(offer);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-				&offer_owner, &token_owner, offer.currency_id, offer.price, &items,
-				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
-				&beneficiary, royalty_rate,
+				&offer_owner,
+				&token_owner,
+				offer.currency_id,
+				offer.price,
+				&items,
+				&Self::treasury_account_id(),
+				T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary,
+				royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::TakenOffer(token_owner, offer_owner, offer_id));
@@ -384,7 +428,8 @@ impl<T: Config> Pallet<T> {
 			let order: OrderOf<T> = maybe_order.as_mut().ok_or(Error::<T>::OrderNotFound)?.clone();
 
 			// Can we safely ignore this remain value?
-			let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(who, order.deposit.saturated_into());
+			let _remain: BalanceOf<T> =
+				<T as Config>::Currency::unreserve(who, order.deposit.saturated_into());
 
 			for item in &order.items {
 				T::NFT::unreserve_tokens(who, item.class_id, item.token_id, item.quantity)?;
@@ -410,6 +455,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn treasury_account_id() -> T::AccountId {
-		sp_runtime::traits::AccountIdConversion::<T::AccountId>::into_account(&T::TreasuryPalletId::get())
+		sp_runtime::traits::AccountIdConversion::<T::AccountId>::into_account(
+			&T::TreasuryPalletId::get(),
+		)
 	}
 }

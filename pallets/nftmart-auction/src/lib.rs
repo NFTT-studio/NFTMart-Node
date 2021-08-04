@@ -5,22 +5,24 @@ use frame_support::{
 	traits::{Currency, ReservableCurrency},
 	transactional,
 };
-use sp_std::vec::Vec;
 use frame_system::pallet_prelude::*;
-use nftmart_traits::constants_types::{GlobalId, Balance, ACCURACY};
+use nftmart_traits::{
+	constants_types::{Balance, GlobalId, ACCURACY},
+	*,
+};
+use orml_traits::{MultiCurrency, MultiReservableCurrency};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, StaticLookup, Zero, Saturating, CheckedDiv},
-	RuntimeDebug, SaturatedConversion, PerU16, FixedU128, FixedPointNumber,
+	traits::{AtLeast32BitUnsigned, CheckedDiv, Saturating, StaticLookup, Zero},
+	FixedPointNumber, FixedU128, PerU16, RuntimeDebug, SaturatedConversion,
 };
-use orml_traits::{MultiCurrency, MultiReservableCurrency};
-use nftmart_traits::*;
+use sp_std::vec::Vec;
 
-mod mock;
+mod benchmarking;
 mod british_tests;
 mod dutch_tests;
-mod benchmarking;
+mod mock;
 pub mod weights;
 use crate::weights::WeightInfo;
 
@@ -49,10 +51,22 @@ pub mod module {
 		type Currency: ReservableCurrency<Self::AccountId>;
 
 		/// The class ID type
-		type ClassId: Parameter + Member + AtLeast32BitUnsigned + Default + Copy + MaybeSerializeDeserialize + codec::FullCodec;
+		type ClassId: Parameter
+			+ Member
+			+ AtLeast32BitUnsigned
+			+ Default
+			+ Copy
+			+ MaybeSerializeDeserialize
+			+ codec::FullCodec;
 
 		/// The token ID type
-		type TokenId: Parameter + Member + AtLeast32BitUnsigned + Default + Copy + MaybeSerializeDeserialize + codec::FullCodec;
+		type TokenId: Parameter
+			+ Member
+			+ AtLeast32BitUnsigned
+			+ Default
+			+ Copy
+			+ MaybeSerializeDeserialize
+			+ codec::FullCodec;
 
 		/// NFTMart nft
 		type NFT: NftmartNft<Self::AccountId, Self::ClassId, Self::TokenId>;
@@ -119,7 +133,7 @@ pub mod module {
 			0
 		}
 
-		fn integrity_test () {}
+		fn integrity_test() {}
 	}
 
 	#[pallet::genesis_config]
@@ -130,9 +144,7 @@ pub mod module {
 	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
-			Self {
-				_phantom: Default::default(),
-			}
+			Self { _phantom: Default::default() }
 		}
 	}
 
@@ -150,26 +162,41 @@ pub mod module {
 	/// BritishAuctions
 	#[pallet::storage]
 	#[pallet::getter(fn british_auctions)]
-	pub type BritishAuctions<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Twox64Concat, GlobalId, BritishAuctionOf<T>>;
+	pub type BritishAuctions<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		Twox64Concat,
+		GlobalId,
+		BritishAuctionOf<T>,
+	>;
 
 	/// BritishAuctionBids
 	#[pallet::storage]
 	#[pallet::getter(fn british_auction_bids)]
-	pub type BritishAuctionBids<T: Config> = StorageMap<_, Twox64Concat, GlobalId, BritishAuctionBidOf<T>>;
+	pub type BritishAuctionBids<T: Config> =
+		StorageMap<_, Twox64Concat, GlobalId, BritishAuctionBidOf<T>>;
 
 	/// DutchAuctions
 	#[pallet::storage]
 	#[pallet::getter(fn dutch_auctions)]
-	pub type DutchAuctions<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Twox64Concat, GlobalId, DutchAuctionOf<T>>;
+	pub type DutchAuctions<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		Twox64Concat,
+		GlobalId,
+		DutchAuctionOf<T>,
+	>;
 
 	/// DutchAuctionBids
 	#[pallet::storage]
 	#[pallet::getter(fn dutch_auction_bids)]
-	pub type DutchAuctionBids<T: Config> = StorageMap<_, Twox64Concat, GlobalId, DutchAuctionBidOf<T>>;
+	pub type DutchAuctionBids<T: Config> =
+		StorageMap<_, Twox64Concat, GlobalId, DutchAuctionBidOf<T>>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
 		#[allow(clippy::too_many_arguments)]
 		#[transactional]
 		#[pallet::weight(T::WeightInfo::submit_dutch_auction(items.len() as u32))]
@@ -190,7 +217,10 @@ pub mod module {
 			ensure!(items.len() as u32 <= MAX_TOKEN_PER_AUCTION, Error::<T>::TooManyTokens);
 
 			// check and reserve `deposit`
-			ensure!(deposit >= T::ExtraConfig::get_min_order_deposit(), Error::<T>::SubmitWithInvalidDeposit);
+			ensure!(
+				deposit >= T::ExtraConfig::get_min_order_deposit(),
+				Error::<T>::SubmitWithInvalidDeposit
+			);
 			<T as Config>::Currency::reserve(&who, deposit.saturated_into())?;
 
 			let created_block = frame_system::Pallet::<T>::block_number();
@@ -198,8 +228,8 @@ pub mod module {
 			ensure!(created_block < deadline, Error::<T>::SubmitWithInvalidDeadline);
 
 			// check min price and max price
-			ensure!(0 < min_price , Error::<T>::InvalidDutchMinPrice);
-			ensure!(min_price < max_price , Error::<T>::MaxPriceShouldBeGreaterThanMinPrice);
+			ensure!(0 < min_price, Error::<T>::InvalidDutchMinPrice);
+			ensure!(min_price < max_price, Error::<T>::MaxPriceShouldBeGreaterThanMinPrice);
 
 			let mut auction: DutchAuctionOf<T> = DutchAuction {
 				currency_id,
@@ -252,8 +282,10 @@ pub mod module {
 			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
 			ensure!(purchaser != auction_owner, Error::<T>::SelfBid);
 
-			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id).ok_or(Error::<T>::DutchAuctionNotFound)?;
-			let auction_bid: DutchAuctionBidOf<T> = Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
+			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id)
+				.ok_or(Error::<T>::DutchAuctionNotFound)?;
+			let auction_bid: DutchAuctionBidOf<T> =
+				Self::dutch_auction_bids(auction_id).ok_or(Error::<T>::DutchAuctionBidNotFound)?;
 
 			match (&auction_bid.last_bid_account, auction.allow_british_auction) {
 				(None, true) => {
@@ -262,7 +294,12 @@ pub mod module {
 					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
 					// get price
 					let current_price: Balance = calc_current_price::<T>(
-						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
+						auction.max_price,
+						auction.min_price,
+						auction.created_block,
+						auction.deadline,
+						current_block,
+					);
 					Self::save_dutch_bid(
 						auction_bid,
 						auction,
@@ -279,23 +316,35 @@ pub mod module {
 					ensure!(auction.deadline >= current_block, Error::<T>::DutchAuctionClosed);
 					// get price
 					let current_price: Balance = calc_current_price::<T>(
-						auction.max_price, auction.min_price, auction.created_block, auction.deadline, current_block);
+						auction.max_price,
+						auction.min_price,
+						auction.created_block,
+						auction.deadline,
+						current_block,
+					);
 					// delete auction
 					Self::delete_dutch_auction(&auction_owner, auction_id)?;
 					// swap
 					let items = to_item_vec!(auction);
 					let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 					swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-						&purchaser, &auction_owner, auction.currency_id, current_price, &items,
-						&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
-						&beneficiary, royalty_rate,
+						&purchaser,
+						&auction_owner,
+						auction.currency_id,
+						current_price,
+						&items,
+						&Self::treasury_account_id(),
+						T::ExtraConfig::get_platform_fee_rate(),
+						&beneficiary,
+						royalty_rate,
 					)?;
 					Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
-				}
+				},
 				(Some(_), true) => {
 					// check deadline
 					ensure!(
-						get_deadline::<T>(true, Zero::zero(), auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
+						get_deadline::<T>(true, Zero::zero(), auction_bid.last_bid_block) >=
+							frame_system::Pallet::<T>::block_number(),
 						Error::<T>::DutchAuctionClosed,
 					);
 					Self::save_dutch_bid(
@@ -309,7 +358,7 @@ pub mod module {
 					Self::deposit_event(Event::BidDutchAuction(purchaser, auction_id));
 				},
 				_ => {
-					return Err(Error::<T>::DutchAuctionClosed.into());
+					return Err(Error::<T>::DutchAuctionClosed.into())
 				},
 			}
 			Ok(().into())
@@ -325,9 +374,10 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
-			let (auction,auction_bid) = Self::delete_dutch_auction(&auction_owner, auction_id)?;
+			let (auction, auction_bid) = Self::delete_dutch_auction(&auction_owner, auction_id)?;
 			ensure!(
-				get_deadline::<T>(true, Zero::zero(), auction_bid.last_bid_block) < frame_system::Pallet::<T>::block_number(),
+				get_deadline::<T>(true, Zero::zero(), auction_bid.last_bid_block) <
+					frame_system::Pallet::<T>::block_number(),
 				Error::<T>::CannotRedeemAuctionUntilDeadline
 			);
 			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
@@ -336,9 +386,15 @@ pub mod module {
 			let items = to_item_vec!(auction);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_bid_price, &items,
-				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
-				&beneficiary, royalty_rate,
+				&purchaser,
+				&auction_owner,
+				auction.currency_id,
+				auction_bid.last_bid_price,
+				&items,
+				&Self::treasury_account_id(),
+				T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary,
+				royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
@@ -388,11 +444,17 @@ pub mod module {
 			let who = ensure_signed(origin)?;
 
 			// check and reserve `deposit`
-			ensure!(deposit >= T::ExtraConfig::get_min_order_deposit(), Error::<T>::SubmitWithInvalidDeposit);
+			ensure!(
+				deposit >= T::ExtraConfig::get_min_order_deposit(),
+				Error::<T>::SubmitWithInvalidDeposit
+			);
 			<T as Config>::Currency::reserve(&who, deposit.saturated_into())?;
 
 			// check deadline
-			ensure!(frame_system::Pallet::<T>::block_number() < deadline, Error::<T>::SubmitWithInvalidDeadline);
+			ensure!(
+				frame_system::Pallet::<T>::block_number() < deadline,
+				Error::<T>::SubmitWithInvalidDeadline
+			);
 
 			// check hammer price
 			if hammer_price > Zero::zero() {
@@ -449,12 +511,18 @@ pub mod module {
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
 			ensure!(purchaser != auction_owner, Error::<T>::SelfBid);
 
-			let auction: BritishAuctionOf<T> = Self::british_auctions(&auction_owner, auction_id).ok_or(Error::<T>::BritishAuctionNotFound)?;
-			let auction_bid: BritishAuctionBidOf<T> = Self::british_auction_bids(auction_id).ok_or(Error::<T>::BritishAuctionBidNotFound)?;
+			let auction: BritishAuctionOf<T> = Self::british_auctions(&auction_owner, auction_id)
+				.ok_or(Error::<T>::BritishAuctionNotFound)?;
+			let auction_bid: BritishAuctionBidOf<T> = Self::british_auction_bids(auction_id)
+				.ok_or(Error::<T>::BritishAuctionBidNotFound)?;
 
 			// check deadline
 			ensure!(
-				get_deadline::<T>(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) >= frame_system::Pallet::<T>::block_number(),
+				get_deadline::<T>(
+					auction.allow_delay,
+					auction.deadline,
+					auction_bid.last_bid_block
+				) >= frame_system::Pallet::<T>::block_number(),
 				Error::<T>::BritishAuctionClosed,
 			);
 
@@ -466,9 +534,15 @@ pub mod module {
 				let items = to_item_vec!(auction);
 				let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 				swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-					&purchaser, &auction_owner, auction.currency_id, auction.hammer_price, &items,
-					&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
-					&beneficiary, royalty_rate,
+					&purchaser,
+					&auction_owner,
+					auction.currency_id,
+					auction.hammer_price,
+					&items,
+					&Self::treasury_account_id(),
+					T::ExtraConfig::get_platform_fee_rate(),
+					&beneficiary,
+					royalty_rate,
 				)?;
 
 				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id));
@@ -478,13 +552,7 @@ pub mod module {
 					ensure!(price >= auction.init_price, Error::<T>::PriceTooLow);
 				}
 
-				Self::save_british_bid(
-					auction_bid,
-					auction,
-					price,
-					purchaser.clone(),
-					auction_id,
-				)?;
+				Self::save_british_bid(auction_bid, auction, price, purchaser.clone(), auction_id)?;
 
 				Self::deposit_event(Event::BidBritishAuction(purchaser, auction_id));
 				Ok(().into())
@@ -501,9 +569,13 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
-			let (auction,auction_bid) = Self::delete_british_auction(&auction_owner, auction_id)?;
+			let (auction, auction_bid) = Self::delete_british_auction(&auction_owner, auction_id)?;
 			ensure!(
-				get_deadline::<T>(auction.allow_delay, auction.deadline, auction_bid.last_bid_block) < frame_system::Pallet::<T>::block_number(),
+				get_deadline::<T>(
+					auction.allow_delay,
+					auction.deadline,
+					auction_bid.last_bid_block
+				) < frame_system::Pallet::<T>::block_number(),
 				Error::<T>::CannotRedeemAuctionUntilDeadline
 			);
 			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
@@ -512,9 +584,15 @@ pub mod module {
 			let items = to_item_vec!(auction);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
-				&purchaser, &auction_owner, auction.currency_id, auction_bid.last_bid_price, &items,
-				&Self::treasury_account_id(), T::ExtraConfig::get_platform_fee_rate(),
-				&beneficiary, royalty_rate,
+				&purchaser,
+				&auction_owner,
+				auction.currency_id,
+				auction_bid.last_bid_price,
+				&items,
+				&Self::treasury_account_id(),
+				T::ExtraConfig::get_platform_fee_rate(),
+				&beneficiary,
+				royalty_rate,
 			)?;
 
 			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id));
@@ -539,11 +617,14 @@ pub mod module {
 
 impl<T: Config> Pallet<T> {
 	pub fn treasury_account_id() -> T::AccountId {
-		sp_runtime::traits::AccountIdConversion::<T::AccountId>::into_account(&T::TreasuryPalletId::get())
+		sp_runtime::traits::AccountIdConversion::<T::AccountId>::into_account(
+			&T::TreasuryPalletId::get(),
+		)
 	}
 
 	fn delete_british_auction(
-		who: &T::AccountId, auction_id: GlobalId
+		who: &T::AccountId,
+		auction_id: GlobalId,
 	) -> Result<(BritishAuctionOf<T>, BritishAuctionBidOf<T>), DispatchError> {
 		delete_auction!(
 			BritishAuctionBids,
@@ -556,7 +637,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn delete_dutch_auction(
-		who: &T::AccountId, auction_id: GlobalId
+		who: &T::AccountId,
+		auction_id: GlobalId,
 	) -> Result<(DutchAuctionOf<T>, DutchAuctionBidOf<T>), DispatchError> {
 		delete_auction!(
 			DutchAuctionBids,
@@ -569,32 +651,24 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn save_dutch_bid(
-		auction_bid: DutchAuctionBidOf<T>, auction: DutchAuctionOf<T>,
-		price: Balance, purchaser: T::AccountId, auction_id: GlobalId
+		auction_bid: DutchAuctionBidOf<T>,
+		auction: DutchAuctionOf<T>,
+		price: Balance,
+		purchaser: T::AccountId,
+		auction_id: GlobalId,
 	) -> DispatchResult {
-		save_bid!(
-			auction_bid,
-			auction,
-			price,
-			purchaser,
-			auction_id,
-			DutchAuctionBids,
-		);
+		save_bid!(auction_bid, auction, price, purchaser, auction_id, DutchAuctionBids,);
 		Ok(())
 	}
 
 	fn save_british_bid(
-		auction_bid: BritishAuctionBidOf<T>, auction: BritishAuctionOf<T>,
-		price: Balance, purchaser: T::AccountId, auction_id: GlobalId
+		auction_bid: BritishAuctionBidOf<T>,
+		auction: BritishAuctionOf<T>,
+		price: Balance,
+		purchaser: T::AccountId,
+		auction_id: GlobalId,
 	) -> DispatchResult {
-		save_bid!(
-			auction_bid,
-			auction,
-			price,
-			purchaser,
-			auction_id,
-			BritishAuctionBids,
-		);
+		save_bid!(auction_bid, auction, price, purchaser, auction_id, BritishAuctionBids,);
 		Ok(())
 	}
 }

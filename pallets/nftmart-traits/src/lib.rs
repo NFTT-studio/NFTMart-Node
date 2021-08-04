@@ -1,28 +1,31 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::unnecessary_cast)]
 
-use frame_support::pallet_prelude::*;
-use sp_std::vec::Vec;
-#[cfg(feature = "std")]
-use serde::{Serialize, Deserialize};
 pub use enumflags2::BitFlags;
-pub use orml_traits::nft::{TokenInfo, ClassInfo, AccountToken};
-use sp_runtime::{PerU16};
+use frame_support::pallet_prelude::*;
+pub use orml_traits::nft::{AccountToken, ClassInfo, TokenInfo};
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
+use sp_runtime::PerU16;
+use sp_std::vec::Vec;
 
 pub mod constants_types;
 pub use crate::constants_types::*;
 pub use contract_types::*;
 pub use log;
 
-pub type ResultPost<T> = sp_std::result::Result<T, sp_runtime::DispatchErrorWithPostInfo<frame_support::weights::PostDispatchInfo>>;
+pub type ResultPost<T> = sp_std::result::Result<
+	T,
+	sp_runtime::DispatchErrorWithPostInfo<frame_support::weights::PostDispatchInfo>,
+>;
 
 pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn auction_close_delay() -> BlockNumber;
 	fn is_in_whitelist(_who: &AccountId) -> bool;
 	fn get_min_order_deposit() -> Balance;
 	fn get_then_inc_id() -> Result<GlobalId, DispatchError>;
-	fn inc_count_in_category (category_id: GlobalId) -> DispatchResult;
-	fn dec_count_in_category (category_id: GlobalId) -> DispatchResult;
+	fn inc_count_in_category(category_id: GlobalId) -> DispatchResult;
+	fn dec_count_in_category(category_id: GlobalId) -> DispatchResult;
 	fn do_add_whitelist(who: &AccountId);
 	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo;
 	fn peek_next_gid() -> GlobalId;
@@ -32,15 +35,49 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 
 pub trait NftmartNft<AccountId, ClassId, TokenId> {
 	fn peek_next_class_id() -> ClassId;
-	fn transfer(from: &AccountId, to: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
-	fn account_token(_who: &AccountId, _class_id: ClassId, _token_id: TokenId) -> AccountToken<TokenId>;
-	fn reserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
-	fn unreserve_tokens(who: &AccountId, class_id: ClassId, token_id: TokenId, quantity: TokenId) -> DispatchResult;
-	fn token_charged_royalty(class_id: ClassId, token_id: TokenId) -> Result<(AccountId, PerU16), DispatchError>;
-	fn create_class(who: &AccountId, metadata: NFTMetadata, name: Vec<u8>, description: Vec<u8>, royalty_rate: PerU16, properties: Properties) -> ResultPost<(AccountId, ClassId)>;
+	fn transfer(
+		from: &AccountId,
+		to: &AccountId,
+		class_id: ClassId,
+		token_id: TokenId,
+		quantity: TokenId,
+	) -> DispatchResult;
+	fn account_token(
+		_who: &AccountId,
+		_class_id: ClassId,
+		_token_id: TokenId,
+	) -> AccountToken<TokenId>;
+	fn reserve_tokens(
+		who: &AccountId,
+		class_id: ClassId,
+		token_id: TokenId,
+		quantity: TokenId,
+	) -> DispatchResult;
+	fn unreserve_tokens(
+		who: &AccountId,
+		class_id: ClassId,
+		token_id: TokenId,
+		quantity: TokenId,
+	) -> DispatchResult;
+	fn token_charged_royalty(
+		class_id: ClassId,
+		token_id: TokenId,
+	) -> Result<(AccountId, PerU16), DispatchError>;
+	fn create_class(
+		who: &AccountId,
+		metadata: NFTMetadata,
+		name: Vec<u8>,
+		description: Vec<u8>,
+		royalty_rate: PerU16,
+		properties: Properties,
+	) -> ResultPost<(AccountId, ClassId)>;
 	fn proxy_mint(
-		delegate: &AccountId, to: &AccountId, class_id: ClassId,
-		metadata: NFTMetadata, quantity: TokenId, charge_royalty: Option<PerU16>,
+		delegate: &AccountId,
+		to: &AccountId,
+		class_id: ClassId,
+		metadata: NFTMetadata,
+		quantity: TokenId,
+		charge_royalty: Option<PerU16>,
 	) -> ResultPost<(AccountId, AccountId, ClassId, TokenId, TokenId)>;
 }
 
@@ -66,9 +103,7 @@ impl Encode for Properties {
 impl Decode for Properties {
 	fn decode<I: codec::Input>(input: &mut I) -> sp_std::result::Result<Self, codec::Error> {
 		let field = u8::decode(input)?;
-		Ok(Self(
-			<BitFlags<ClassProperty>>::from_bits(field as u8).map_err(|_| "invalid value")?,
-		))
+		Ok(Self(<BitFlags<ClassProperty>>::from_bits(field as u8).map_err(|_| "invalid value")?))
 	}
 }
 
@@ -157,11 +192,14 @@ pub struct TokenConfig<AccountId, TokenId> {
 }
 
 /// Check only one royalty constrains.
-pub fn count_charged_royalty<AccountId, ClassId, TokenId, NFT>(items: &[(ClassId, TokenId, TokenId)])
-	-> ResultPost<(u32, AccountId, PerU16)>
-	where
-		NFT: NftmartNft<AccountId, ClassId, TokenId>,
-		ClassId: Copy, TokenId: Copy, AccountId: Default,
+pub fn count_charged_royalty<AccountId, ClassId, TokenId, NFT>(
+	items: &[(ClassId, TokenId, TokenId)],
+) -> ResultPost<(u32, AccountId, PerU16)>
+where
+	NFT: NftmartNft<AccountId, ClassId, TokenId>,
+	ClassId: Copy,
+	TokenId: Copy,
+	AccountId: Default,
 {
 	let mut count_of_charged_royalty: u32 = 0;
 	let mut royalty_rate = PerU16::zero();
@@ -185,12 +223,18 @@ pub fn swap_assets<MultiCurrency, NFT, AccountId, ClassId, TokenId, CurrencyId>(
 	currency_id: CurrencyId,
 	price: Balance,
 	items: &[(ClassId, TokenId, TokenId)],
-	treasury: &AccountId, platform_fee_rate: PerU16,
-	beneficiary: &AccountId, royalty_rate: PerU16,
-) -> ResultPost<()> where
-	MultiCurrency: orml_traits::MultiCurrency<AccountId, CurrencyId = CurrencyId, Balance = Balance>,
+	treasury: &AccountId,
+	platform_fee_rate: PerU16,
+	beneficiary: &AccountId,
+	royalty_rate: PerU16,
+) -> ResultPost<()>
+where
+	MultiCurrency:
+		orml_traits::MultiCurrency<AccountId, CurrencyId = CurrencyId, Balance = Balance>,
 	NFT: NftmartNft<AccountId, ClassId, TokenId>,
-	ClassId: Copy, TokenId: Copy, CurrencyId: Copy,
+	ClassId: Copy,
+	TokenId: Copy,
+	CurrencyId: Copy,
 {
 	MultiCurrency::transfer(currency_id, pay_currency, pay_nfts, price)?;
 	MultiCurrency::transfer(currency_id, pay_nfts, treasury, platform_fee_rate.mul_ceil(price))?;
@@ -205,19 +249,23 @@ pub fn swap_assets<MultiCurrency, NFT, AccountId, ClassId, TokenId, CurrencyId>(
 #[macro_export]
 macro_rules! to_item_vec {
 	($obj: ident) => {{
-		let items = $obj.items.iter().map(|x|(x.class_id, x.token_id, x.quantity))
-			 .collect::<Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>>();
+		let items = $obj.items.iter().map(|x| (x.class_id, x.token_id, x.quantity)).collect::<Vec<(
+			ClassIdOf<T>,
+			TokenIdOf<T>,
+			TokenIdOf<T>,
+		)>>();
 		items
-	}}
+	}};
 }
 
 #[macro_export]
 macro_rules! ensure_one_royalty {
 	($items: ident) => {{
-		let (c, id, r) = count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&$items)?;
-		ensure!(c <= 1,Error::<T>::TooManyTokenChargedRoyalty);
+		let (c, id, r) =
+			count_charged_royalty::<T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::NFT>(&$items)?;
+		ensure!(c <= 1, Error::<T>::TooManyTokenChargedRoyalty);
 		(id, r)
-	}}
+	}};
 }
 
 #[macro_export]
@@ -254,20 +302,17 @@ pub fn reserve_and_push_tokens<AccountId, ClassId, TokenId, NFT>(
 	nft_owner: Option<&AccountId>,
 	items: &[(ClassId, TokenId, TokenId)],
 	push_to: &mut Vec<OrderItem<ClassId, TokenId>>,
-) -> ResultPost<()> where
+) -> ResultPost<()>
+where
 	NFT: NftmartNft<AccountId, ClassId, TokenId>,
-	ClassId: Copy, TokenId: Copy,
+	ClassId: Copy,
+	TokenId: Copy,
 {
 	for &(class_id, token_id, quantity) in items {
 		if let Some(nft_owner) = nft_owner {
 			NFT::reserve_tokens(nft_owner, class_id, token_id, quantity)?;
 		}
-		push_to.push(OrderItem{
-			class_id,
-			token_id,
-			quantity,
-		})
+		push_to.push(OrderItem { class_id, token_id, quantity })
 	}
 	Ok(())
 }
-

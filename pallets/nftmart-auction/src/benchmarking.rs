@@ -1,10 +1,9 @@
 #![cfg(feature = "runtime-benchmarks")]
 
 use super::*;
+use crate::{utils::test_helper::*, Pallet as NftmartAuction};
+use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite, whitelisted_caller};
 use frame_system::RawOrigin;
-use frame_benchmarking::{benchmarks, account, whitelisted_caller, impl_benchmark_test_suite};
-use crate::Pallet as NftmartAuction;
-use crate::utils::test_helper::*;
 use nftmart_traits::time::MINUTES;
 use sp_std::vec::Vec;
 
@@ -57,8 +56,4 @@ benchmarks! {
 	}
 }
 
-impl_benchmark_test_suite!(
-	NftmartAuction,
-	crate::mock::new_test_ext(),
-	crate::mock::Runtime,
-);
+impl_benchmark_test_suite!(NftmartAuction, crate::mock::new_test_ext(), crate::mock::Runtime,);

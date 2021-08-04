@@ -1,9 +1,13 @@
 #![cfg(test)]
 
-use nftmart_traits::constants_types::*;
 use crate as nftmart_config;
 use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::{construct_runtime, parameter_types, traits::{Filter, InstanceFilter}, RuntimeDebug};
+use frame_support::{
+	construct_runtime, parameter_types,
+	traits::{Filter, InstanceFilter},
+	RuntimeDebug,
+};
+use nftmart_traits::constants_types::*;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
 	testing::Header,
@@ -70,7 +74,9 @@ parameter_types! {
 	pub const AnnouncementDepositBase: u64 = 1;
 	pub const AnnouncementDepositFactor: u64 = 1;
 }
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen)]
+#[derive(
+	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
+)]
 pub enum ProxyType {
 	Any,
 	JustTransfer,
@@ -85,7 +91,9 @@ impl InstanceFilter<Call> for ProxyType {
 	fn filter(&self, c: &Call) -> bool {
 		match self {
 			ProxyType::Any => true,
-			ProxyType::JustTransfer => matches!(c, Call::Balances(pallet_balances::Call::transfer(..))),
+			ProxyType::JustTransfer => {
+				matches!(c, Call::Balances(pallet_balances::Call::transfer(..)))
+			},
 			ProxyType::JustUtility => matches!(c, Call::Utility(..)),
 		}
 	}
@@ -145,7 +153,6 @@ construct_runtime!(
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 
-
 pub struct ExtBuilder;
 impl Default for ExtBuilder {
 	fn default() -> Self {
@@ -155,13 +162,9 @@ impl Default for ExtBuilder {
 
 impl ExtBuilder {
 	pub fn build(self) -> sp_io::TestExternalities {
-		let mut t = frame_system::GenesisConfig::default()
-			.build_storage::<Runtime>()
-			.unwrap();
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
-		pallet_balances::GenesisConfig::<Runtime> {
-			balances: vec![(ALICE, 100)],
-		}
+		pallet_balances::GenesisConfig::<Runtime> { balances: vec![(ALICE, 100)] }
 			.assimilate_storage(&mut t)
 			.unwrap();
 
@@ -172,8 +175,5 @@ impl ExtBuilder {
 }
 
 pub fn last_event() -> Event {
-	frame_system::Pallet::<Runtime>::events()
-		.pop()
-		.expect("Event expected")
-		.event
+	frame_system::Pallet::<Runtime>::events().pop().expect("Event expected").event
 }

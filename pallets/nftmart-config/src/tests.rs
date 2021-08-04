@@ -33,18 +33,27 @@ fn update_category() {
 		);
 	});
 	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(NftmartConf::create_category(Origin::root(), vec![22,2]));
-		assert_eq!(Some(CategoryData{ metadata:  vec![22,2], count: 0 }), NftmartConf::categories(0));
+		assert_ok!(NftmartConf::create_category(Origin::root(), vec![22, 2]));
+		assert_eq!(
+			Some(CategoryData { metadata: vec![22, 2], count: 0 }),
+			NftmartConf::categories(0)
+		);
 
 		assert_ok!(NftmartConf::update_category(Origin::root(), 0, vec![2]));
-		assert_eq!(Some(CategoryData{ metadata:  vec![2], count: 0 }), NftmartConf::categories(0));
+		assert_eq!(Some(CategoryData { metadata: vec![2], count: 0 }), NftmartConf::categories(0));
 	});
 }
 
 #[test]
 fn create_category_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_eq!({ let id_expect: GlobalId = Zero::zero(); id_expect }, NftmartConf::next_id());
+		assert_eq!(
+			{
+				let id_expect: GlobalId = Zero::zero();
+				id_expect
+			},
+			NftmartConf::next_id()
+		);
 		assert_eq!(None, NftmartConf::categories(0));
 
 		assert_ok!(NftmartConf::create_category(Origin::root(), vec![233]));
@@ -52,8 +61,17 @@ fn create_category_should_work() {
 		let event = Event::NftmartConf(crate::Event::CreatedCategory(0));
 		assert_eq!(last_event(), event);
 
-		assert_eq!({ let id_expect: GlobalId = One::one(); id_expect }, NftmartConf::next_id());
-		assert_eq!(Some(CategoryData{ metadata: vec![233], count: 0 }), NftmartConf::categories(0));
+		assert_eq!(
+			{
+				let id_expect: GlobalId = One::one();
+				id_expect
+			},
+			NftmartConf::next_id()
+		);
+		assert_eq!(
+			Some(CategoryData { metadata: vec![233], count: 0 }),
+			NftmartConf::categories(0)
+		);
 		assert_eq!(None, NftmartConf::categories(100));
 	});
 }

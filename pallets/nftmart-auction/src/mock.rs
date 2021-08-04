@@ -1,14 +1,14 @@
 #![cfg(test)]
 
 use super::*;
-use orml_currencies::BasicCurrencyAdapter;
 use crate as nftmart_auction;
 use codec::{Decode, Encode};
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{Filter, InstanceFilter},
-	RuntimeDebug, PalletId
+	PalletId, RuntimeDebug,
 };
+use orml_currencies::BasicCurrencyAdapter;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
 	testing::Header,
@@ -73,7 +73,9 @@ parameter_types! {
 	pub const AnnouncementDepositBase: u64 = 1;
 	pub const AnnouncementDepositFactor: u64 = 1;
 }
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen)]
+#[derive(
+	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
+)]
 pub enum ProxyType {
 	Any,
 	JustTransfer,
@@ -88,7 +90,9 @@ impl InstanceFilter<Call> for ProxyType {
 	fn filter(&self, c: &Call) -> bool {
 		match self {
 			ProxyType::Any => true,
-			ProxyType::JustTransfer => matches!(c, Call::Balances(pallet_balances::Call::transfer(..))),
+			ProxyType::JustTransfer => {
+				matches!(c, Call::Balances(pallet_balances::Call::transfer(..)))
+			},
 			ProxyType::JustUtility => matches!(c, Call::Utility(..)),
 		}
 	}
@@ -146,7 +150,12 @@ parameter_types! {
 	pub const GetNativeCurrencyId: nftmart_traits::constants_types::CurrencyId = nftmart_traits::constants_types::NATIVE_CURRENCY_ID;
 }
 
-pub type AdaptedBasicCurrency = BasicCurrencyAdapter<Runtime, Balances, nftmart_traits::constants_types::Amount, nftmart_traits::constants_types::Moment>;
+pub type AdaptedBasicCurrency = BasicCurrencyAdapter<
+	Runtime,
+	Balances,
+	nftmart_traits::constants_types::Amount,
+	nftmart_traits::constants_types::Moment,
+>;
 
 impl orml_currencies::Config for Runtime {
 	type Event = Event;
@@ -246,8 +255,7 @@ impl Default for ExtBuilder {
 
 impl ExtBuilder {
 	pub fn build(self) -> sp_io::TestExternalities {
-		let mut t = frame_system::GenesisConfig::default()
-			.build_storage::<Runtime>().unwrap();
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 		pallet_balances::GenesisConfig::<Runtime> {
 			balances: vec![
@@ -256,12 +264,13 @@ impl ExtBuilder {
 				(CHARLIE, CHARLIE_INIT),
 				(DAVE, DAVE_INIT),
 			],
-		}.assimilate_storage(&mut t).unwrap();
+		}
+		.assimilate_storage(&mut t)
+		.unwrap();
 
-		nftmart_config::GenesisConfig::<Runtime> {
-			min_order_deposit: 10,
-			..Default::default()
-		}.assimilate_storage(&mut t).unwrap();
+		nftmart_config::GenesisConfig::<Runtime> { min_order_deposit: 10, ..Default::default() }
+			.assimilate_storage(&mut t)
+			.unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| {
@@ -286,11 +295,10 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 // }
 
 pub fn all_tokens_by(who: AccountId) -> Vec<(ClassId, TokenId, orml_nft::AccountToken<TokenId>)> {
-	let v: Vec<_> = orml_nft::TokensByOwner::<Runtime>::iter().filter(|(account, (_c, _t), _data)| {
-		who == *account
-	}).map(|(_account, (c, t), data)| {
-		(c, t, data)
-	}).collect();
+	let v: Vec<_> = orml_nft::TokensByOwner::<Runtime>::iter()
+		.filter(|(account, (_c, _t), _data)| who == *account)
+		.map(|(_account, (c, t), data)| (c, t, data))
+		.collect();
 	v.into_iter().rev().collect()
 }
 

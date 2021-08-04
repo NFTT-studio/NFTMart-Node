@@ -12,13 +12,18 @@ macro_rules! save_bid {
 	) => {{
 		if let Some(account) = &$auction_bid.last_bid_account {
 			// check the new bid price.
-			let lowest_price: Balance = $auction_bid.last_bid_price.saturating_add(
-				$auction.min_raise.mul_ceil($auction_bid.last_bid_price));
+			let lowest_price: Balance = $auction_bid
+				.last_bid_price
+				.saturating_add($auction.min_raise.mul_ceil($auction_bid.last_bid_price));
 
 			ensure!($price > lowest_price, Error::<T>::PriceTooLow);
 
 			ensure!(&$purchaser != account, Error::<T>::DuplicatedBid);
-			let _ = T::MultiCurrency::unreserve($auction.currency_id, account, $auction_bid.last_bid_price);
+			let _ = T::MultiCurrency::unreserve(
+				$auction.currency_id,
+				account,
+				$auction_bid.last_bid_price,
+			);
 		}
 
 		T::MultiCurrency::reserve($auction.currency_id, &$purchaser, $price)?;
@@ -27,7 +32,7 @@ macro_rules! save_bid {
 		auction_bid.last_bid_account = Some($purchaser.clone());
 		auction_bid.last_bid_block = frame_system::Pallet::<T>::block_number();
 		$AuctionBids::<T>::insert($auction_id, auction_bid);
-	}}
+	}};
 }
 
 #[macro_export]
@@ -41,15 +46,21 @@ macro_rules! delete_auction {
 		$AuctionNotFound: ident,
 	) => {
 		$AuctionBids::<T>::try_mutate_exists($auction_id, |maybe_auction_bid| {
-			let auction_bid = maybe_auction_bid.as_mut().ok_or(Error::<T>::$AuctionBidNotFound)?.clone();
+			let auction_bid =
+				maybe_auction_bid.as_mut().ok_or(Error::<T>::$AuctionBidNotFound)?.clone();
 			$Auctions::<T>::try_mutate_exists($who, $auction_id, |maybe_auction| {
 				let auction = maybe_auction.as_mut().ok_or(Error::<T>::$AuctionNotFound)?.clone();
 
 				if let Some(account) = &auction_bid.last_bid_account {
-					let _ = T::MultiCurrency::unreserve(auction.currency_id, account, auction_bid.last_bid_price);
+					let _ = T::MultiCurrency::unreserve(
+						auction.currency_id,
+						account,
+						auction_bid.last_bid_price,
+					);
 				}
 
-				let _remain: BalanceOf<T> = <T as Config>::Currency::unreserve(&$who, auction.deposit.saturated_into());
+				let _remain: BalanceOf<T> =
+					<T as Config>::Currency::unreserve(&$who, auction.deposit.saturated_into());
 
 				for item in &auction.items {
 					T::NFT::unreserve_tokens($who, item.class_id, item.token_id, item.quantity)?;
@@ -62,19 +73,20 @@ macro_rules! delete_auction {
 				Ok((auction, auction_bid))
 			})
 		})
-	}
+	};
 }
 
 pub fn calc_current_price<T: Config>(
-	max_price: Balance, min_price: Balance,
+	max_price: Balance,
+	min_price: Balance,
 	created_block: BlockNumberOf<T>,
 	deadline: BlockNumberOf<T>,
 	current_block: BlockNumberOf<T>,
 ) -> Balance {
 	if current_block <= created_block {
-		return max_price;
+		return max_price
 	} else if current_block > deadline {
-		return min_price;
+		return min_price
 	}
 
 	let created_block: BlockNumber = created_block.saturated_into();
@@ -105,11 +117,13 @@ pub fn calc_current_price<T: Config>(
 }
 
 pub fn get_deadline<T: Config>(
-	allow_delay: bool, deadline: BlockNumberOf<T>, last_bid_block: BlockNumberOf<T>
+	allow_delay: bool,
+	deadline: BlockNumberOf<T>,
+	last_bid_block: BlockNumberOf<T>,
 ) -> BlockNumberFor<T> {
 	if allow_delay {
 		let delay = last_bid_block.saturating_add(T::ExtraConfig::auction_close_delay());
-		core::cmp::max(deadline,delay)
+		core::cmp::max(deadline, delay)
 	} else {
 		deadline
 	}
@@ -117,41 +131,52 @@ pub fn get_deadline<T: Config>(
 
 #[cfg(any(test, feature = "runtime-benchmarks"))]
 pub mod test_helper {
-	use frame_support::{assert_ok};
 	use crate::*;
+	use frame_support::assert_ok;
 	use sp_std::vec::Vec;
 
 	#[macro_export]
 	macro_rules! balances {
 		($amount: expr) => {
-			nftmart_traits::constants_types::ACCURACY.saturating_mul($amount).saturated_into()
-		}
+			nftmart_traits::constants_types::ACCURACY
+				.saturating_mul($amount)
+				.saturated_into()
+		};
 	}
 
 	#[macro_export]
 	macro_rules! into {
 		($amount: expr) => {
 			($amount as u128).saturated_into()
-		}
+		};
 	}
 
-	pub fn add_whitelist<Runtime>(who: &Runtime::AccountId) where Runtime: crate::Config {
+	pub fn add_whitelist<Runtime>(who: &Runtime::AccountId)
+	where
+		Runtime: crate::Config,
+	{
 		Runtime::ExtraConfig::do_add_whitelist(who);
 	}
 
-	pub fn add_class<Runtime>(who: Runtime::AccountId) where Runtime: crate::Config {
+	pub fn add_class<Runtime>(who: Runtime::AccountId)
+	where
+		Runtime: crate::Config,
+	{
 		assert_ok!(Runtime::NFT::create_class(
 			&who,
-			Vec::from("1"),Vec::from("1"), Vec::from("1"), PerU16::from_percent(5),
+			Vec::from("1"),
+			Vec::from("1"),
+			Vec::from("1"),
+			PerU16::from_percent(5),
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 		));
 	}
 
-	pub fn last_event<Runtime>() -> Runtime::Event where Runtime: frame_system::Config {
-		frame_system::Pallet::<Runtime>::events()
-			.pop()
-			.expect("Event expected")
-			.event
+	pub fn last_event<Runtime>() -> Runtime::Event
+	where
+		Runtime: frame_system::Config,
+	{
+		frame_system::Pallet::<Runtime>::events().pop().expect("Event expected").event
 	}
 
 	pub fn assert_last_event<T: Config>(generic_event: <T as Config>::Event) {
@@ -159,9 +184,22 @@ pub mod test_helper {
 	}
 
 	pub fn add_token<Runtime>(
-		who: Runtime::AccountId, to: Runtime::AccountId, class_id: Runtime::ClassId, quantity: Runtime::TokenId, charge_royalty: Option<PerU16>
-	) where Runtime: crate::Config {
-		assert_ok!(Runtime::NFT::proxy_mint(&who, &to, class_id, Vec::from("1"), quantity, charge_royalty));
+		who: Runtime::AccountId,
+		to: Runtime::AccountId,
+		class_id: Runtime::ClassId,
+		quantity: Runtime::TokenId,
+		charge_royalty: Option<PerU16>,
+	) where
+		Runtime: crate::Config,
+	{
+		assert_ok!(Runtime::NFT::proxy_mint(
+			&who,
+			&to,
+			class_id,
+			Vec::from("1"),
+			quantity,
+			charge_royalty
+		));
 	}
 
 	pub fn add_category<Runtime: Config>() {
@@ -175,5 +213,4 @@ pub mod test_helper {
 	pub fn peek_next_class_id<Runtime: Config>() -> Runtime::ClassId {
 		Runtime::NFT::peek_next_class_id()
 	}
-
 }

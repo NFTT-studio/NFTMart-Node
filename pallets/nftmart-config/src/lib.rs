@@ -1,9 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{
-	pallet_prelude::*,
-	transactional
-};
+use frame_support::{pallet_prelude::*, transactional};
 use frame_system::pallet_prelude::*;
 use sp_std::vec::Vec;
 
@@ -11,9 +8,14 @@ mod mock;
 mod tests;
 
 pub use module::*;
-use nftmart_traits::constants_types::{GlobalId, Balance, ACCURACY};
-use sp_runtime::{traits::{Zero, One}, PerU16};
-use nftmart_traits::{CategoryData, NFTMetadata, NftmartConfig, time};
+use nftmart_traits::{
+	constants_types::{Balance, GlobalId, ACCURACY},
+	time, CategoryData, NFTMetadata, NftmartConfig,
+};
+use sp_runtime::{
+	traits::{One, Zero},
+	PerU16,
+};
 
 #[frame_support::pallet]
 pub mod module {
@@ -78,8 +80,10 @@ pub mod module {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {
-		fn on_runtime_upgrade() -> Weight { 0 }
-		fn integrity_test () {}
+		fn on_runtime_upgrade() -> Weight {
+			0
+		}
+		fn integrity_test() {}
 	}
 
 	#[pallet::genesis_build]
@@ -163,7 +167,10 @@ pub mod module {
 		/// add an account into whitelist
 		#[pallet::weight((100_000, DispatchClass::Operational))]
 		#[transactional]
-		pub fn add_whitelist(origin: OriginFor<T>, who: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn add_whitelist(
+			origin: OriginFor<T>,
+			who: T::AccountId,
+		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 			Self::do_add_whitelist(&who);
 			Ok((None, Pays::No).into())
@@ -172,7 +179,10 @@ pub mod module {
 		/// remove an account from whitelist
 		#[pallet::weight((100_000, DispatchClass::Operational))]
 		#[transactional]
-		pub fn remove_whitelist(origin: OriginFor<T>, who: T::AccountId) -> DispatchResultWithPostInfo {
+		pub fn remove_whitelist(
+			origin: OriginFor<T>,
+			who: T::AccountId,
+		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 			AccountWhitelist::<T>::remove(&who);
 			Self::deposit_event(Event::RemoveWhitelist(who));
@@ -185,7 +195,10 @@ pub mod module {
 		/// - `metadata`: metadata
 		#[pallet::weight((100_000, DispatchClass::Operational, Pays::Yes))]
 		#[transactional]
-		pub fn create_category(origin: OriginFor<T>, metadata: NFTMetadata) -> DispatchResultWithPostInfo {
+		pub fn create_category(
+			origin: OriginFor<T>,
+			metadata: NFTMetadata,
+		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 			Self::do_create_category(metadata)?;
 			Ok((None, Pays::No).into())
@@ -197,13 +210,14 @@ pub mod module {
 		/// - `metadata`: metadata
 		#[pallet::weight((100_000, DispatchClass::Operational, Pays::Yes))]
 		#[transactional]
-		pub fn update_category(origin: OriginFor<T>, category_id: GlobalId, metadata: NFTMetadata) -> DispatchResultWithPostInfo {
+		pub fn update_category(
+			origin: OriginFor<T>,
+			category_id: GlobalId,
+			metadata: NFTMetadata,
+		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 			if let Some(category) = Self::categories(category_id) {
-				let info = CategoryData {
-					metadata,
-					count: category.count,
-				};
+				let info = CategoryData { metadata, count: category.count };
 				Categories::<T>::insert(category_id, info);
 				Self::deposit_event(Event::UpdatedCategory(category_id));
 			}
@@ -212,7 +226,10 @@ pub mod module {
 
 		#[pallet::weight((100_000, DispatchClass::Operational, Pays::Yes))]
 		#[transactional]
-		pub fn update_auction_close_delay(origin: OriginFor<T>, delay: BlockNumberFor<T>) -> DispatchResultWithPostInfo {
+		pub fn update_auction_close_delay(
+			origin: OriginFor<T>,
+			delay: BlockNumberFor<T>,
+		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 			AuctionCloseDelay::<T>::set(delay);
 			Ok((None, Pays::No).into())
@@ -241,7 +258,7 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 		})
 	}
 
-	fn inc_count_in_category (category_id: GlobalId) -> DispatchResult {
+	fn inc_count_in_category(category_id: GlobalId) -> DispatchResult {
 		Categories::<T>::try_mutate(category_id, |maybe_category| -> DispatchResult {
 			let category = maybe_category.as_mut().ok_or(Error::<T>::CategoryNotFound)?;
 			category.count = category.count.saturating_add(One::one());
@@ -249,7 +266,7 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 		})
 	}
 
-	fn dec_count_in_category (category_id: GlobalId) -> DispatchResult {
+	fn dec_count_in_category(category_id: GlobalId) -> DispatchResult {
 		Categories::<T>::try_mutate(category_id, |maybe_category| -> DispatchResult {
 			let category = maybe_category.as_mut().ok_or(Error::<T>::CategoryNotFound)?;
 			category.count = category.count.saturating_sub(One::one());
@@ -263,12 +280,10 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 	}
 
 	fn do_create_category(metadata: NFTMetadata) -> DispatchResultWithPostInfo {
-		let category_id = <Self as NftmartConfig<T::AccountId, BlockNumberFor<T>>>::get_then_inc_id()?;
+		let category_id =
+			<Self as NftmartConfig<T::AccountId, BlockNumberFor<T>>>::get_then_inc_id()?;
 
-		let info = CategoryData {
-			metadata,
-			count: Zero::zero(),
-		};
+		let info = CategoryData { metadata, count: Zero::zero() };
 		Categories::<T>::insert(category_id, info);
 
 		Self::deposit_event(Event::CreatedCategory(category_id));

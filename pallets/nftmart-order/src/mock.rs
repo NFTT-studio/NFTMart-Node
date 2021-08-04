@@ -1,21 +1,22 @@
 #![cfg(test)]
 
 use super::*;
-use orml_currencies::BasicCurrencyAdapter;
 use crate as nftmart_order;
 use codec::{Decode, Encode};
 use frame_support::{
-	construct_runtime, parameter_types,
+	assert_ok, construct_runtime, parameter_types,
 	traits::{Filter, InstanceFilter},
-	RuntimeDebug, assert_ok, PalletId
+	PalletId, RuntimeDebug,
 };
+use nftmart_traits::{ClassProperty, Properties};
+use orml_currencies::BasicCurrencyAdapter;
+use orml_nft::AccountToken;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
-	testing::Header, PerU16,
-	traits::{BlakeTwo256, IdentityLookup, AccountIdConversion},
+	testing::Header,
+	traits::{AccountIdConversion, BlakeTwo256, IdentityLookup},
+	PerU16,
 };
-use nftmart_traits::{Properties, ClassProperty};
-use orml_nft::AccountToken;
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
@@ -75,7 +76,9 @@ parameter_types! {
 	pub const AnnouncementDepositBase: u64 = 1;
 	pub const AnnouncementDepositFactor: u64 = 1;
 }
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen)]
+#[derive(
+	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
+)]
 pub enum ProxyType {
 	Any,
 	JustTransfer,
@@ -90,7 +93,9 @@ impl InstanceFilter<Call> for ProxyType {
 	fn filter(&self, c: &Call) -> bool {
 		match self {
 			ProxyType::Any => true,
-			ProxyType::JustTransfer => matches!(c, Call::Balances(pallet_balances::Call::transfer(..))),
+			ProxyType::JustTransfer => {
+				matches!(c, Call::Balances(pallet_balances::Call::transfer(..)))
+			},
 			ProxyType::JustUtility => matches!(c, Call::Utility(..)),
 		}
 	}
@@ -148,7 +153,12 @@ parameter_types! {
 	pub const GetNativeCurrencyId: nftmart_traits::constants_types::CurrencyId = nftmart_traits::constants_types::NATIVE_CURRENCY_ID;
 }
 
-pub type AdaptedBasicCurrency = BasicCurrencyAdapter<Runtime, Balances, nftmart_traits::constants_types::Amount, nftmart_traits::constants_types::Moment>;
+pub type AdaptedBasicCurrency = BasicCurrencyAdapter<
+	Runtime,
+	Balances,
+	nftmart_traits::constants_types::Amount,
+	nftmart_traits::constants_types::Moment,
+>;
 
 impl orml_currencies::Config for Runtime {
 	type Event = Event;
@@ -243,22 +253,17 @@ impl Default for ExtBuilder {
 
 impl ExtBuilder {
 	pub fn build(self) -> sp_io::TestExternalities {
-		let mut t = frame_system::GenesisConfig::default()
-			.build_storage::<Runtime>().unwrap();
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 		pallet_balances::GenesisConfig::<Runtime> {
-			balances: vec![
-				(ALICE, 200),
-				(BOB, 100),
-				(CHARLIE, 100),
-				(DAVE, 100),
-			],
-		}.assimilate_storage(&mut t).unwrap();
+			balances: vec![(ALICE, 200), (BOB, 100), (CHARLIE, 100), (DAVE, 100)],
+		}
+		.assimilate_storage(&mut t)
+		.unwrap();
 
-		nftmart_config::GenesisConfig::<Runtime> {
-			min_order_deposit: 10,
-			..Default::default()
-		}.assimilate_storage(&mut t).unwrap();
+		nftmart_config::GenesisConfig::<Runtime> { min_order_deposit: 10, ..Default::default() }
+			.assimilate_storage(&mut t)
+			.unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| {
@@ -274,16 +279,16 @@ impl ExtBuilder {
 
 #[allow(dead_code)]
 pub fn last_event() -> Event {
-	frame_system::Pallet::<Runtime>::events()
-		.pop()
-		.expect("Event expected")
-		.event
+	frame_system::Pallet::<Runtime>::events().pop().expect("Event expected").event
 }
 
 pub fn add_class(who: AccountId) {
 	assert_ok!(Nftmart::create_class(
 		Origin::signed(who),
-		vec![1], vec![1], vec![1], PerU16::from_percent(5),
+		vec![1],
+		vec![1],
+		vec![1],
+		PerU16::from_percent(5),
 		Properties(ClassProperty::Transferable | ClassProperty::Burnable)
 	));
 }
@@ -300,7 +305,8 @@ pub fn add_token(who: AccountId, quantity: TokenId, charge_royalty: Option<PerU1
 		who,
 		CLASS_ID0,
 		vec![1],
-		quantity, charge_royalty,
+		quantity,
+		charge_royalty,
 	));
 }
 
@@ -309,28 +315,38 @@ pub fn add_category() {
 }
 
 pub fn all_tokens_by(who: AccountId) -> Vec<(ClassId, TokenId, orml_nft::AccountToken<TokenId>)> {
-	let v: Vec<_> = orml_nft::TokensByOwner::<Runtime>::iter().filter(|(account, (_c, _t), _data)| {
-		who == *account
-	}).map(|(_account, (c, t), data)| {
-		(c, t, data)
-	}).collect();
+	let v: Vec<_> = orml_nft::TokensByOwner::<Runtime>::iter()
+		.filter(|(account, (_c, _t), _data)| who == *account)
+		.map(|(_account, (c, t), data)| (c, t, data))
+		.collect();
 	v.into_iter().rev().collect()
 }
 
 pub fn all_orders() -> Vec<OrderOf<Runtime>> {
-	nftmart_order::Orders::<Runtime>::iter().map(|(_who, _order_id, order)|order).collect()
+	nftmart_order::Orders::<Runtime>::iter()
+		.map(|(_who, _order_id, order)| order)
+		.collect()
 }
 
 pub fn all_offers() -> Vec<OfferOf<Runtime>> {
-	nftmart_order::Offers::<Runtime>::iter().map(|(_who, _order_id, offer)|offer).collect()
+	nftmart_order::Offers::<Runtime>::iter()
+		.map(|(_who, _order_id, offer)| offer)
+		.collect()
 }
 
 pub fn current_gid() -> GlobalId {
 	nftmart_config::Pallet::<Runtime>::next_id()
 }
 
-pub fn ensure_account(who: &AccountId, class_id: ClassId, token_id: TokenId, reserved: TokenId, free: TokenId) {
-	let account: AccountToken<TokenId> = orml_nft::Pallet::<Runtime>::tokens_by_owner(who, (class_id, token_id)).unwrap_or_default();
+pub fn ensure_account(
+	who: &AccountId,
+	class_id: ClassId,
+	token_id: TokenId,
+	reserved: TokenId,
+	free: TokenId,
+) {
+	let account: AccountToken<TokenId> =
+		orml_nft::Pallet::<Runtime>::tokens_by_owner(who, (class_id, token_id)).unwrap_or_default();
 	assert_eq!(account.reserved, reserved);
 	assert_eq!(account.quantity, free);
 }

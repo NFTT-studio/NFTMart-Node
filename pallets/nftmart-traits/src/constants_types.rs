@@ -1,5 +1,6 @@
 use sp_runtime::{
-	traits::{Verify, IdentifyAccount}, MultiSignature
+	traits::{IdentifyAccount, Verify},
+	MultiSignature,
 };
 
 /// Balance type.
@@ -50,7 +51,7 @@ pub mod currency {
 	use super::*;
 
 	pub const MILLICENTS: Balance = CENTS / 1000;
-	pub const CENTS: Balance = DOLLARS / 100;    // assume this is worth about a cent.
+	pub const CENTS: Balance = DOLLARS / 100; // assume this is worth about a cent.
 	pub const DOLLARS: Balance = ACCURACY;
 
 	pub const fn deposit(items: u32, bytes: u32) -> Balance {
@@ -110,13 +111,13 @@ pub const TARGET__BLOCK__FULLNESS: u64 = 25;
 
 /// Fee-related.
 pub mod fee {
-	pub use sp_runtime::Perbill;
 	use super::*;
 	use frame_support::weights::{
-		WeightToFeePolynomial, WeightToFeeCoefficient, WeightToFeeCoefficients,
-		constants::ExtrinsicBaseWeight,
+		constants::ExtrinsicBaseWeight, WeightToFeeCoefficient, WeightToFeeCoefficients,
+		WeightToFeePolynomial,
 	};
 	use smallvec::smallvec;
+	pub use sp_runtime::Perbill;
 
 	/// The block saturation level. Fees will be updates based on this value.
 	// pub const TARGET_BLOCK_FULLNESS: Perbill = Perbill::from_percent(TARGET__BLOCK__FULLNESS as u32);
@@ -153,9 +154,13 @@ pub mod fee {
 /// These constants are specific to FRAME, and the current implementation of its various components.
 /// For example: FRAME System, FRAME Executive, our FRAME support libraries, etc...
 pub mod constants {
-	use frame_support::weights::{RuntimeDbWeight, Weight};
-	use frame_support::parameter_types;
-	pub use frame_support::weights::constants::{WEIGHT_PER_SECOND, WEIGHT_PER_MILLIS, WEIGHT_PER_MICROS, WEIGHT_PER_NANOS};
+	pub use frame_support::weights::constants::{
+		WEIGHT_PER_MICROS, WEIGHT_PER_MILLIS, WEIGHT_PER_NANOS, WEIGHT_PER_SECOND,
+	};
+	use frame_support::{
+		parameter_types,
+		weights::{RuntimeDbWeight, Weight},
+	};
 
 	parameter_types! {
 		/// Importing a block with 0 txs takes ~5 ms

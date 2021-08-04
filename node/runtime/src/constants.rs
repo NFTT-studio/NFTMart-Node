@@ -15,6 +15,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub use nftmart_traits::currency;
-pub use nftmart_traits::time;
-pub use nftmart_traits::fee;
+pub use nftmart_traits::{currency, fee, time};
