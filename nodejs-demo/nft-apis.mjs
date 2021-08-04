@@ -160,6 +160,9 @@ async function main() {
 
     await remove_dutch_auction(ws, "//Alice", 5);
     await remove_british_auction(ws, "//Alice", 7);
+
+    await bid_dutch_auction(ws, "//Bob", "//Alice", 6, 33);
+    await bid_british_auction(ws, "//Bob", "//Alice", 8, 30000);
   });
 
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' create_class //Alice
