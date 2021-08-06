@@ -31,6 +31,8 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn peek_next_gid() -> GlobalId;
 	fn get_royalties_rate() -> PerU16;
 	fn get_platform_fee_rate() -> PerU16;
+	fn get_max_commission_reward_rate() -> PerU16;
+	fn get_min_commission_agent_deposit() -> Balance;
 }
 
 pub trait NftmartNft<AccountId, ClassId, TokenId> {
@@ -227,6 +229,7 @@ pub fn swap_assets<MultiCurrency, NFT, AccountId, ClassId, TokenId, CurrencyId>(
 	platform_fee_rate: PerU16,
 	beneficiary: &AccountId,
 	royalty_rate: PerU16,
+	commission_agent: &Option<(bool, AccountId, PerU16)>,
 ) -> ResultPost<()>
 where
 	MultiCurrency:
@@ -236,9 +239,17 @@ where
 	TokenId: Copy,
 	CurrencyId: Copy,
 {
+	let trading_fee = platform_fee_rate.mul_ceil(price);
+	let royalty_fee = royalty_rate.mul_ceil(price);
 	MultiCurrency::transfer(currency_id, pay_currency, pay_nfts, price)?;
-	MultiCurrency::transfer(currency_id, pay_nfts, treasury, platform_fee_rate.mul_ceil(price))?;
-	MultiCurrency::transfer(currency_id, pay_nfts, beneficiary, royalty_rate.mul_ceil(price))?;
+	MultiCurrency::transfer(currency_id, pay_nfts, treasury, trading_fee)?;
+	MultiCurrency::transfer(currency_id, pay_nfts, beneficiary, royalty_fee)?;
+	if let Some((status, agent, rate)) = commission_agent {
+		if *status {
+			let r = price.saturating_sub(trading_fee).saturating_sub(royalty_fee);
+			MultiCurrency::transfer(currency_id, pay_nfts, agent, rate.mul_ceil(r))?;
+		}
+	}
 
 	for (class_id, token_id, quantity) in items {
 		NFT::transfer(pay_nfts, pay_currency, *class_id, *token_id, *quantity)?;
@@ -248,13 +259,23 @@ where
 
 #[macro_export]
 macro_rules! to_item_vec {
-	($obj: ident) => {{
+	($obj: ident, $commission_agent: ident) => {{
 		let items = $obj.items.iter().map(|x| (x.class_id, x.token_id, x.quantity)).collect::<Vec<(
 			ClassIdOf<T>,
 			TokenIdOf<T>,
 			TokenIdOf<T>,
 		)>>();
-		items
+
+		let commission_agent: Option<(bool, T::AccountId, PerU16)> = $commission_agent.and_then(|ca| {
+			let b: Balance = <T as Config>::Currency::total_balance(&ca).saturated_into();
+			if b < T::ExtraConfig::get_min_commission_agent_deposit() || $obj.commission_rate.is_zero() {
+				Some((false, ca, $obj.commission_rate))
+			} else {
+				Some((true, ca, $obj.commission_rate))
+			}
+		});
+
+		(items, commission_agent)
 	}};
 }
 

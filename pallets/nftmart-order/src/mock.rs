@@ -256,7 +256,7 @@ impl ExtBuilder {
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 		pallet_balances::GenesisConfig::<Runtime> {
-			balances: vec![(ALICE, 200), (BOB, 100), (CHARLIE, 100), (DAVE, 100)],
+			balances: vec![(ALICE, 200), (BOB, 100), (CHARLIE, 100), (DAVE, 100 * ACCURACY)],
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

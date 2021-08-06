@@ -54,8 +54,8 @@ pub mod module {
 	pub struct GenesisConfig<T: Config> {
 		pub royalties_rate: PerU16,
 		pub platform_fee_rate: PerU16,
-		pub max_distribution_reward: PerU16,
-		pub min_reference_deposit: Balance,
+		pub max_commission_reward_rate: PerU16,
+		pub min_commission_agent_deposit: Balance,
 		pub min_order_deposit: Balance,
 		pub auction_close_delay: BlockNumberFor<T>,
 		pub white_list: Vec<T::AccountId>,
@@ -68,8 +68,8 @@ pub mod module {
 			Self {
 				platform_fee_rate: PerU16::from_rational(1u32, 10000u32),
 				royalties_rate: PerU16::from_percent(20),
-				max_distribution_reward: PerU16::from_percent(100),
-				min_reference_deposit: ACCURACY,
+				max_commission_reward_rate: PerU16::from_percent(100),
+				min_commission_agent_deposit: ACCURACY,
 				min_order_deposit: ACCURACY,
 				auction_close_delay: time::MINUTES.into(),
 				white_list: vec![],
@@ -91,8 +91,8 @@ pub mod module {
 		fn build(&self) {
 			PlatformFeeRate::<T>::put(self.platform_fee_rate);
 			RoyaltiesRate::<T>::put(self.royalties_rate);
-			MaxDistributionReward::<T>::put(self.max_distribution_reward);
-			MinReferenceDeposit::<T>::put(self.min_reference_deposit);
+			MaxCommissionRewardRate::<T>::put(self.max_commission_reward_rate);
+			MinCommissionAgentDeposit::<T>::put(self.min_commission_agent_deposit);
 			MinOrderDeposit::<T>::put(self.min_order_deposit);
 			AuctionCloseDelay::<T>::put(self.auction_close_delay);
 			for a in &self.white_list {
@@ -134,18 +134,18 @@ pub mod module {
 	/// Reward = (Price - Royalty - PlatformFee) * `distributionReward`
 	/// It will pay the `Reward` to the secondary retailer.
 	///
-	/// The max `distributionReward` is `MaxDistributionReward`
+	/// The max `distributionReward` is `MaxCommissionRewardRate`
 	#[pallet::storage]
-	#[pallet::getter(fn max_distribution_reward)]
-	pub type MaxDistributionReward<T: Config> = StorageValue<_, PerU16, ValueQuery>;
+	#[pallet::getter(fn max_commission_reward_rate)]
+	pub type MaxCommissionRewardRate<T: Config> = StorageValue<_, PerU16, ValueQuery>;
 
 	/// min reference deposit
 	///
 	/// The secondary retailer who will get reward from helping selling
 	/// should keep at least `MinReferenceDeposit` balances.
 	#[pallet::storage]
-	#[pallet::getter(fn min_reference_deposit)]
-	pub type MinReferenceDeposit<T: Config> = StorageValue<_, Balance, ValueQuery>;
+	#[pallet::getter(fn min_commission_agent_deposit)]
+	pub type MinCommissionAgentDeposit<T: Config> = StorageValue<_, Balance, ValueQuery>;
 
 	/// The lowest deposit every order should deposit.
 	#[pallet::storage]
@@ -300,5 +300,13 @@ impl<T: Config> NftmartConfig<T::AccountId, BlockNumberFor<T>> for Pallet<T> {
 
 	fn get_platform_fee_rate() -> PerU16 {
 		Self::platform_fee_rate()
+	}
+
+	fn get_max_commission_reward_rate() -> PerU16 {
+		Self::max_commission_reward_rate()
+	}
+
+	fn get_min_commission_agent_deposit() -> Balance {
+		Self::min_commission_agent_deposit()
 	}
 }

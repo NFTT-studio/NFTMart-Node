@@ -12,7 +12,7 @@ use orml_traits::{MultiCurrency, MultiReservableCurrency};
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, StaticLookup},
-	RuntimeDebug, SaturatedConversion,
+	RuntimeDebug, SaturatedConversion, PerU16,
 };
 use sp_std::vec::Vec;
 
@@ -41,6 +41,9 @@ pub struct Order<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
 	pub category_id: CategoryId,
 	/// nft list
 	pub items: Vec<OrderItem<ClassId, TokenId>>,
+	/// commission rate
+	#[codec(compact)]
+	pub commission_rate: PerU16,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -60,6 +63,9 @@ pub struct Offer<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
 	pub category_id: CategoryId,
 	/// nft list
 	pub items: Vec<OrderItem<ClassId, TokenId>>,
+	/// commission rate
+	#[codec(compact)]
+	pub commission_rate: PerU16,
 }
 
 #[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug)]
@@ -145,9 +151,14 @@ pub mod module {
 		/// cannot take one's own order
 		TakeOwnOrder,
 		TakeOwnOffer,
+		InvalidCommissionRate,
 	}
 
 	#[pallet::event]
+	#[pallet::metadata(
+		T::AccountId = "AccountId",
+		Option<(bool, T::AccountId, PerU16)> = "Option<(bool, AccountId, PerU16)>",
+	)]
 	#[pallet::generate_deposit(pub(crate) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// CreatedOrder \[who, order_id\]
@@ -156,9 +167,9 @@ pub mod module {
 		RemovedOrder(T::AccountId, GlobalId),
 		RemovedOffer(T::AccountId, GlobalId),
 		/// TakenOrder \[purchaser, order_owner, order_id\]
-		TakenOrder(T::AccountId, T::AccountId, GlobalId),
+		TakenOrder(T::AccountId, T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
 		/// TakenOrder \[token_owner, offer_owner, order_id\]
-		TakenOffer(T::AccountId, T::AccountId, GlobalId),
+		TakenOffer(T::AccountId, T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
 		/// CreatedOffer \[who, order_id\]
 		CreatedOffer(T::AccountId, GlobalId),
 	}
@@ -235,8 +246,11 @@ pub mod module {
 			#[pallet::compact] price: Balance,
 			#[pallet::compact] deadline: BlockNumberOf<T>,
 			items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
+			#[pallet::compact] commission_rate: PerU16,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
+
+			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
 
 			ensure!(
 				deposit >= T::ExtraConfig::get_min_order_deposit(),
@@ -255,6 +269,7 @@ pub mod module {
 				deadline,
 				category_id,
 				items: Vec::with_capacity(items.len()),
+				commission_rate,
 			};
 
 			ensure_one_royalty!(items);
@@ -277,6 +292,8 @@ pub mod module {
 			origin: OriginFor<T>,
 			#[pallet::compact] order_id: GlobalId,
 			order_owner: <T::Lookup as StaticLookup>::Source,
+			commission_agent: Option<T::AccountId>,
+			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			let purchaser = ensure_signed(origin)?;
 			let order_owner = T::Lookup::lookup(order_owner)?;
@@ -292,7 +309,7 @@ pub mod module {
 				Error::<T>::TakeExpiredOrderOrOffer
 			);
 
-			let items = to_item_vec!(order);
+			let (items, commission_agent) = to_item_vec!(order, commission_agent);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&purchaser,
@@ -304,9 +321,10 @@ pub mod module {
 				T::ExtraConfig::get_platform_fee_rate(),
 				&beneficiary,
 				royalty_rate,
+				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::TakenOrder(purchaser, order_owner, order_id));
+			Self::deposit_event(Event::TakenOrder(purchaser, order_owner, order_id, commission_agent, commission_data));
 			Ok(().into())
 		}
 
@@ -349,12 +367,15 @@ pub mod module {
 			#[pallet::compact] price: Balance,
 			#[pallet::compact] deadline: BlockNumberOf<T>,
 			items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
+			#[pallet::compact] commission_rate: PerU16,
 		) -> DispatchResultWithPostInfo {
 			let purchaser = ensure_signed(origin)?;
 			ensure!(
 				frame_system::Pallet::<T>::block_number() < deadline,
 				Error::<T>::SubmitWithInvalidDeadline
 			);
+
+			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
 
 			// Reserve balances of `currency_id` for tokenOwner to accept this offer.
 			T::MultiCurrency::reserve(currency_id, &purchaser, price)?;
@@ -365,6 +386,7 @@ pub mod module {
 				deadline,
 				category_id,
 				items: Vec::with_capacity(items.len()),
+				commission_rate,
 			};
 
 			ensure_one_royalty!(items);
@@ -387,6 +409,8 @@ pub mod module {
 			origin: OriginFor<T>,
 			#[pallet::compact] offer_id: GlobalId,
 			offer_owner: <T::Lookup as StaticLookup>::Source,
+			commission_agent: Option<T::AccountId>,
+			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			let token_owner = ensure_signed(origin)?;
 			let offer_owner = T::Lookup::lookup(offer_owner)?;
@@ -402,7 +426,7 @@ pub mod module {
 				Error::<T>::TakeExpiredOrderOrOffer
 			);
 
-			let items = to_item_vec!(offer);
+			let (items, commission_agent) = to_item_vec!(offer, commission_agent);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&offer_owner,
@@ -414,9 +438,10 @@ pub mod module {
 				T::ExtraConfig::get_platform_fee_rate(),
 				&beneficiary,
 				royalty_rate,
+				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::TakenOffer(token_owner, offer_owner, offer_id));
+			Self::deposit_event(Event::TakenOffer(token_owner, offer_owner, offer_id, commission_agent, commission_data));
 			Ok(().into())
 		}
 	}
