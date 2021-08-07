@@ -133,8 +133,6 @@ pub mod module {
 	///
 	/// Reward = (Price - Royalty - PlatformFee) * `distributionReward`
 	/// It will pay the `Reward` to the secondary retailer.
-	///
-	/// The max `distributionReward` is `MaxCommissionRewardRate`
 	#[pallet::storage]
 	#[pallet::getter(fn max_commission_reward_rate)]
 	pub type MaxCommissionRewardRate<T: Config> = StorageValue<_, PerU16, ValueQuery>;

@@ -106,6 +106,7 @@ pub mod module {
 		SelfBid,
 		TooManyTokens,
 		EmptyTokenList,
+		InvalidCommissionRate,
 	}
 
 	#[pallet::event]
@@ -117,11 +118,11 @@ pub mod module {
 		/// RemovedBritishAuction \[who, auction_id\]
 		RemovedBritishAuction(T::AccountId, GlobalId),
 		RemovedDutchAuction(T::AccountId, GlobalId),
-		RedeemedBritishAuction(T::AccountId, GlobalId),
-		RedeemedDutchAuction(T::AccountId, GlobalId),
+		RedeemedBritishAuction(T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
+		RedeemedDutchAuction(T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
 		BidBritishAuction(T::AccountId, GlobalId),
 		BidDutchAuction(T::AccountId, GlobalId),
-		HammerBritishAuction(T::AccountId, GlobalId),
+		HammerBritishAuction(T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
 	}
 
 	#[pallet::pallet]
@@ -211,10 +212,12 @@ pub mod module {
 			items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
 			allow_british_auction: bool,
 			#[pallet::compact] min_raise: PerU16,
+			#[pallet::compact] commission_rate: PerU16,
 		) -> DispatchResultWithPostInfo {
 			let who: T::AccountId = ensure_signed(origin)?;
 			ensure!(!items.is_empty(), Error::<T>::EmptyTokenList);
 			ensure!(items.len() as u32 <= MAX_TOKEN_PER_AUCTION, Error::<T>::TooManyTokens);
+			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
 
 			// check and reserve `deposit`
 			ensure!(
@@ -242,6 +245,7 @@ pub mod module {
 				items: Vec::with_capacity(items.len()),
 				allow_british_auction,
 				min_raise,
+				commission_rate,
 			};
 
 			ensure_one_royalty!(items);
@@ -276,6 +280,8 @@ pub mod module {
 			#[pallet::compact] price: Balance,
 			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
+			commission_agent: Option<T::AccountId>,
+			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			// Rename to bidder TODO
 			let purchaser: T::AccountId = ensure_signed(origin)?;
@@ -325,7 +331,7 @@ pub mod module {
 					// delete auction
 					Self::delete_dutch_auction(&auction_owner, auction_id)?;
 					// swap
-					let items = to_item_vec!(auction);
+					let (items, commission_agent) = to_item_vec!(auction, commission_agent);
 					let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 					swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 						&purchaser,
@@ -337,8 +343,9 @@ pub mod module {
 						T::ExtraConfig::get_platform_fee_rate(),
 						&beneficiary,
 						royalty_rate,
+						&commission_agent,
 					)?;
-					Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
+					Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id, commission_agent, commission_data));
 				},
 				(Some(_), true) => {
 					// check deadline
@@ -371,6 +378,8 @@ pub mod module {
 			origin: OriginFor<T>,
 			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
+			commission_agent: Option<T::AccountId>,
+			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
@@ -383,7 +392,7 @@ pub mod module {
 			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
 			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
 
-			let items = to_item_vec!(auction);
+			let (items, commission_agent) = to_item_vec!(auction, commission_agent);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&purchaser,
@@ -395,9 +404,10 @@ pub mod module {
 				T::ExtraConfig::get_platform_fee_rate(),
 				&beneficiary,
 				royalty_rate,
+				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id));
+			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id, commission_agent, commission_data));
 			Ok(().into())
 		}
 
@@ -440,8 +450,10 @@ pub mod module {
 			allow_delay: bool,
 			#[pallet::compact] category_id: GlobalId,
 			items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
+			#[pallet::compact] commission_rate: PerU16,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
+			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
 
 			// check and reserve `deposit`
 			ensure!(
@@ -471,6 +483,7 @@ pub mod module {
 				allow_delay,
 				category_id,
 				items: Vec::with_capacity(items.len()),
+				commission_rate,
 			};
 
 			ensure_one_royalty!(items);
@@ -506,6 +519,8 @@ pub mod module {
 			#[pallet::compact] price: Balance,
 			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
+			commission_agent: Option<T::AccountId>,
+			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			let purchaser = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
@@ -531,7 +546,7 @@ pub mod module {
 				// delete the auction and release all assets reserved by this auction.
 				Self::delete_british_auction(&auction_owner, auction_id)?;
 
-				let items = to_item_vec!(auction);
+				let (items, commission_agent) = to_item_vec!(auction, commission_agent);
 				let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 				swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 					&purchaser,
@@ -543,9 +558,10 @@ pub mod module {
 					T::ExtraConfig::get_platform_fee_rate(),
 					&beneficiary,
 					royalty_rate,
+					&commission_agent,
 				)?;
 
-				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id));
+				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id, commission_agent, commission_data));
 				Ok(().into())
 			} else {
 				if auction_bid.last_bid_account.is_none() {
@@ -566,6 +582,8 @@ pub mod module {
 			origin: OriginFor<T>,
 			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
+			commission_agent: Option<T::AccountId>,
+			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
@@ -581,7 +599,7 @@ pub mod module {
 			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
 			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
 
-			let items = to_item_vec!(auction);
+			let (items, commission_agent) = to_item_vec!(auction, commission_agent);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
 				&purchaser,
@@ -593,9 +611,10 @@ pub mod module {
 				T::ExtraConfig::get_platform_fee_rate(),
 				&beneficiary,
 				royalty_rate,
+				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id));
+			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id, commission_agent, commission_data));
 			Ok(().into())
 		}
 

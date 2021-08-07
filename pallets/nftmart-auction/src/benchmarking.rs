@@ -49,6 +49,7 @@ benchmarks! {
 			tokens,
 			true,
 			PerU16::from_percent(50),
+			PerU16::zero(),
 		)?;
 	}
 	verify {

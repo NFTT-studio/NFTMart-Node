@@ -43,6 +43,7 @@ macro_rules! submit_british_auction_should_work {
 						true, // allow_delay
 						cate_id, // category_id
 						vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
+						PerU16::zero(),
 					));
 					let event = Event::NftmartAuction(crate::Event::CreatedBritishAuction(BOB, auction_id));
 					assert_eq!(last_event::<Runtime>(), event);
@@ -88,6 +89,7 @@ fn bid_british_auction_should_work_hammer_price() {
 			true,                     // allow_delay
 			cate_id,                  // category_id
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
+			PerU16::zero(),
 		));
 
 		let price = 600;
@@ -95,9 +97,9 @@ fn bid_british_auction_should_work_hammer_price() {
 			Origin::signed(CHARLIE),
 			price,
 			BOB,
-			auction_id
+			auction_id, None, None,
 		));
-		let event = Event::NftmartAuction(crate::Event::HammerBritishAuction(CHARLIE, auction_id));
+		let event = Event::NftmartAuction(crate::Event::HammerBritishAuction(CHARLIE, auction_id, None, None));
 		assert_eq!(last_event::<Runtime>(), event);
 
 		assert_eq!(
@@ -138,13 +140,14 @@ macro_rules! bid_british_auction_should_work {
 						true, // allow_delay
 						cate_id, // category_id
 						vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
+						PerU16::zero(),
 					));
 
 					let price = $price;
 
 					// CHARLIE bid
 					assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT);
-					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id));
+					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id, None, None));
 					let event = Event::NftmartAuction(crate::Event::BidBritishAuction(CHARLIE, auction_id));
 					assert_eq!(last_event::<Runtime>(), event);
 					assert_eq!(reserved_balance(&CHARLIE), price);
@@ -153,7 +156,7 @@ macro_rules! bid_british_auction_should_work {
 					// DAVE bid
 					let price = price + raise.mul_ceil(price) + 1;
 					assert_eq!(free_balance(&DAVE), DAVE_INIT);
-					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(DAVE), price, BOB, auction_id));
+					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(DAVE), price, BOB, auction_id, None, None));
 					let event = Event::NftmartAuction(crate::Event::BidBritishAuction(DAVE, auction_id));
 					assert_eq!(last_event::<Runtime>(), event);
 					assert_eq!(reserved_balance(&DAVE), price);
@@ -162,7 +165,7 @@ macro_rules! bid_british_auction_should_work {
 					// CHARLIE bid again
 					let price = price + raise.mul_ceil(price) + 1;
 					assert_eq!(free_balance(&CHARLIE), CHARLIE_INIT);
-					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id));
+					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id, None, None));
 					let event = Event::NftmartAuction(crate::Event::BidBritishAuction(CHARLIE, auction_id));
 					assert_eq!(last_event::<Runtime>(), event);
 					assert_eq!(reserved_balance(&CHARLIE), price);
@@ -203,12 +206,13 @@ macro_rules! redeem_british_auction_should_work {
 						$allow_delay, // allow_delay
 						cate_id, // category_id
 						vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
+						PerU16::zero(),
 					));
 					let price = 300;
-					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id));
+					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id, None, None));
 					System::set_block_number($set_block);
-					assert_ok!(NftmartAuction::redeem_british_auction(Origin::signed(DAVE), BOB, auction_id));
-					let event = Event::NftmartAuction(crate::Event::RedeemedBritishAuction(CHARLIE, auction_id));
+					assert_ok!(NftmartAuction::redeem_british_auction(Origin::signed(DAVE), BOB, auction_id, None, None));
+					let event = Event::NftmartAuction(crate::Event::RedeemedBritishAuction(CHARLIE, auction_id, None, None));
 					assert_eq!(last_event::<Runtime>(), event);
 					assert!(get_bid(auction_id).is_none());
 					assert!(get_auction(&BOB, auction_id).is_none());
@@ -257,6 +261,7 @@ fn remove_british_auction_should_work() {
 			true,                     // allow_delay
 			cate_id,                  // category_id
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
+			PerU16::zero(),
 		));
 		assert_ok!(NftmartAuction::remove_british_auction(Origin::signed(BOB), auction_id));
 		let event = Event::NftmartAuction(crate::Event::RemovedBritishAuction(BOB, auction_id));

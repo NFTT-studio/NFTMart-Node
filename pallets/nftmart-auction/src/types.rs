@@ -31,6 +31,9 @@ pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId>
 	pub category_id: CategoryId,
 	/// nft list
 	pub items: Vec<OrderItem<ClassId, TokenId>>,
+	/// commission rate
+	#[codec(compact)]
+	pub commission_rate: PerU16,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
@@ -67,6 +70,9 @@ pub struct DutchAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
 	pub allow_british_auction: bool,
 	#[codec(compact)]
 	pub min_raise: PerU16,
+	/// commission rate
+	#[codec(compact)]
+	pub commission_rate: PerU16,
 }
 
 pub type DutchAuctionBid<AccountId, BlockNumber> = BritishAuctionBid<AccountId, BlockNumber>;

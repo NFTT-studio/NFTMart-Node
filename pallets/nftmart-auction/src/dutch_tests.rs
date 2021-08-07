@@ -27,6 +27,7 @@ fn create_auction(allow_british: bool, max_price: Balance) -> GlobalId {
 		vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 		allow_british,
 		PerU16::from_percent(50),
+		PerU16::zero(),
 	));
 	let event = Event::NftmartAuction(crate::Event::CreatedDutchAuction(BOB, auction_id));
 	assert_eq!(last_event::<Runtime>(), event);
@@ -73,6 +74,7 @@ fn submit_dutch_auction_should_fail() {
 				vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 				false,
 				PerU16::from_percent(50),
+				PerU16::zero(),
 			),
 			Error::<Runtime>::TooManyTokenChargedRoyalty
 		);
@@ -83,8 +85,8 @@ fn submit_dutch_auction_should_fail() {
 fn bid_dutch_auction_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		let auction_id = create_auction(false, 500);
-		assert_ok!(NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, auction_id,));
-		let event = Event::NftmartAuction(crate::Event::RedeemedDutchAuction(CHARLIE, auction_id));
+		assert_ok!(NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, auction_id, None, None));
+		let event = Event::NftmartAuction(crate::Event::RedeemedDutchAuction(CHARLIE, auction_id, None, None));
 		assert_eq!(last_event::<Runtime>(), event);
 
 		assert_eq!(
@@ -115,7 +117,7 @@ fn bid_dutch_auction_should_work() {
 		let bid_price = max_price + max_price / 2 + 1;
 
 		let auction_id = create_auction(true, max_price);
-		assert_ok!(NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, auction_id,));
+		assert_ok!(NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, auction_id, None, None));
 		let bid: DutchAuctionBidOf<Runtime> =
 			NftmartAuction::dutch_auction_bids(auction_id).unwrap();
 		assert_eq!(bid.last_bid_price, max_price);
@@ -123,12 +125,12 @@ fn bid_dutch_auction_should_work() {
 		assert_eq!(last_event::<Runtime>(), event);
 
 		assert_noop!(
-			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), max_price, BOB, auction_id),
+			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), max_price, BOB, auction_id, None, None),
 			Error::<Runtime>::PriceTooLow,
 		);
 
 		assert_noop!(
-			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), bid_price, BOB, auction_id),
+			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), bid_price, BOB, auction_id, None, None),
 			Error::<Runtime>::DuplicatedBid,
 		);
 
@@ -139,24 +141,24 @@ fn bid_dutch_auction_should_work() {
 			Origin::signed(DAVE),
 			bid_price,
 			BOB,
-			auction_id,
+			auction_id, None, None
 		));
 		assert_eq!(reserved_balance(&CHARLIE), 0);
 		assert_eq!(reserved_balance(&DAVE), bid_price);
 
 		assert_noop!(
-			NftmartAuction::redeem_dutch_auction(Origin::signed(CHARLIE), BOB, auction_id),
+			NftmartAuction::redeem_dutch_auction(Origin::signed(CHARLIE), BOB, auction_id, None, None),
 			Error::<Runtime>::CannotRedeemAuctionUntilDeadline,
 		);
 
 		System::set_block_number(10 + 1 + 10 + 1);
 		assert_noop!(
-			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), bid_price, BOB, auction_id),
+			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), bid_price, BOB, auction_id, None, None),
 			Error::<Runtime>::DutchAuctionClosed,
 		);
 
 		// DAVE redeem nfts by the help of ALICE
-		assert_ok!(NftmartAuction::redeem_dutch_auction(Origin::signed(ALICE), BOB, auction_id));
+		assert_ok!(NftmartAuction::redeem_dutch_auction(Origin::signed(ALICE), BOB, auction_id, None, None));
 		assert_eq!(reserved_balance(&DAVE), 0);
 		assert_eq!(
 			vec![
@@ -173,7 +175,7 @@ fn bid_dutch_auction_should_work() {
 fn bid_dutch_auction_should_fail() {
 	ExtBuilder::default().build().execute_with(|| {
 		assert_noop!(
-			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, 120),
+			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, 120, None, None),
 			Error::<Runtime>::DutchAuctionNotFound,
 		);
 	});
@@ -181,7 +183,7 @@ fn bid_dutch_auction_should_fail() {
 		let auction_id = create_auction(false, 500);
 		System::set_block_number(10000);
 		assert_noop!(
-			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, auction_id),
+			NftmartAuction::bid_dutch_auction(Origin::signed(CHARLIE), 0, BOB, auction_id, None, None),
 			Error::<Runtime>::DutchAuctionClosed,
 		);
 	});
