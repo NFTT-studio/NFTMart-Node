@@ -6,7 +6,7 @@ import {
   hexToUtf8,
   initApi,
   NativeCurrencyID,
-  unit,
+  unit, utf8ToHex,
   waitTx,
 } from "./utils.mjs";
 import {Keyring} from "@polkadot/api";
@@ -163,6 +163,9 @@ async function main() {
 
     await bid_dutch_auction(ws, "//Bob", "//Alice", 6, 33);
     await bid_british_auction(ws, "//Bob", "//Alice", 8, 30000);
+
+    await redeem_british_auction(ws, "//Bob", "//Alice", 10);
+    await redeem_dutch_auction(ws, "//Bob", "//Alice", 10);
   });
 
   // node nft-apis.mjs --ws 'ws://81.70.132.13:9944' create_class //Alice
@@ -427,7 +430,8 @@ async function redeem_british_auction(ws, signer, auctionCreatorAddress, auction
   await initApi(ws);
   const keyring = getKeyring();
   signer = keyring.addFromUri(signer);
-  const call = Global_Api.tx.nftmartAuction.redeemBritishAuction(ensureAddress(keyring, auctionCreatorAddress), auctionId);
+  const commissionAgent = ensureAddress(keyring, "//Eve");
+  const call = Global_Api.tx.nftmartAuction.redeemBritishAuction(ensureAddress(keyring, auctionCreatorAddress), auctionId, commissionAgent, utf8ToHex("hello redeemBritishAuction"));
   const feeInfo = await call.paymentInfo(signer);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
   let [a, b] = waitTx(Global_ModuleMetadata);
@@ -441,7 +445,8 @@ async function bid_british_auction(ws, bidder, auctionCreatorAddress, auctionId,
   const keyring = getKeyring();
   auctionCreatorAddress = ensureAddress(keyring, auctionCreatorAddress);
   price = bnToBn(price);
-  let call = Global_Api.tx.nftmartAuction.bidBritishAuction(price.mul(unit), auctionCreatorAddress, auctionId);
+  const commissionAgent = ensureAddress(keyring, "//Eve");
+  let call = Global_Api.tx.nftmartAuction.bidBritishAuction(price.mul(unit), auctionCreatorAddress, auctionId, commissionAgent, utf8ToHex("hello bidBritishAuction"));
   bidder = keyring.addFromUri(bidder);
   const feeInfo = await call.paymentInfo(bidder);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
@@ -512,9 +517,10 @@ async function submit_british_auction(ws, account, allow_delay, deadline_minute,
   // For any bidding of an auction,
   // the second bidding should at least to be 1.5 times of the first relative biding.
   const minRaise = float2PerU16(0.5); // 50%
+  const commission = float2PerU16(0.1); // 10%
   const call = Global_Api.tx.nftmartAuction.submitBritishAuction(
     NativeCurrencyID, hammer_price, minRaise, min_deposit, init_price,
-    deadlineBlock, allow_delay, categoryId, tokens);
+    deadlineBlock, allow_delay, categoryId, tokens, commission);
 
   const feeInfo = await call.paymentInfo(account);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
@@ -541,7 +547,8 @@ async function redeem_dutch_auction(ws, signer, auctionCreatorAddress, auctionId
   await initApi(ws);
   const keyring = getKeyring();
   signer = keyring.addFromUri(signer);
-  const call = Global_Api.tx.nftmartAuction.redeemDutchAuction(ensureAddress(keyring, auctionCreatorAddress), auctionId);
+  const commissionAgent = ensureAddress(keyring, "//Eve");
+  const call = Global_Api.tx.nftmartAuction.redeemDutchAuction(ensureAddress(keyring, auctionCreatorAddress), auctionId, commissionAgent, utf8ToHex("hello redeemDutchAuction"));
   const feeInfo = await call.paymentInfo(signer);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
   let [a, b] = waitTx(Global_ModuleMetadata);
@@ -560,6 +567,7 @@ async function bid_dutch_auction(ws, bidder, auctionCreatorAddress, auctionId, p
     Global_Api.rpc.chain.getBlock(),
   ]);
 
+  const commissionAgent = ensureAddress(keyring, "//Eve");
   const currentBlock = Number(block.block.header.number);
   if (auction.isSome && bid.isSome) {
     auction = auction.unwrap();
@@ -572,7 +580,7 @@ async function bid_dutch_auction(ws, bidder, auctionCreatorAddress, auctionId, p
         return;
       }
       const uselessPrice = 0; // The real price used will be calculated by Dutch auction logic.
-      call = Global_Api.tx.nftmartAuction.bidDutchAuction(uselessPrice, auctionCreatorAddress, auctionId);
+      call = Global_Api.tx.nftmartAuction.bidDutchAuction(uselessPrice, auctionCreatorAddress, auctionId, commissionAgent, utf8ToHex("hello bidDutchAuction"));
     } else {
       // This if branch is at least the second bidding.
 
@@ -585,7 +593,7 @@ async function bid_dutch_auction(ws, bidder, auctionCreatorAddress, auctionId, p
       const minRaise = perU16ToFloat(auction.minRaise);
       const lowest = (1 + minRaise) * (bid.lastBidPrice / unit);
       if (price > lowest) {
-        call = Global_Api.tx.nftmartAuction.bidDutchAuction(price * unit, auctionCreatorAddress, auctionId);
+        call = Global_Api.tx.nftmartAuction.bidDutchAuction(price * unit, auctionCreatorAddress, auctionId, commissionAgent, utf8ToHex("hello bidDutchAuction"));
       } else {
         console.log("price %s NMT should be greater than %s NMT", price, lowest);
         return;
@@ -676,9 +684,10 @@ async function submit_dutch_auction(ws, account, allow_british_auction, deadline
   // For any bidding of an auction,
   // the second bidding should at least to be 1.5 times of the first relative biding.
   const minRaise = float2PerU16(0.5); // 50%
+  const commission = float2PerU16(0.1); // 10%
   const call = Global_Api.tx.nftmartAuction.submitDutchAuction(
     NativeCurrencyID, categoryId, min_deposit, min_price, max_price,
-    deadlineBlock, tokens, allow_british_auction, minRaise);
+    deadlineBlock, tokens, allow_british_auction, minRaise, commission);
 
   const feeInfo = await call.paymentInfo(account);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
@@ -706,7 +715,8 @@ async function take_offer(ws, keyring, account, offerId, offerOwner) {
   await initApi(ws);
   account = keyring.addFromUri(account);
   offerOwner = ensureAddress(keyring, offerOwner);
-  const call = Global_Api.tx.nftmartOrder.takeOffer(offerId, offerOwner);
+  const commissionAgent = ensureAddress(keyring, "//Eve");
+  const call = Global_Api.tx.nftmartOrder.takeOffer(offerId, offerOwner, commissionAgent, utf8ToHex("hello takeOffer"));
   const feeInfo = await call.paymentInfo(account);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
   let [a, b] = waitTx(Global_ModuleMetadata);
@@ -759,6 +769,7 @@ async function submit_offer(ws, keyring, account, tokens) {
   const price = unit.mul(bnToBn('20'));
   const categoryId = 0;
   const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
+  const commissionRate = float2PerU16(0.1);
 
   const call = Global_Api.tx.nftmartOrder.submitOffer(
     NativeCurrencyID,
@@ -766,6 +777,7 @@ async function submit_offer(ws, keyring, account, tokens) {
     price,
     currentBlockNumber.add(bnToBn('300000')),
     tokens,
+    commissionRate,
   );
 
   const feeInfo = await call.paymentInfo(account);
@@ -794,7 +806,8 @@ async function take_order(ws, keyring, account, orderId, orderOwner) {
   await initApi(ws);
   account = keyring.addFromUri(account);
   orderOwner = ensureAddress(keyring, orderOwner);
-  const call = Global_Api.tx.nftmartOrder.takeOrder(orderId, orderOwner);
+  const commissionAgent = ensureAddress(keyring, "//Eve");
+  const call = Global_Api.tx.nftmartOrder.takeOrder(orderId, orderOwner, commissionAgent, utf8ToHex("hello takeOrder"));
   const feeInfo = await call.paymentInfo(account);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
   let [a, b] = waitTx(Global_ModuleMetadata);
@@ -848,6 +861,7 @@ async function submit_order(ws, keyring, account, tokens) {
   const deposit = unit.mul(bnToBn('5'));
   const categoryId = 0;
   const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
+  const commissionRate = float2PerU16(0.1);
 
   const call = Global_Api.tx.nftmartOrder.submitOrder(
     NativeCurrencyID,
@@ -856,6 +870,7 @@ async function submit_order(ws, keyring, account, tokens) {
     price,
     currentBlockNumber.add(bnToBn('300000')),
     tokens,
+    commissionRate,
   );
 
   const feeInfo = await call.paymentInfo(account);

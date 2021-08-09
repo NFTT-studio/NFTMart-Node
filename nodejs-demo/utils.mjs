@@ -178,6 +178,7 @@ export async function getApi(dest) {
       deadline: 'Compact<BlockNumberOf>',
       categoryId: 'Compact<CategoryId>',
       items: 'Vec<OrderItem>',
+      commissionRate: 'Compact<PerU16>',
     },
 
     OfferOf: {
@@ -186,6 +187,7 @@ export async function getApi(dest) {
       deadline: 'Compact<BlockNumberOf>',
       categoryId: 'Compact<CategoryId>',
       items: 'Vec<OrderItem>',
+      commissionRate: 'Compact<PerU16>',
     },
 
     BritishAuctionOf: {
@@ -198,6 +200,7 @@ export async function getApi(dest) {
       allowDelay: 'bool',
       categoryId: 'Compact<CategoryId>',
       items: 'Vec<OrderItem>',
+      commissionRate: 'Compact<PerU16>',
     },
 
     BritishAuctionBidOf: {
@@ -217,6 +220,7 @@ export async function getApi(dest) {
       items: 'Vec<OrderItem>',
       allowBritishAuction: 'bool',
       minRaise: 'Compact<PerU16>',
+      commissionRate: 'Compact<PerU16>',
     },
 
     DutchAuctionBidOf: 'BritishAuctionBidOf',
