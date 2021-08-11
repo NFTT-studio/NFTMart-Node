@@ -207,6 +207,8 @@ export async function getApi(dest) {
       lastBidPrice: 'Compact<Balance>',
       lastBidAccount: 'Option<AccountId>',
       lastBidBlock: 'Compact<BlockNumberOf>',
+      commissionAgent: 'Option<AccountId>',
+      commissionData: 'Option<Vec<u8>>',
     },
 
     DutchAuctionOf: {

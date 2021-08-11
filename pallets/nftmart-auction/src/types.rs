@@ -47,6 +47,8 @@ pub struct BritishAuctionBid<AccountId, BlockNumber> {
 	/// last bid block number.
 	#[codec(compact)]
 	pub last_bid_block: BlockNumber,
+	pub commission_agent: Option<AccountId>,
+	pub commission_data: Option<Vec<u8>>,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]

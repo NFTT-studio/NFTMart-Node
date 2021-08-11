@@ -9,6 +9,8 @@ macro_rules! save_bid {
 		$purchaser: ident,
 		$auction_id: ident,
 		$AuctionBids: ident,
+		$commission_agent: ident,
+		$commission_data: ident,
 	) => {{
 		if let Some(account) = &$auction_bid.last_bid_account {
 			// check the new bid price.
@@ -31,6 +33,8 @@ macro_rules! save_bid {
 		auction_bid.last_bid_price = $price;
 		auction_bid.last_bid_account = Some($purchaser.clone());
 		auction_bid.last_bid_block = frame_system::Pallet::<T>::block_number();
+		auction_bid.commission_agent = $commission_agent;
+		auction_bid.commission_data = $commission_data;
 		$AuctionBids::<T>::insert($auction_id, auction_bid);
 	}};
 }

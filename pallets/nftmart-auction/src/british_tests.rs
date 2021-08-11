@@ -211,7 +211,7 @@ macro_rules! redeem_british_auction_should_work {
 					let price = 300;
 					assert_ok!(NftmartAuction::bid_british_auction(Origin::signed(CHARLIE), price, BOB, auction_id, None, None));
 					System::set_block_number($set_block);
-					assert_ok!(NftmartAuction::redeem_british_auction(Origin::signed(DAVE), BOB, auction_id, None, None));
+					assert_ok!(NftmartAuction::redeem_british_auction(Origin::signed(DAVE), BOB, auction_id));
 					let event = Event::NftmartAuction(crate::Event::RedeemedBritishAuction(CHARLIE, auction_id, None, None));
 					assert_eq!(last_event::<Runtime>(), event);
 					assert!(get_bid(auction_id).is_none());

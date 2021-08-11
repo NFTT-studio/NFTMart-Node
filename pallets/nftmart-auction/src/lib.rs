@@ -107,6 +107,7 @@ pub mod module {
 		TooManyTokens,
 		EmptyTokenList,
 		InvalidCommissionRate,
+		SenderTakeCommission,
 	}
 
 	#[pallet::event]
@@ -264,6 +265,8 @@ pub mod module {
 				last_bid_price: min_price,
 				last_bid_account: None,
 				last_bid_block: Zero::zero(),
+				commission_agent: None,
+				commission_data: None,
 			};
 
 			DutchAuctionBids::<T>::insert(auction_id, auction_bid);
@@ -287,6 +290,10 @@ pub mod module {
 			let purchaser: T::AccountId = ensure_signed(origin)?;
 			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
 			ensure!(purchaser != auction_owner, Error::<T>::SelfBid);
+
+			if let Some(c) = &commission_agent {
+				ensure!(&purchaser != c, Error::<T>::SenderTakeCommission);
+			}
 
 			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id)
 				.ok_or(Error::<T>::DutchAuctionNotFound)?;
@@ -312,6 +319,8 @@ pub mod module {
 						current_price,
 						purchaser.clone(),
 						auction_id,
+						commission_agent,
+						commission_data,
 					)?;
 
 					Self::deposit_event(Event::BidDutchAuction(purchaser, auction_id));
@@ -360,6 +369,8 @@ pub mod module {
 						price,
 						purchaser.clone(),
 						auction_id,
+						commission_agent,
+						commission_data,
 					)?;
 
 					Self::deposit_event(Event::BidDutchAuction(purchaser, auction_id));
@@ -378,8 +389,6 @@ pub mod module {
 			origin: OriginFor<T>,
 			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
-			commission_agent: Option<T::AccountId>,
-			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
@@ -392,6 +401,7 @@ pub mod module {
 			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
 			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
 
+			let commission_agent = auction_bid.commission_agent.clone();
 			let (items, commission_agent) = to_item_vec!(auction, commission_agent);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
@@ -407,7 +417,7 @@ pub mod module {
 				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id, commission_agent, commission_data));
+			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id, commission_agent, auction_bid.commission_data));
 			Ok(().into())
 		}
 
@@ -502,6 +512,8 @@ pub mod module {
 				last_bid_price: init_price,
 				last_bid_account: None,
 				last_bid_block: Zero::zero(),
+				commission_agent: None,
+				commission_data: None,
 			};
 
 			BritishAuctionBids::<T>::insert(auction_id, auction_bid);
@@ -525,6 +537,9 @@ pub mod module {
 			let purchaser = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
 			ensure!(purchaser != auction_owner, Error::<T>::SelfBid);
+			if let Some(c) = &commission_agent {
+				ensure!(&purchaser != c, Error::<T>::SenderTakeCommission);
+			}
 
 			let auction: BritishAuctionOf<T> = Self::british_auctions(&auction_owner, auction_id)
 				.ok_or(Error::<T>::BritishAuctionNotFound)?;
@@ -568,7 +583,7 @@ pub mod module {
 					ensure!(price >= auction.init_price, Error::<T>::PriceTooLow);
 				}
 
-				Self::save_british_bid(auction_bid, auction, price, purchaser.clone(), auction_id)?;
+				Self::save_british_bid(auction_bid, auction, price, purchaser.clone(), auction_id, commission_agent, commission_data)?;
 
 				Self::deposit_event(Event::BidBritishAuction(purchaser, auction_id));
 				Ok(().into())
@@ -582,8 +597,6 @@ pub mod module {
 			origin: OriginFor<T>,
 			auction_owner: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] auction_id: GlobalId,
-			commission_agent: Option<T::AccountId>,
-			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			let _ = ensure_signed(origin)?;
 			let auction_owner = T::Lookup::lookup(auction_owner)?;
@@ -599,6 +612,7 @@ pub mod module {
 			ensure!(auction_bid.last_bid_account.is_some(), Error::<T>::CannotRedeemAuctionNoBid);
 			let purchaser = auction_bid.last_bid_account.expect("Must be Some");
 
+			let commission_agent = auction_bid.commission_agent.clone();
 			let (items, commission_agent) = to_item_vec!(auction, commission_agent);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
 			swap_assets::<T::MultiCurrency, T::NFT, _, _, _, _>(
@@ -614,7 +628,7 @@ pub mod module {
 				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id, commission_agent, commission_data));
+			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id, commission_agent, auction_bid.commission_data));
 			Ok(().into())
 		}
 
@@ -675,8 +689,10 @@ impl<T: Config> Pallet<T> {
 		price: Balance,
 		purchaser: T::AccountId,
 		auction_id: GlobalId,
+		commission_agent: Option<T::AccountId>,
+		commission_data: Option<Vec<u8>>,
 	) -> DispatchResult {
-		save_bid!(auction_bid, auction, price, purchaser, auction_id, DutchAuctionBids,);
+		save_bid!(auction_bid, auction, price, purchaser, auction_id, DutchAuctionBids,commission_agent,commission_data,);
 		Ok(())
 	}
 
@@ -686,8 +702,10 @@ impl<T: Config> Pallet<T> {
 		price: Balance,
 		purchaser: T::AccountId,
 		auction_id: GlobalId,
+		commission_agent: Option<T::AccountId>,
+		commission_data: Option<Vec<u8>>,
 	) -> DispatchResult {
-		save_bid!(auction_bid, auction, price, purchaser, auction_id, BritishAuctionBids,);
+		save_bid!(auction_bid, auction, price, purchaser, auction_id, BritishAuctionBids,commission_agent,commission_data,);
 		Ok(())
 	}
 }

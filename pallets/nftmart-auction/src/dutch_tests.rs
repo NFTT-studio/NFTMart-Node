@@ -147,7 +147,7 @@ fn bid_dutch_auction_should_work() {
 		assert_eq!(reserved_balance(&DAVE), bid_price);
 
 		assert_noop!(
-			NftmartAuction::redeem_dutch_auction(Origin::signed(CHARLIE), BOB, auction_id, None, None),
+			NftmartAuction::redeem_dutch_auction(Origin::signed(CHARLIE), BOB, auction_id),
 			Error::<Runtime>::CannotRedeemAuctionUntilDeadline,
 		);
 
@@ -158,7 +158,7 @@ fn bid_dutch_auction_should_work() {
 		);
 
 		// DAVE redeem nfts by the help of ALICE
-		assert_ok!(NftmartAuction::redeem_dutch_auction(Origin::signed(ALICE), BOB, auction_id, None, None));
+		assert_ok!(NftmartAuction::redeem_dutch_auction(Origin::signed(ALICE), BOB, auction_id));
 		assert_eq!(reserved_balance(&DAVE), 0);
 		assert_eq!(
 			vec![
