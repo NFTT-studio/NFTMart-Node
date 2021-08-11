@@ -152,6 +152,7 @@ pub mod module {
 		TakeOwnOrder,
 		TakeOwnOffer,
 		InvalidCommissionRate,
+		SenderTakeCommission,
 	}
 
 	#[pallet::event]
@@ -301,6 +302,10 @@ pub mod module {
 			// Simplify the logic, to make life easier.
 			ensure!(purchaser != order_owner, Error::<T>::TakeOwnOrder);
 
+			if let Some(c) = &commission_agent {
+				ensure!(&purchaser != c, Error::<T>::SenderTakeCommission);
+			}
+
 			let order: OrderOf<T> = Self::delete_order(&order_owner, order_id)?;
 
 			// Check deadline of this order
@@ -417,6 +422,10 @@ pub mod module {
 
 			// Simplify the logic, to make life easier.
 			ensure!(offer_owner != token_owner, Error::<T>::TakeOwnOffer);
+
+			if let Some(c) = &commission_agent {
+				ensure!(&token_owner != c, Error::<T>::SenderTakeCommission);
+			}
 
 			let offer: OfferOf<T> = Self::delete_offer(&offer_owner, offer_id)?;
 
