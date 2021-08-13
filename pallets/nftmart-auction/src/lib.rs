@@ -286,7 +286,7 @@ pub mod module {
 			commission_agent: Option<T::AccountId>,
 			commission_data: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
-			// Rename to bidder TODO
+			// TODO Rename to bidder
 			let purchaser: T::AccountId = ensure_signed(origin)?;
 			let auction_owner: T::AccountId = T::Lookup::lookup(auction_owner)?;
 			ensure!(purchaser != auction_owner, Error::<T>::SelfBid);

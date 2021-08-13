@@ -360,6 +360,10 @@ impl<T: Config> Pallet<T> {
 		})
 	}
 
+	pub fn total_count(account: &T::AccountId, token: (T::ClassId, T::TokenId)) -> T::TokenId {
+		Self::tokens_by_owner(account, token).unwrap_or_default().total()
+	}
+
 	pub fn is_owner(account: &T::AccountId, token: (T::ClassId, T::TokenId)) -> bool {
 		Self::tokens_by_owner(account, token).unwrap_or_default().total() >= One::one()
 	}

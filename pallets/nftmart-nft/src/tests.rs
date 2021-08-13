@@ -133,19 +133,18 @@ fn update_token_royalty() {
 		);
 
 		// erc1155
-		assert_noop!(
+		assert_ok!(
 			Nftmart::update_token_royalty(
 				Origin::signed(BOB),
 				CLASS_ID,
 				TOKEN_ID2,
 				Some(PerU16::from_percent(5))
 			),
-			Error::<Runtime>::NotSupportedForNow,
 		);
 		// erc1155
 		assert_eq!(
 			orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID2).unwrap().data.royalty_rate,
-			PerU16::from_percent(0)
+			PerU16::from_percent(5)
 		);
 	});
 	// royalty beneficiary erc1155
@@ -300,11 +299,6 @@ fn mint_should_fail() {
 			Nftmart::mint(Origin::signed(ALICE), BOB, CLASS_ID_NOT_EXIST, vec![1], 2, None),
 			Error::<Runtime>::ClassIdNotFound
 		);
-
-		// assert_noop!( // erc1155
-		// 	Nftmart::mint(Origin::signed(class_id_account()), BOB, CLASS_ID, vec![1], 2, Some(true)),
-		// 	Error::<Runtime>::NotSupportedForNow
-		// );
 
 		assert_noop!(
 			Nftmart::mint(Origin::signed(BOB), BOB, CLASS_ID, vec![1], 0, None),

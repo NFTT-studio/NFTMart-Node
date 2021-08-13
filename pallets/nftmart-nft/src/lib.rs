@@ -209,8 +209,6 @@ pub mod module {
 		DescriptionTooLong,
 		/// account not in whitelist
 		AccountNotInWhitelist,
-		/// Not supported for now
-		NotSupportedForNow,
 		RoyaltyRateTooHigh,
 	}
 
@@ -410,12 +408,9 @@ pub mod module {
 						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
 					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
 					ensure!(
-						orml_nft::Pallet::<T>::is_owner(&who, (class_id, token_id)),
+						orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) == token_info.quantity,
 						Error::<T>::NoPermission
 					);
-
-					// TODO: Get rid of this limitation.
-					ensure!(token_info.quantity == One::one(), Error::<T>::NotSupportedForNow);
 
 					token_info.data.royalty_rate = charge_royalty
 						.ok_or_else(|| -> Result<PerU16, DispatchError> {
