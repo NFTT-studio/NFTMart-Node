@@ -133,14 +133,12 @@ fn update_token_royalty() {
 		);
 
 		// erc1155
-		assert_ok!(
-			Nftmart::update_token_royalty(
-				Origin::signed(BOB),
-				CLASS_ID,
-				TOKEN_ID2,
-				Some(PerU16::from_percent(5))
-			),
-		);
+		assert_ok!(Nftmart::update_token_royalty(
+			Origin::signed(BOB),
+			CLASS_ID,
+			TOKEN_ID2,
+			Some(PerU16::from_percent(5))
+		),);
 		// erc1155
 		assert_eq!(
 			orml_nft::Tokens::<Runtime>::get(CLASS_ID, TOKEN_ID2).unwrap().data.royalty_rate,

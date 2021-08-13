@@ -12,7 +12,7 @@ use orml_traits::{MultiCurrency, MultiReservableCurrency};
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, StaticLookup},
-	RuntimeDebug, SaturatedConversion, PerU16,
+	PerU16, RuntimeDebug, SaturatedConversion,
 };
 use sp_std::vec::Vec;
 
@@ -168,9 +168,21 @@ pub mod module {
 		RemovedOrder(T::AccountId, GlobalId),
 		RemovedOffer(T::AccountId, GlobalId),
 		/// TakenOrder \[purchaser, order_owner, order_id\]
-		TakenOrder(T::AccountId, T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
+		TakenOrder(
+			T::AccountId,
+			T::AccountId,
+			GlobalId,
+			Option<(bool, T::AccountId, PerU16)>,
+			Option<Vec<u8>>,
+		),
 		/// TakenOrder \[token_owner, offer_owner, order_id\]
-		TakenOffer(T::AccountId, T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
+		TakenOffer(
+			T::AccountId,
+			T::AccountId,
+			GlobalId,
+			Option<(bool, T::AccountId, PerU16)>,
+			Option<Vec<u8>>,
+		),
 		/// CreatedOffer \[who, order_id\]
 		CreatedOffer(T::AccountId, GlobalId),
 	}
@@ -251,7 +263,10 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
-			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
+			ensure!(
+				commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(),
+				Error::<T>::InvalidCommissionRate
+			);
 
 			ensure!(
 				deposit >= T::ExtraConfig::get_min_order_deposit(),
@@ -329,7 +344,13 @@ pub mod module {
 				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::TakenOrder(purchaser, order_owner, order_id, commission_agent, commission_data));
+			Self::deposit_event(Event::TakenOrder(
+				purchaser,
+				order_owner,
+				order_id,
+				commission_agent,
+				commission_data,
+			));
 			Ok(().into())
 		}
 
@@ -380,7 +401,10 @@ pub mod module {
 				Error::<T>::SubmitWithInvalidDeadline
 			);
 
-			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
+			ensure!(
+				commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(),
+				Error::<T>::InvalidCommissionRate
+			);
 
 			// Reserve balances of `currency_id` for tokenOwner to accept this offer.
 			T::MultiCurrency::reserve(currency_id, &purchaser, price)?;
@@ -450,7 +474,13 @@ pub mod module {
 				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::TakenOffer(token_owner, offer_owner, offer_id, commission_agent, commission_data));
+			Self::deposit_event(Event::TakenOffer(
+				token_owner,
+				offer_owner,
+				offer_id,
+				commission_agent,
+				commission_data,
+			));
 			Ok(().into())
 		}
 	}

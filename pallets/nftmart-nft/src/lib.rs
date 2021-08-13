@@ -408,7 +408,8 @@ pub mod module {
 						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
 					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
 					ensure!(
-						orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) == token_info.quantity,
+						orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) ==
+							token_info.quantity,
 						Error::<T>::NoPermission
 					);
 

@@ -4,7 +4,7 @@ use super::NATIVE_CURRENCY_ID;
 use crate::mock::{
 	add_category, add_class, add_token, all_offers, all_orders, all_tokens_by, current_gid,
 	ensure_account, free_balance, last_event, Event, ExtBuilder, Nftmart, NftmartOrder, Origin,
-	ALICE, BOB, CHARLIE, CLASS_ID0, TOKEN_ID0, TOKEN_ID1, DAVE,
+	ALICE, BOB, CHARLIE, CLASS_ID0, DAVE, TOKEN_ID0, TOKEN_ID1,
 };
 use frame_support::assert_ok;
 use orml_nft::AccountToken;
@@ -86,7 +86,13 @@ fn take_order_should_work() {
 			PerU16::from_percent(10),
 		));
 		assert_eq!(1, all_orders().len());
-		assert_ok!(NftmartOrder::take_order(Origin::signed(ALICE), order_id, BOB, Some(DAVE), Some(vec![1, 2, 4])));
+		assert_ok!(NftmartOrder::take_order(
+			Origin::signed(ALICE),
+			order_id,
+			BOB,
+			Some(DAVE),
+			Some(vec![1, 2, 4])
+		));
 		assert_eq!(0, all_orders().len());
 
 		assert_eq!(98, free_balance(&ALICE));
@@ -100,7 +106,9 @@ fn take_order_should_work() {
 		assert_eq!(
 			last_event(),
 			Event::NftmartOrder(crate::Event::TakenOrder(
-				ALICE, BOB, order_id,
+				ALICE,
+				BOB,
+				order_id,
 				Some((true, DAVE, PerU16::from_percent(10))),
 				Some(vec![1, 2, 4]),
 			)),

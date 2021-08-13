@@ -97,9 +97,13 @@ fn bid_british_auction_should_work_hammer_price() {
 			Origin::signed(CHARLIE),
 			price,
 			BOB,
-			auction_id, None, None,
+			auction_id,
+			None,
+			None,
 		));
-		let event = Event::NftmartAuction(crate::Event::HammerBritishAuction(CHARLIE, auction_id, None, None));
+		let event = Event::NftmartAuction(crate::Event::HammerBritishAuction(
+			CHARLIE, auction_id, None, None,
+		));
 		assert_eq!(last_event::<Runtime>(), event);
 
 		assert_eq!(

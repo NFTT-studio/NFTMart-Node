@@ -119,11 +119,26 @@ pub mod module {
 		/// RemovedBritishAuction \[who, auction_id\]
 		RemovedBritishAuction(T::AccountId, GlobalId),
 		RemovedDutchAuction(T::AccountId, GlobalId),
-		RedeemedBritishAuction(T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
-		RedeemedDutchAuction(T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
+		RedeemedBritishAuction(
+			T::AccountId,
+			GlobalId,
+			Option<(bool, T::AccountId, PerU16)>,
+			Option<Vec<u8>>,
+		),
+		RedeemedDutchAuction(
+			T::AccountId,
+			GlobalId,
+			Option<(bool, T::AccountId, PerU16)>,
+			Option<Vec<u8>>,
+		),
 		BidBritishAuction(T::AccountId, GlobalId),
 		BidDutchAuction(T::AccountId, GlobalId),
-		HammerBritishAuction(T::AccountId, GlobalId, Option<(bool, T::AccountId, PerU16)>, Option<Vec<u8>>),
+		HammerBritishAuction(
+			T::AccountId,
+			GlobalId,
+			Option<(bool, T::AccountId, PerU16)>,
+			Option<Vec<u8>>,
+		),
 	}
 
 	#[pallet::pallet]
@@ -218,7 +233,10 @@ pub mod module {
 			let who: T::AccountId = ensure_signed(origin)?;
 			ensure!(!items.is_empty(), Error::<T>::EmptyTokenList);
 			ensure!(items.len() as u32 <= MAX_TOKEN_PER_AUCTION, Error::<T>::TooManyTokens);
-			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
+			ensure!(
+				commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(),
+				Error::<T>::InvalidCommissionRate
+			);
 
 			// check and reserve `deposit`
 			ensure!(
@@ -354,7 +372,12 @@ pub mod module {
 						royalty_rate,
 						&commission_agent,
 					)?;
-					Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id, commission_agent, commission_data));
+					Self::deposit_event(Event::RedeemedDutchAuction(
+						purchaser,
+						auction_id,
+						commission_agent,
+						commission_data,
+					));
 				},
 				(Some(_), true) => {
 					// check deadline
@@ -375,9 +398,7 @@ pub mod module {
 
 					Self::deposit_event(Event::BidDutchAuction(purchaser, auction_id));
 				},
-				_ => {
-					return Err(Error::<T>::DutchAuctionClosed.into())
-				},
+				_ => return Err(Error::<T>::DutchAuctionClosed.into()),
 			}
 			Ok(().into())
 		}
@@ -417,7 +438,12 @@ pub mod module {
 				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::RedeemedDutchAuction(purchaser, auction_id, commission_agent, auction_bid.commission_data));
+			Self::deposit_event(Event::RedeemedDutchAuction(
+				purchaser,
+				auction_id,
+				commission_agent,
+				auction_bid.commission_data,
+			));
 			Ok(().into())
 		}
 
@@ -463,7 +489,10 @@ pub mod module {
 			#[pallet::compact] commission_rate: PerU16,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			ensure!(commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(), Error::<T>::InvalidCommissionRate);
+			ensure!(
+				commission_rate <= T::ExtraConfig::get_max_commission_reward_rate(),
+				Error::<T>::InvalidCommissionRate
+			);
 
 			// check and reserve `deposit`
 			ensure!(
@@ -576,14 +605,27 @@ pub mod module {
 					&commission_agent,
 				)?;
 
-				Self::deposit_event(Event::HammerBritishAuction(purchaser, auction_id, commission_agent, commission_data));
+				Self::deposit_event(Event::HammerBritishAuction(
+					purchaser,
+					auction_id,
+					commission_agent,
+					commission_data,
+				));
 				Ok(().into())
 			} else {
 				if auction_bid.last_bid_account.is_none() {
 					ensure!(price >= auction.init_price, Error::<T>::PriceTooLow);
 				}
 
-				Self::save_british_bid(auction_bid, auction, price, purchaser.clone(), auction_id, commission_agent, commission_data)?;
+				Self::save_british_bid(
+					auction_bid,
+					auction,
+					price,
+					purchaser.clone(),
+					auction_id,
+					commission_agent,
+					commission_data,
+				)?;
 
 				Self::deposit_event(Event::BidBritishAuction(purchaser, auction_id));
 				Ok(().into())
@@ -628,7 +670,12 @@ pub mod module {
 				&commission_agent,
 			)?;
 
-			Self::deposit_event(Event::RedeemedBritishAuction(purchaser, auction_id, commission_agent, auction_bid.commission_data));
+			Self::deposit_event(Event::RedeemedBritishAuction(
+				purchaser,
+				auction_id,
+				commission_agent,
+				auction_bid.commission_data,
+			));
 			Ok(().into())
 		}
 
@@ -692,7 +739,16 @@ impl<T: Config> Pallet<T> {
 		commission_agent: Option<T::AccountId>,
 		commission_data: Option<Vec<u8>>,
 	) -> DispatchResult {
-		save_bid!(auction_bid, auction, price, purchaser, auction_id, DutchAuctionBids,commission_agent,commission_data,);
+		save_bid!(
+			auction_bid,
+			auction,
+			price,
+			purchaser,
+			auction_id,
+			DutchAuctionBids,
+			commission_agent,
+			commission_data,
+		);
 		Ok(())
 	}
 
@@ -705,7 +761,16 @@ impl<T: Config> Pallet<T> {
 		commission_agent: Option<T::AccountId>,
 		commission_data: Option<Vec<u8>>,
 	) -> DispatchResult {
-		save_bid!(auction_bid, auction, price, purchaser, auction_id, BritishAuctionBids,commission_agent,commission_data,);
+		save_bid!(
+			auction_bid,
+			auction,
+			price,
+			purchaser,
+			auction_id,
+			BritishAuctionBids,
+			commission_agent,
+			commission_data,
+		);
 		Ok(())
 	}
 }

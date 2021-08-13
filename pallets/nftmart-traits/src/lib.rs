@@ -266,14 +266,17 @@ macro_rules! to_item_vec {
 			TokenIdOf<T>,
 		)>>();
 
-		let commission_agent: Option<(bool, T::AccountId, PerU16)> = $commission_agent.and_then(|ca| {
-			let b: Balance = <T as Config>::Currency::total_balance(&ca).saturated_into();
-			if b < T::ExtraConfig::get_min_commission_agent_deposit() || $obj.commission_rate.is_zero() {
-				Some((false, ca, $obj.commission_rate))
-			} else {
-				Some((true, ca, $obj.commission_rate))
-			}
-		});
+		let commission_agent: Option<(bool, T::AccountId, PerU16)> =
+			$commission_agent.and_then(|ca| {
+				let b: Balance = <T as Config>::Currency::total_balance(&ca).saturated_into();
+				if b < T::ExtraConfig::get_min_commission_agent_deposit() ||
+					$obj.commission_rate.is_zero()
+				{
+					Some((false, ca, $obj.commission_rate))
+				} else {
+					Some((true, ca, $obj.commission_rate))
+				}
+			});
 
 		(items, commission_agent)
 	}};
