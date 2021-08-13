@@ -72,6 +72,7 @@ pub trait NftmartNft<AccountId, ClassId, TokenId> {
 		description: Vec<u8>,
 		royalty_rate: PerU16,
 		properties: Properties,
+		category_id: GlobalId,
 	) -> ResultPost<(AccountId, ClassId)>;
 	fn proxy_mint(
 		delegate: &AccountId,
@@ -125,6 +126,9 @@ pub struct ClassData<BlockNumber> {
 	pub create_block: BlockNumber,
 	#[codec(compact)]
 	pub royalty_rate: PerU16,
+	/// Category of this class.
+	#[codec(compact)]
+	pub category_id: GlobalId,
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]

@@ -70,8 +70,6 @@ macro_rules! delete_auction {
 					T::NFT::unreserve_tokens($who, item.class_id, item.token_id, item.quantity)?;
 				}
 
-				T::ExtraConfig::dec_count_in_category(auction.category_id)?;
-
 				*maybe_auction_bid = None;
 				*maybe_auction = None;
 				Ok((auction, auction_bid))
@@ -166,13 +164,16 @@ pub mod test_helper {
 	where
 		Runtime: crate::Config,
 	{
+		let cate_id = current_gid::<Runtime>();
+		add_category::<Runtime>();
 		assert_ok!(Runtime::NFT::create_class(
 			&who,
 			Vec::from("1"),
 			Vec::from("1"),
 			Vec::from("1"),
 			PerU16::from_percent(5),
-			Properties(ClassProperty::Transferable | ClassProperty::Burnable)
+			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
+			cate_id,
 		));
 	}
 

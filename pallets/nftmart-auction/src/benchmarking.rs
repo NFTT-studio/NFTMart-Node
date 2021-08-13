@@ -34,14 +34,11 @@ benchmarks! {
 			tokens.push((class_id, into!(i+1), into!(10)));
 		}
 
-		let cate_id = current_gid::<T>();
-		add_category::<T>();
 		let auction_id = current_gid::<T>();
 	}: {
 		NftmartAuction::<T>::submit_dutch_auction(
 			RawOrigin::Signed(bob.clone()).into(),
 			into!(NATIVE_CURRENCY_ID),
-			cate_id,
 			into!(ACCURACY), // deposit
 			200, // min_price
 			2000, // max_price

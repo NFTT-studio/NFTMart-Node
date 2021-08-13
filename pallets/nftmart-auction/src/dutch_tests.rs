@@ -12,14 +12,10 @@ fn create_auction(allow_british: bool, max_price: Balance) -> GlobalId {
 	add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
 	add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
 
-	let cate_id = current_gid::<Runtime>();
-	add_category::<Runtime>();
-
 	let auction_id = current_gid::<Runtime>();
 	assert_ok!(NftmartAuction::submit_dutch_auction(
 		Origin::signed(BOB),
 		NATIVE_CURRENCY_ID,
-		cate_id,
 		50,                         // deposit
 		200,                        // min_price
 		max_price,                  // max_price
@@ -59,14 +55,10 @@ fn submit_dutch_auction_should_fail() {
 
 		assert_storage_noop!(current_gid::<Runtime>());
 
-		let cate_id = current_gid::<Runtime>();
-		add_category::<Runtime>();
-
 		assert_noop!(
 			NftmartAuction::submit_dutch_auction(
 				Origin::signed(BOB),
 				NATIVE_CURRENCY_ID,
-				cate_id,
 				50,  // deposit
 				200, // min_price
 				500, // max_price

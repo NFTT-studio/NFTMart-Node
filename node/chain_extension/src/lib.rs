@@ -6,7 +6,7 @@ use frame_support::{
 	log::{error, trace},
 	traits::Randomness,
 };
-use nftmart_traits::{BitFlags, ClassId, ClassProperty, Properties, Signature, TokenId};
+use nftmart_traits::{BitFlags, ClassId, ClassProperty, GlobalId, Properties, Signature, TokenId};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, RetVal, SysConfig, UncheckedFrom,
 };
@@ -58,7 +58,7 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let caller: <Runtime as SysConfig>::AccountId = to_account_id(caller.as_ref())?;
-				let (metadata, name, description, properties): (_, _, _, u8) =
+				let (metadata, name, description, properties, cate_id): (_, _, _, u8, GlobalId) =
 					env.read_as_unbounded(env.in_len())?;
 				let p = Properties(
 					<BitFlags<ClassProperty>>::from_bits(properties)
@@ -71,6 +71,7 @@ where
 					description,
 					PerU16::zero(),
 					p,
+					cate_id,
 				)
 				.map_err(|e| e.error)?;
 				let r = (owner, class_id).encode();

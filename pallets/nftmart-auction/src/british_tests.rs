@@ -23,9 +23,6 @@ macro_rules! submit_british_auction_should_work {
 						(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 40, reserved: 0 })
 					], all_tokens_by(BOB));
 
-					let cate_id = current_gid::<Runtime>();
-					add_category::<Runtime>();
-
 					let bob_free = 100;
 					assert_eq!(free_balance(&BOB), bob_free);
 
@@ -41,7 +38,6 @@ macro_rules! submit_british_auction_should_work {
 						200, // init_price
 						10, // deadline
 						true, // allow_delay
-						cate_id, // category_id
 						vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 						PerU16::zero(),
 					));
@@ -53,7 +49,6 @@ macro_rules! submit_british_auction_should_work {
 						(CLASS_ID0, TOKEN_ID1, AccountToken { quantity: 20, reserved: 20 })
 					], all_tokens_by(BOB));
 					assert_eq!(free_balance(&BOB), bob_free - deposit);
-					assert_eq!(1, categories(cate_id).count);
 					assert!(get_bid(auction_id).is_some());
 					assert!(get_auction(&BOB, auction_id).is_some());
 				});
@@ -72,8 +67,6 @@ fn bid_british_auction_should_work_hammer_price() {
 		add_class::<Runtime>(ALICE);
 		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
 		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
-		let cate_id = current_gid::<Runtime>();
-		add_category::<Runtime>();
 		let auction_id = current_gid::<Runtime>();
 
 		let bob_free = free_balance(&BOB);
@@ -87,7 +80,6 @@ fn bid_british_auction_should_work_hammer_price() {
 			200,                      // init_price
 			10,                       // deadline
 			true,                     // allow_delay
-			cate_id,                  // category_id
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 			PerU16::zero(),
 		));
@@ -128,8 +120,6 @@ macro_rules! bid_british_auction_should_work {
 					add_class::<Runtime>(ALICE);
 					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
 					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
-					let cate_id = current_gid::<Runtime>();
-					add_category::<Runtime>();
 					let auction_id = current_gid::<Runtime>();
 
 					let raise = PerU16::from_percent(10);
@@ -142,7 +132,6 @@ macro_rules! bid_british_auction_should_work {
 						200, // init_price
 						10, // deadline
 						true, // allow_delay
-						cate_id, // category_id
 						vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 						PerU16::zero(),
 					));
@@ -196,8 +185,6 @@ macro_rules! redeem_british_auction_should_work {
 					add_class::<Runtime>(ALICE);
 					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
 					add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
-					let cate_id = current_gid::<Runtime>();
-					add_category::<Runtime>();
 					let auction_id = current_gid::<Runtime>();
 					assert_ok!(NftmartAuction::submit_british_auction(
 						Origin::signed(BOB),
@@ -208,7 +195,6 @@ macro_rules! redeem_british_auction_should_work {
 						200, // init_price
 						10, // deadline
 						$allow_delay, // allow_delay
-						cate_id, // category_id
 						vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 						PerU16::zero(),
 					));
@@ -249,8 +235,6 @@ fn remove_british_auction_should_work() {
 		add_class::<Runtime>(ALICE);
 		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 20, None);
 		add_token::<Runtime>(ALICE, BOB, CLASS_ID0, 40, Some(PerU16::zero()));
-		let cate_id = current_gid::<Runtime>();
-		add_category::<Runtime>();
 		let auction_id = current_gid::<Runtime>();
 
 		let hammer = 500;
@@ -263,7 +247,6 @@ fn remove_british_auction_should_work() {
 			200,                      // init_price
 			10,                       // deadline
 			true,                     // allow_delay
-			cate_id,                  // category_id
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
 			PerU16::zero(),
 		));

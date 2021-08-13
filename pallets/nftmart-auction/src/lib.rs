@@ -220,7 +220,6 @@ pub mod module {
 		pub fn submit_dutch_auction(
 			origin: OriginFor<T>,
 			#[pallet::compact] currency_id: CurrencyIdOf<T>,
-			#[pallet::compact] category_id: GlobalId,
 			#[pallet::compact] deposit: Balance,
 			#[pallet::compact] min_price: Balance,
 			#[pallet::compact] max_price: Balance,
@@ -260,7 +259,6 @@ pub mod module {
 				max_price,
 				deadline,
 				created_block,
-				category_id,
 				items: Vec::with_capacity(items.len()),
 				allow_british_auction,
 				min_raise,
@@ -269,9 +267,6 @@ pub mod module {
 
 			ensure_one_royalty!(items);
 			reserve_and_push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
-
-			// add the auction to a category
-			T::ExtraConfig::inc_count_in_category(category_id)?;
 
 			// generate an auction id
 			let auction_id = T::ExtraConfig::get_then_inc_id()?;
@@ -470,7 +465,6 @@ pub mod module {
 		/// - `init_price`: The initial price for the auction to kick off.
 		/// - `deadline`: A block number which represents the end of the auction activity.
 		/// - `allow_delay`: If ture, in some cases the deadline will be extended.
-		/// - `category_id`: Category Id
 		/// - `items`: Nft list.
 		#[pallet::weight(100_000)]
 		#[transactional]
@@ -484,7 +478,6 @@ pub mod module {
 			#[pallet::compact] init_price: Balance,
 			#[pallet::compact] deadline: BlockNumberOf<T>,
 			allow_delay: bool,
-			#[pallet::compact] category_id: GlobalId,
 			items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
 			#[pallet::compact] commission_rate: PerU16,
 		) -> DispatchResultWithPostInfo {
@@ -520,16 +513,12 @@ pub mod module {
 				init_price,
 				deadline,
 				allow_delay,
-				category_id,
 				items: Vec::with_capacity(items.len()),
 				commission_rate,
 			};
 
 			ensure_one_royalty!(items);
 			reserve_and_push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut auction.items)?;
-
-			// add the auction to a category
-			T::ExtraConfig::inc_count_in_category(category_id)?;
 
 			// generate an auction id
 			let auction_id = T::ExtraConfig::get_then_inc_id()?;

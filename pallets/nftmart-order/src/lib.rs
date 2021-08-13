@@ -23,7 +23,7 @@ pub use module::*;
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct Order<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
+pub struct Order<CurrencyId, BlockNumber, ClassId, TokenId> {
 	/// currency ID.
 	#[codec(compact)]
 	pub currency_id: CurrencyId,
@@ -36,9 +36,6 @@ pub struct Order<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
 	/// This order will be invalidated after `deadline` block number.
 	#[codec(compact)]
 	pub deadline: BlockNumber,
-	/// Category of this order.
-	#[codec(compact)]
-	pub category_id: CategoryId,
 	/// nft list
 	pub items: Vec<OrderItem<ClassId, TokenId>>,
 	/// commission rate
@@ -48,7 +45,7 @@ pub struct Order<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct Offer<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
+pub struct Offer<CurrencyId, BlockNumber, ClassId, TokenId> {
 	/// currency ID.
 	#[codec(compact)]
 	pub currency_id: CurrencyId,
@@ -58,9 +55,6 @@ pub struct Offer<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
 	/// This order will be invalidated after `deadline` block number.
 	#[codec(compact)]
 	pub deadline: BlockNumber,
-	/// Category of this order.
-	#[codec(compact)]
-	pub category_id: CategoryId,
 	/// nft list
 	pub items: Vec<OrderItem<ClassId, TokenId>>,
 	/// commission rate
@@ -87,10 +81,8 @@ pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrenc
 	<T as frame_system::Config>::AccountId,
 >>::CurrencyId;
 pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
-pub type OrderOf<T> =
-	Order<CurrencyIdOf<T>, BlockNumberOf<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
-pub type OfferOf<T> =
-	Offer<CurrencyIdOf<T>, BlockNumberOf<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
+pub type OrderOf<T> = Order<CurrencyIdOf<T>, BlockNumberOf<T>, ClassIdOf<T>, TokenIdOf<T>>;
+pub type OfferOf<T> = Offer<CurrencyIdOf<T>, BlockNumberOf<T>, ClassIdOf<T>, TokenIdOf<T>>;
 
 #[frame_support::pallet]
 pub mod module {
@@ -254,7 +246,6 @@ pub mod module {
 		pub fn submit_order(
 			origin: OriginFor<T>,
 			#[pallet::compact] currency_id: CurrencyIdOf<T>,
-			#[pallet::compact] category_id: GlobalId,
 			#[pallet::compact] deposit: Balance,
 			#[pallet::compact] price: Balance,
 			#[pallet::compact] deadline: BlockNumberOf<T>,
@@ -283,7 +274,6 @@ pub mod module {
 				deposit,
 				price,
 				deadline,
-				category_id,
 				items: Vec::with_capacity(items.len()),
 				commission_rate,
 			};
@@ -291,7 +281,6 @@ pub mod module {
 			ensure_one_royalty!(items);
 			reserve_and_push_tokens::<_, _, _, T::NFT>(Some(&who), &items, &mut order.items)?;
 
-			T::ExtraConfig::inc_count_in_category(category_id)?;
 			let order_id = T::ExtraConfig::get_then_inc_id()?;
 			Orders::<T>::insert(&who, order_id, order);
 			Self::deposit_event(Event::CreatedOrder(who, order_id));
@@ -389,7 +378,6 @@ pub mod module {
 		pub fn submit_offer(
 			origin: OriginFor<T>,
 			#[pallet::compact] currency_id: CurrencyIdOf<T>,
-			#[pallet::compact] category_id: GlobalId,
 			#[pallet::compact] price: Balance,
 			#[pallet::compact] deadline: BlockNumberOf<T>,
 			items: Vec<(ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>)>,
@@ -413,7 +401,6 @@ pub mod module {
 				currency_id,
 				price,
 				deadline,
-				category_id,
 				items: Vec::with_capacity(items.len()),
 				commission_rate,
 			};
@@ -421,7 +408,6 @@ pub mod module {
 			ensure_one_royalty!(items);
 			reserve_and_push_tokens::<_, _, _, T::NFT>(None, &items, &mut offer.items)?;
 
-			T::ExtraConfig::inc_count_in_category(category_id)?;
 			let offer_id = T::ExtraConfig::get_then_inc_id()?;
 			Offers::<T>::insert(&purchaser, offer_id, offer);
 			Self::deposit_event(Event::CreatedOffer(purchaser, offer_id));
@@ -499,7 +485,6 @@ impl<T: Config> Pallet<T> {
 				T::NFT::unreserve_tokens(who, item.class_id, item.token_id, item.quantity)?;
 			}
 
-			T::ExtraConfig::dec_count_in_category(order.category_id)?;
 			*maybe_order = None;
 			Ok(order)
 		})
@@ -512,7 +497,6 @@ impl<T: Config> Pallet<T> {
 			// Can we safely ignore this remain value?
 			let _remain: Balance = T::MultiCurrency::unreserve(offer.currency_id, who, offer.price);
 
-			T::ExtraConfig::dec_count_in_category(offer.category_id)?;
 			*maybe_offer = None;
 			Ok(offer)
 		})

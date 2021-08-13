@@ -2,9 +2,9 @@
 
 use super::NATIVE_CURRENCY_ID;
 use crate::mock::{
-	add_category, add_class, add_token, all_offers, all_orders, all_tokens_by, current_gid,
-	ensure_account, free_balance, last_event, Event, ExtBuilder, Nftmart, NftmartOrder, Origin,
-	ALICE, BOB, CHARLIE, CLASS_ID0, DAVE, TOKEN_ID0, TOKEN_ID1,
+	add_class, add_token, all_offers, all_orders, all_tokens_by, current_gid, ensure_account,
+	free_balance, last_event, Event, ExtBuilder, Nftmart, NftmartOrder, Origin, ALICE, BOB,
+	CHARLIE, CLASS_ID0, DAVE, TOKEN_ID0, TOKEN_ID1,
 };
 use frame_support::assert_ok;
 use orml_nft::AccountToken;
@@ -24,9 +24,6 @@ fn submit_order_should_work() {
 			all_tokens_by(BOB)
 		);
 
-		let cate_id = current_gid();
-		add_category();
-
 		let deposit = 10;
 		let price = 100;
 		let deadline = 2;
@@ -35,7 +32,6 @@ fn submit_order_should_work() {
 		assert_ok!(NftmartOrder::submit_order(
 			Origin::signed(BOB),
 			NATIVE_CURRENCY_ID,
-			cate_id,
 			deposit,
 			price,
 			deadline,
@@ -67,9 +63,6 @@ fn take_order_should_work() {
 			CHARLIE
 		));
 
-		let cate_id = current_gid();
-		add_category();
-
 		let deposit = 10;
 		let price = 100;
 		let deadline = 2;
@@ -78,7 +71,6 @@ fn take_order_should_work() {
 		assert_ok!(NftmartOrder::submit_order(
 			Origin::signed(BOB),
 			NATIVE_CURRENCY_ID,
-			cate_id,
 			deposit,
 			price,
 			deadline,
@@ -124,9 +116,6 @@ fn submit_offer_should_work() {
 		add_token(BOB, 40, Some(PerU16::zero()));
 		assert_eq!(100, free_balance(&CHARLIE));
 
-		let cate_id = current_gid();
-		add_category();
-
 		let price = 100;
 		let deadline = 2;
 
@@ -134,7 +123,6 @@ fn submit_offer_should_work() {
 		assert_ok!(NftmartOrder::submit_offer(
 			Origin::signed(CHARLIE),
 			NATIVE_CURRENCY_ID,
-			cate_id,
 			price,
 			deadline,
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],
@@ -157,9 +145,6 @@ fn take_offer_should_work() {
 		add_token(BOB, 20, None);
 		add_token(BOB, 40, Some(PerU16::zero()));
 
-		let cate_id = current_gid();
-		add_category();
-
 		let price = 100;
 		let deadline = 2;
 
@@ -167,7 +152,6 @@ fn take_offer_should_work() {
 		assert_ok!(NftmartOrder::submit_offer(
 			Origin::signed(CHARLIE),
 			NATIVE_CURRENCY_ID,
-			cate_id,
 			price,
 			deadline,
 			vec![(CLASS_ID0, TOKEN_ID0, 10), (CLASS_ID0, TOKEN_ID1, 20)],

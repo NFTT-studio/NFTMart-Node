@@ -282,7 +282,14 @@ pub fn ensure_bob_balances(amount: Balance) {
 	assert_eq!(Currencies::free_balance(NATIVE_CURRENCY_ID, &BOB), amount);
 }
 
+pub fn get_cid() -> GlobalId {
+	use nftmart_traits::NftmartConfig;
+	<Runtime as Config>::ExtraConfig::peek_next_gid()
+}
+
 pub fn add_class(who: AccountId) {
+	let cate_id = get_cid();
+	add_category();
 	let metadata = vec![1];
 	assert_ok!(Nftmart::create_class(
 		Origin::signed(who),
@@ -290,7 +297,8 @@ pub fn add_class(who: AccountId) {
 		vec![1],
 		vec![1],
 		PerU16::from_percent(5),
-		Properties(ClassProperty::Transferable | ClassProperty::Burnable)
+		Properties(ClassProperty::Transferable | ClassProperty::Burnable),
+		cate_id
 	));
 }
 

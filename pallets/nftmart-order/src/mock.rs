@@ -283,13 +283,16 @@ pub fn last_event() -> Event {
 }
 
 pub fn add_class(who: AccountId) {
+	let cate_id = current_gid();
+	add_category();
 	assert_ok!(Nftmart::create_class(
 		Origin::signed(who),
 		vec![1],
 		vec![1],
 		vec![1],
 		PerU16::from_percent(5),
-		Properties(ClassProperty::Transferable | ClassProperty::Burnable)
+		Properties(ClassProperty::Transferable | ClassProperty::Burnable),
+		cate_id
 	));
 }
 

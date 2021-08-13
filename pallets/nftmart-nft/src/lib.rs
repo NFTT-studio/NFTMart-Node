@@ -89,6 +89,7 @@ pub mod migrations {
 				name: self.name,
 				description: self.description,
 				royalty_rate: PerU16::zero(),
+				category_id: Default::default(),
 			}
 		}
 	}
@@ -306,6 +307,7 @@ pub mod module {
 					description: description.clone(),
 					create_block: <frame_system::Pallet<T>>::block_number(),
 					royalty_rate: *royalty_rate,
+					category_id: Default::default(),
 				};
 				orml_nft::Pallet::<T>::create_class(&owner, class_metadata.clone(), data).unwrap();
 
@@ -382,11 +384,20 @@ pub mod module {
 			metadata: NFTMetadata,
 			name: Vec<u8>,
 			description: Vec<u8>,
-			royalty_rate: PerU16,
+			#[pallet::compact] royalty_rate: PerU16,
 			properties: Properties,
+			#[pallet::compact] category_id: GlobalId,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			Self::do_create_class(&who, metadata, name, description, royalty_rate, properties)?;
+			Self::do_create_class(
+				&who,
+				metadata,
+				name,
+				description,
+				royalty_rate,
+				properties,
+				category_id,
+			)?;
 			Ok(().into())
 		}
 
@@ -696,6 +707,7 @@ impl<T: Config> Pallet<T> {
 		description: Vec<u8>,
 		royalty_rate: PerU16,
 		properties: Properties,
+		category_id: GlobalId,
 	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
 		ensure!(T::ExtraConfig::is_in_whitelist(who), Error::<T>::AccountNotInWhitelist);
 
@@ -732,7 +744,9 @@ impl<T: Config> Pallet<T> {
 			description,
 			create_block: <frame_system::Pallet<T>>::block_number(),
 			royalty_rate,
+			category_id,
 		};
+		T::ExtraConfig::inc_count_in_category(category_id)?;
 		orml_nft::Pallet::<T>::create_class(&owner, metadata, data)?;
 
 		Self::deposit_event(Event::CreatedClass(owner.clone(), next_id));
@@ -934,8 +948,17 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 		description: Vec<u8>,
 		royalty_rate: PerU16,
 		properties: Properties,
+		category_id: GlobalId,
 	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
-		Self::do_create_class(who, metadata, name, description, royalty_rate, properties)
+		Self::do_create_class(
+			who,
+			metadata,
+			name,
+			description,
+			royalty_rate,
+			properties,
+			category_id,
+		)
 	}
 
 	#[allow(clippy::type_complexity)]

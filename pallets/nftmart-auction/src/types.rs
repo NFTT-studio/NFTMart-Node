@@ -2,7 +2,7 @@ use crate::*;
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
+pub struct BritishAuction<CurrencyId, BlockNumber, ClassId, TokenId> {
 	/// currency ID for this auction
 	#[codec(compact)]
 	pub currency_id: CurrencyId,
@@ -26,9 +26,6 @@ pub struct BritishAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId>
 	pub deadline: BlockNumber,
 	/// If true, the real deadline will be max(deadline, last_bid_block + delay).
 	pub allow_delay: bool,
-	/// Category of this auction.
-	#[codec(compact)]
-	pub category_id: CategoryId,
 	/// nft list
 	pub items: Vec<OrderItem<ClassId, TokenId>>,
 	/// commission rate
@@ -53,11 +50,9 @@ pub struct BritishAuctionBid<AccountId, BlockNumber> {
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct DutchAuction<CurrencyId, BlockNumber, CategoryId, ClassId, TokenId> {
+pub struct DutchAuction<CurrencyId, BlockNumber, ClassId, TokenId> {
 	#[codec(compact)]
 	pub currency_id: CurrencyId,
-	#[codec(compact)]
-	pub category_id: CategoryId,
 	#[codec(compact)]
 	pub deposit: Balance,
 	#[codec(compact)]
@@ -100,9 +95,9 @@ pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrenc
 pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BritishAuctionOf<T> =
-	BritishAuction<CurrencyIdOf<T>, BlockNumberFor<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
+	BritishAuction<CurrencyIdOf<T>, BlockNumberFor<T>, ClassIdOf<T>, TokenIdOf<T>>;
 pub type BritishAuctionBidOf<T> = BritishAuctionBid<AccountIdOf<T>, BlockNumberFor<T>>;
 pub type DutchAuctionOf<T> =
-	DutchAuction<CurrencyIdOf<T>, BlockNumberFor<T>, GlobalId, ClassIdOf<T>, TokenIdOf<T>>;
+	DutchAuction<CurrencyIdOf<T>, BlockNumberFor<T>, ClassIdOf<T>, TokenIdOf<T>>;
 pub type DutchAuctionBidOf<T> = DutchAuctionBid<AccountIdOf<T>, BlockNumberFor<T>>;
 pub const DESC_INTERVAL: BlockNumber = time::MINUTES * 30;

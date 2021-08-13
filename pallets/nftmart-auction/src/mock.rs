@@ -310,6 +310,7 @@ pub fn reserved_balance(who: &AccountId) -> Balance {
 	<Runtime as Config>::Currency::reserved_balance(who)
 }
 
+#[allow(dead_code)]
 pub fn categories(cate_id: GlobalId) -> nftmart_traits::CategoryData {
 	nftmart_config::Pallet::<Runtime>::categories(cate_id).unwrap()
 }
