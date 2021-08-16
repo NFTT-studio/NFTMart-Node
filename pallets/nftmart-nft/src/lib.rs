@@ -613,6 +613,8 @@ pub mod module {
 				KeepAlive,
 			)?;
 
+			T::ExtraConfig::dec_count_in_category(data.category_id)?;
+
 			// transfer all free from origin to dest
 			orml_nft::Pallet::<T>::destroy_class(&who, class_id)?;
 
