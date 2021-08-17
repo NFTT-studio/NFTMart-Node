@@ -158,13 +158,13 @@ async function main() {
     await submit_british_auction(ws, "//Alice", true, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
     await submit_british_auction(ws, "//Alice", false, 10, [[classId, 0, 1], [classId, 1, 2], [classId, 2, 3]]);
 
-    await remove_dutch_auction(ws, "//Alice", 5);
-    await remove_british_auction(ws, "//Alice", 7);
+    await remove_dutch_auction(ws, "//Alice", 9);
+    await remove_british_auction(ws, "//Alice", 11);
 
-    await bid_dutch_auction(ws, "//Bob", "//Alice", 6, 33);
-    await bid_british_auction(ws, "//Bob", "//Alice", 8, 30000);
+    await bid_dutch_auction(ws, "//Bob", "//Alice", 8, 33);
+    await bid_british_auction(ws, "//Bob", "//Alice", 10, 30000);
 
-    await redeem_british_auction(ws, "//Bob", "//Alice", 10);
+    await redeem_british_auction(ws, "//Bob", "//Alice", 8);
     await redeem_dutch_auction(ws, "//Bob", "//Alice", 10);
   });
 
@@ -883,7 +883,7 @@ async function show_category(ws) {
     const len = key.length;
     const cateId = Buffer.from(key.buffer.slice(len - 8, len)).readBigUInt64LE();
     cateIds.push(cateId);
-    console.log(cateId.toString(), data.toHuman());
+    console.log(cateId.toString(), data.toJSON());
     cateCount++;
   }
   console.log(`cateCount is ${cateCount}.`);

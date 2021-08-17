@@ -314,6 +314,7 @@ pub fn testnet_genesis(
 						br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec(),
 					)
 					.unwrap(),
+					category_id: 0,
 					name: String::from_utf8(b"class name31".to_vec()).unwrap(),
 					description: String::from_utf8(b"class description31".to_vec()).unwrap(),
 					properties: 1 | 2,
@@ -383,6 +384,7 @@ pub fn testnet_genesis(
 						br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec(),
 					)
 					.unwrap(),
+					category_id: 0,
 					name: String::from_utf8(b"class name55".to_vec()).unwrap(),
 					description: String::from_utf8(b"class description55".to_vec()).unwrap(),
 					properties: 1 | 2,
@@ -454,6 +456,7 @@ pub fn testnet_genesis(
 		nftmart_conf: node_runtime::NftmartConfConfig {
 			white_list: endowed_accounts,
 			auction_close_delay: nftmart_traits::time::MINUTES * 10,
+			category_list: vec![b"saaaa1".to_vec(), b"saaaa2".to_vec(), b"saaaa3".to_vec()],
 			..Default::default()
 		},
 	}

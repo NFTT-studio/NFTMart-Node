@@ -177,6 +177,7 @@ pub struct OrderItem<ClassId, TokenId> {
 pub struct ClassConfig<ClassId, AccountId, TokenId> {
 	pub class_id: ClassId,
 	pub class_metadata: String,
+	pub category_id: GlobalId,
 	pub name: String,
 	pub description: String,
 	pub royalty_rate: PerU16,

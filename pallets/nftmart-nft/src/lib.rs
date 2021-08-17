@@ -267,6 +267,7 @@ pub mod module {
 			for ClassConfig {
 				class_id,
 				class_metadata,
+				category_id,
 				name,
 				description,
 				royalty_rate,
@@ -307,8 +308,9 @@ pub mod module {
 					description: description.clone(),
 					create_block: <frame_system::Pallet<T>>::block_number(),
 					royalty_rate: *royalty_rate,
-					category_id: Default::default(),
+					category_id: *category_id,
 				};
+				T::ExtraConfig::inc_count_in_category(*category_id).unwrap();
 				orml_nft::Pallet::<T>::create_class(&owner, class_metadata.clone(), data).unwrap();
 
 				if max_class_id < *class_id {

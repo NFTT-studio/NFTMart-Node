@@ -59,6 +59,7 @@ pub mod module {
 		pub min_order_deposit: Balance,
 		pub auction_close_delay: BlockNumberFor<T>,
 		pub white_list: Vec<T::AccountId>,
+		pub category_list: Vec<NFTMetadata>,
 		pub _phantom: PhantomData<T>,
 	}
 
@@ -73,6 +74,7 @@ pub mod module {
 				min_order_deposit: ACCURACY,
 				auction_close_delay: time::MINUTES.into(),
 				white_list: vec![],
+				category_list: vec![b"saaaa1".to_vec(), b"saaaa2".to_vec(), b"saaaa3".to_vec()],
 				_phantom: Default::default(),
 			}
 		}
@@ -96,7 +98,10 @@ pub mod module {
 			MinOrderDeposit::<T>::put(self.min_order_deposit);
 			AuctionCloseDelay::<T>::put(self.auction_close_delay);
 			for a in &self.white_list {
-				AccountWhitelist::<T>::insert(a, ());
+				<Pallet<T> as NftmartConfig<T::AccountId, T::BlockNumber>>::do_add_whitelist(a);
+			}
+			for c in &self.category_list {
+				<Pallet<T> as NftmartConfig<T::AccountId, T::BlockNumber>>::do_create_category(c.clone()).unwrap();
 			}
 		}
 	}
