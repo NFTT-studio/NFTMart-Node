@@ -116,6 +116,7 @@ async function main() {
     const sudo = '//Alice';
     await add_whitelist(ws, keyring, sudo, "//Alice2");
     await update_auction_close_delay(ws, 3);
+    await create_category(ws, keyring, "//Alice", "my category");
 
     const classId = 56;
 
@@ -132,7 +133,6 @@ async function main() {
     await burn_nft(ws, keyring, "//Bob", classId + 1, 0, 20);
     await destroy_class(ws, keyring, "//Bob", classId + 1);
 
-    await create_category(ws, keyring, "//Alice", "my category");
     await submit_order(ws, keyring, "//Alice", [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
     await submit_order(ws, keyring, "//Alice", [[classId, 0, 3], [classId, 1, 3], [classId, 2, 3]]);
     await submit_offer(ws, keyring, "//Bob", [[classId, 0, 2], [classId, 1, 2], [classId, 2, 2]]);
@@ -508,7 +508,6 @@ async function submit_british_auction(ws, account, allow_delay, deadline_minute,
   account = keyring.addFromUri(account);
 
   let min_deposit = (await Global_Api.query.nftmartConf.minOrderDeposit()).toString();
-  const categoryId = 0;
   const init_price = 10 * unit;
   const hammer_price = bnToBn('10000').mul(unit);
   // `float2PerU16(0.5)`:
@@ -519,7 +518,7 @@ async function submit_british_auction(ws, account, allow_delay, deadline_minute,
   const commission = float2PerU16(0.1); // 10%
   const call = Global_Api.tx.nftmartAuction.submitBritishAuction(
     NativeCurrencyID, hammer_price, minRaise, min_deposit, init_price,
-    deadlineBlock, allow_delay, categoryId, tokens, commission);
+    deadlineBlock, allow_delay, tokens, commission);
 
   const feeInfo = await call.paymentInfo(account);
   console.log("The fee of the call: %s NMT", feeInfo.partialFee / unit);
@@ -674,7 +673,6 @@ async function submit_dutch_auction(ws, account, allow_british_auction, deadline
   account = keyring.addFromUri(account);
 
   let min_deposit = (await Global_Api.query.nftmartConf.minOrderDeposit()).toString();
-  const categoryId = 0;
   const min_price = 10 * unit;
   const max_price = 100 * unit;
   // `float2PerU16(0.5)`:
@@ -684,7 +682,7 @@ async function submit_dutch_auction(ws, account, allow_british_auction, deadline
   const minRaise = float2PerU16(0.5); // 50%
   const commission = float2PerU16(0.1); // 10%
   const call = Global_Api.tx.nftmartAuction.submitDutchAuction(
-    NativeCurrencyID, categoryId, min_deposit, min_price, max_price,
+    NativeCurrencyID, min_deposit, min_price, max_price,
     deadlineBlock, tokens, allow_british_auction, minRaise, commission);
 
   const feeInfo = await call.paymentInfo(account);
@@ -765,13 +763,11 @@ async function submit_offer(ws, keyring, account, tokens) {
   account = keyring.addFromUri(account);
 
   const price = unit.mul(bnToBn('20'));
-  const categoryId = 0;
   const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
   const commissionRate = float2PerU16(0.1);
 
   const call = Global_Api.tx.nftmartOrder.submitOffer(
     NativeCurrencyID,
-    categoryId,
     price,
     currentBlockNumber.add(bnToBn('300000')),
     tokens,
@@ -857,13 +853,11 @@ async function submit_order(ws, keyring, account, tokens) {
 
   const price = unit.mul(bnToBn('20'));
   const deposit = unit.mul(bnToBn('5'));
-  const categoryId = 0;
   const currentBlockNumber = bnToBn(await Global_Api.query.system.number());
   const commissionRate = float2PerU16(0.1);
 
   const call = Global_Api.tx.nftmartOrder.submitOrder(
     NativeCurrencyID,
-    categoryId,
     deposit,
     price,
     currentBlockNumber.add(bnToBn('300000')),
@@ -1236,6 +1230,7 @@ async function create_class(ws, keyring, signer) {
   const description = 'demo class description';
   const metadata = 'demo class metadata';
   const royalty_rate = float2PerU16(0.20);
+  const cate = 0;
 
   const deposit = await classDeposit(metadata, name, description);
   console.log("create class deposit %s", deposit);
@@ -1243,7 +1238,7 @@ async function create_class(ws, keyring, signer) {
   // 	Transferable = 0b00000001,
   // 	Burnable = 0b00000010,
   let [a, b] = waitTx(Global_ModuleMetadata);
-  await Global_Api.tx.nftmart.createClass(metadata, name, description, royalty_rate, 1 | 2).signAndSend(signer, a);
+  await Global_Api.tx.nftmart.createClass(metadata, name, description, royalty_rate, 1 | 2, cate).signAndSend(signer, a);
   await b();
 }
 

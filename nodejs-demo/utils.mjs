@@ -138,7 +138,8 @@ export async function getApi(dest) {
       name: 'Vec<u8>',
       description: 'Vec<u8>',
       createBlock: 'Compact<BlockNumberOf>',
-      royalty_rate: 'Compact<PerU16>',
+      royaltyRate: 'Compact<PerU16>',
+      categoryId: 'Compact<CategoryId>',
     },
 
     TokenInfoOf: {
@@ -152,7 +153,7 @@ export async function getApi(dest) {
       createBlock: 'Compact<BlockNumberOf>',
       royalty_rate: 'Compact<PerU16>',
       creator: 'AccountId',
-      royalty_beneficiary: 'AccountId',
+      royaltyBeneficiary: 'AccountId',
     },
 
     AccountToken: {
@@ -176,7 +177,6 @@ export async function getApi(dest) {
       deposit: 'Compact<Balance>',
       price: 'Compact<Balance>',
       deadline: 'Compact<BlockNumberOf>',
-      categoryId: 'Compact<CategoryId>',
       items: 'Vec<OrderItem>',
       commissionRate: 'Compact<PerU16>',
     },
@@ -185,7 +185,6 @@ export async function getApi(dest) {
       currencyId: 'Compact<CurrencyId>',
       price: 'Compact<Balance>',
       deadline: 'Compact<BlockNumberOf>',
-      categoryId: 'Compact<CategoryId>',
       items: 'Vec<OrderItem>',
       commissionRate: 'Compact<PerU16>',
     },
@@ -198,7 +197,6 @@ export async function getApi(dest) {
       initPrice: 'Compact<Balance>',
       deadline: 'Compact<BlockNumberOf>',
       allowDelay: 'bool',
-      categoryId: 'Compact<CategoryId>',
       items: 'Vec<OrderItem>',
       commissionRate: 'Compact<PerU16>',
     },
@@ -213,7 +211,6 @@ export async function getApi(dest) {
 
     DutchAuctionOf: {
       currencyId: 'Compact<CurrencyId>',
-      categoryId: 'Compact<CategoryId>',
       deposit: 'Compact<Balance>',
       minPrice: 'Compact<Balance>',
       maxPrice: 'Compact<Balance>',
