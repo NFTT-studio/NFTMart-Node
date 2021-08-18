@@ -58,18 +58,19 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let caller: <Runtime as SysConfig>::AccountId = to_account_id(caller.as_ref())?;
-				let (metadata, name, description, properties, cate_id): (_, _, _, u8, GlobalId) =
+				let (metadata, name, description, properties, royalty_rate, cate_id): (_, _, _, u8, u16, GlobalId) =
 					env.read_as_unbounded(env.in_len())?;
 				let p = Properties(
 					<BitFlags<ClassProperty>>::from_bits(properties)
 						.map_err(|_| "invalid class properties value")?,
 				);
+				let royalty_rate = PerU16::from_parts(royalty_rate);
 				let (owner, class_id) = nftmart_nft::Pallet::<Runtime>::do_create_class(
 					&caller,
 					metadata,
 					name,
 					description,
-					PerU16::zero(),
+					royalty_rate,
 					p,
 					cate_id,
 				)
