@@ -187,7 +187,7 @@ fn update_token_royalty() {
 #[test]
 fn create_class_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
-		let cate_id = get_cid();
+		let cate_id1 = get_cid();
 		add_category();
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
@@ -196,7 +196,7 @@ fn create_class_should_work() {
 			METADATA.to_vec(),
 			PerU16::from_percent(5),
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
-			cate_id
+			vec![cate_id1]
 		));
 
 		let event = Event::Nftmart(crate::Event::CreatedClass(class_id_account(), CLASS_ID));
@@ -219,7 +219,7 @@ fn create_class_should_work() {
 #[test]
 fn create_class_should_fail() {
 	ExtBuilder::default().build().execute_with(|| {
-		let cate_id = get_cid();
+		let cate_id1 = get_cid();
 		add_category();
 		assert_noop!(
 			Nftmart::create_class(
@@ -229,7 +229,7 @@ fn create_class_should_fail() {
 				METADATA.to_vec(),
 				PerU16::from_percent(5),
 				Properties(ClassProperty::Transferable | ClassProperty::Burnable),
-				cate_id
+				vec![cate_id1]
 			),
 			pallet_balances::Error::<Runtime, _>::InsufficientBalance
 		);
@@ -240,7 +240,7 @@ fn create_class_should_fail() {
 fn mint_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		let (metadata, reserved) = {
-			let cate_id = get_cid();
+			let cate_id1 = get_cid();
 			add_category();
 			assert_ok!(Nftmart::create_class(
 				Origin::signed(ALICE),
@@ -249,7 +249,7 @@ fn mint_should_work() {
 				METADATA.to_vec(),
 				PerU16::from_percent(5),
 				Properties(ClassProperty::Transferable | ClassProperty::Burnable),
-				cate_id
+				vec![cate_id1]
 			));
 			let event = Event::Nftmart(crate::Event::CreatedClass(class_id_account(), CLASS_ID));
 			assert_eq!(last_event(), event);
@@ -378,7 +378,7 @@ fn transfer_should_fail() {
 	});
 
 	ExtBuilder::default().build().execute_with(|| {
-		let cate_id = get_cid();
+		let cate_id1 = get_cid();
 		add_category();
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
@@ -387,7 +387,7 @@ fn transfer_should_fail() {
 			METADATA.to_vec(),
 			PerU16::from_percent(5),
 			Default::default(),
-			cate_id
+			vec![cate_id1]
 		));
 		let deposit = Nftmart::mint_token_deposit(METADATA.len() as u32);
 		assert_eq!(Balances::deposit_into_existing(&class_id_account(), deposit).is_ok(), true);
@@ -419,7 +419,7 @@ fn burn_should_work() {
 	)
 	.1;
 	ExtBuilder::default().build().execute_with(|| {
-		let cate_id = get_cid();
+		let cate_id1 = get_cid();
 		add_category();
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
@@ -428,7 +428,7 @@ fn burn_should_work() {
 			description,
 			PerU16::from_percent(5),
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
-			cate_id
+			vec![cate_id1]
 		));
 		assert_eq!(
 			Balances::deposit_into_existing(&class_id_account(), deposit_token).is_ok(),
@@ -497,7 +497,7 @@ fn burn_should_fail() {
 	});
 
 	ExtBuilder::default().build().execute_with(|| {
-		let cate_id = get_cid();
+		let cate_id1 = get_cid();
 		add_category();
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
@@ -506,7 +506,7 @@ fn burn_should_fail() {
 			METADATA.to_vec(),
 			PerU16::from_percent(5),
 			Default::default(),
-			cate_id
+			vec![cate_id1]
 		));
 		add_token(BOB, 1, None);
 		assert_noop!(
@@ -532,7 +532,7 @@ fn destroy_class_should_work() {
 		assert_eq!(reserved_balance(&class_id_account()), 0);
 		assert_eq!(free_balance(&class_id_account()), 0);
 		assert_eq!(free_balance(&ALICE), 100000);
-		let cate_id = get_cid();
+		let cate_id1 = get_cid();
 		add_category();
 		assert_ok!(Nftmart::create_class(
 			Origin::signed(ALICE),
@@ -541,7 +541,7 @@ fn destroy_class_should_work() {
 			description,
 			PerU16::from_percent(5),
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
-			cate_id
+			vec![cate_id1]
 		));
 		assert_eq!(free_balance(&ALICE), 100000 - deposit_class);
 		assert_eq!(free_balance(&class_id_account()), 0);

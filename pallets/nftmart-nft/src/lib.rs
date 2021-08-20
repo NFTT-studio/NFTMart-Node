@@ -89,7 +89,7 @@ pub mod migrations {
 				name: self.name,
 				description: self.description,
 				royalty_rate: PerU16::zero(),
-				category_id: Default::default(),
+				category_ids: Default::default(),
 			}
 		}
 	}
@@ -210,6 +210,8 @@ pub mod module {
 		DescriptionTooLong,
 		/// account not in whitelist
 		AccountNotInWhitelist,
+		CategoryOutOfBound,
+		DuplicatedCategories,
 		RoyaltyRateTooHigh,
 	}
 
@@ -267,7 +269,7 @@ pub mod module {
 			for ClassConfig {
 				class_id,
 				class_metadata,
-				category_id,
+				category_ids,
 				name,
 				description,
 				royalty_rate,
@@ -308,9 +310,11 @@ pub mod module {
 					description: description.clone(),
 					create_block: <frame_system::Pallet<T>>::block_number(),
 					royalty_rate: *royalty_rate,
-					category_id: *category_id,
+					category_ids: category_ids.clone(),
 				};
-				T::ExtraConfig::inc_count_in_category(*category_id).unwrap();
+				for category_id in category_ids {
+					T::ExtraConfig::inc_count_in_category(*category_id).unwrap();
+				}
 				orml_nft::Pallet::<T>::create_class(&owner, class_metadata.clone(), data).unwrap();
 
 				if max_class_id < *class_id {
@@ -388,7 +392,7 @@ pub mod module {
 			description: Vec<u8>,
 			#[pallet::compact] royalty_rate: PerU16,
 			properties: Properties,
-			#[pallet::compact] category_id: GlobalId,
+			category_ids: Vec<GlobalId>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			Self::do_create_class(
@@ -398,7 +402,7 @@ pub mod module {
 				description,
 				royalty_rate,
 				properties,
-				category_id,
+				category_ids,
 			)?;
 			Ok(().into())
 		}
@@ -615,7 +619,9 @@ pub mod module {
 				KeepAlive,
 			)?;
 
-			T::ExtraConfig::dec_count_in_category(data.category_id)?;
+			for category_id in data.category_ids {
+				T::ExtraConfig::dec_count_in_category(category_id)?;
+			}
 
 			// transfer all free from origin to dest
 			orml_nft::Pallet::<T>::destroy_class(&who, class_id)?;
@@ -711,9 +717,14 @@ impl<T: Config> Pallet<T> {
 		description: Vec<u8>,
 		royalty_rate: PerU16,
 		properties: Properties,
-		category_id: GlobalId,
+		category_ids: Vec<GlobalId>,
 	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
 		ensure!(T::ExtraConfig::is_in_whitelist(who), Error::<T>::AccountNotInWhitelist);
+		ensure!(category_ids.len() <= MAX_CATEGORY_PER_CLASS, Error::<T>::CategoryOutOfBound);
+		ensure!(category_ids.len() >= 1, Error::<T>::CategoryOutOfBound);
+		if category_ids.len() == 2 {
+			ensure!(category_ids[0] != category_ids[1], Error::<T>::DuplicatedCategories);
+		}
 
 		ensure!(name.len() <= 20, Error::<T>::NameTooLong); // TODO: pass configurations from runtime configuration.
 		ensure!(description.len() <= 256, Error::<T>::DescriptionTooLong); // TODO: pass configurations from runtime configuration.
@@ -741,6 +752,9 @@ impl<T: Config> Pallet<T> {
 			Zero::zero(),
 		)?;
 
+		for category_id in &category_ids {
+			T::ExtraConfig::inc_count_in_category(*category_id)?;
+		}
 		let data: ClassData<BlockNumberOf<T>> = ClassData {
 			deposit,
 			properties,
@@ -748,9 +762,9 @@ impl<T: Config> Pallet<T> {
 			description,
 			create_block: <frame_system::Pallet<T>>::block_number(),
 			royalty_rate,
-			category_id,
+			category_ids,
 		};
-		T::ExtraConfig::inc_count_in_category(category_id)?;
+
 		orml_nft::Pallet::<T>::create_class(&owner, metadata, data)?;
 
 		Self::deposit_event(Event::CreatedClass(owner.clone(), next_id));
@@ -952,7 +966,7 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 		description: Vec<u8>,
 		royalty_rate: PerU16,
 		properties: Properties,
-		category_id: GlobalId,
+		category_ids: Vec<GlobalId>,
 	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
 		Self::do_create_class(
 			who,
@@ -961,7 +975,7 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 			description,
 			royalty_rate,
 			properties,
-			category_id,
+			category_ids,
 		)
 	}
 

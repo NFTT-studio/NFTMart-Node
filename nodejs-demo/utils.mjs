@@ -107,7 +107,7 @@ export async function getApi(dest) {
     CurrencyIdOf: 'CurrencyId',
     Amount: 'i128',
     AmountOf: 'Amount',
-    CategoryId: 'u32',
+    CategoryId: 'GlobalId',
     CategoryIdOf: 'CategoryId',
     ClassId: 'u32',
     ClassIdOf: 'ClassId',
@@ -139,7 +139,7 @@ export async function getApi(dest) {
       description: 'Vec<u8>',
       createBlock: 'Compact<BlockNumberOf>',
       royaltyRate: 'Compact<PerU16>',
-      categoryId: 'Compact<CategoryId>',
+      categoryIds: 'Vec<CategoryId>',
     },
 
     TokenInfoOf: {

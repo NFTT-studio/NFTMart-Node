@@ -288,7 +288,9 @@ pub fn get_cid() -> GlobalId {
 }
 
 pub fn add_class(who: AccountId) {
-	let cate_id = get_cid();
+	let cate_id1 = get_cid();
+	add_category();
+	let cate_id2 = get_cid();
 	add_category();
 	let metadata = vec![1];
 	assert_ok!(Nftmart::create_class(
@@ -298,7 +300,7 @@ pub fn add_class(who: AccountId) {
 		vec![1],
 		PerU16::from_percent(5),
 		Properties(ClassProperty::Transferable | ClassProperty::Burnable),
-		cate_id
+		vec![cate_id1, cate_id2]
 	));
 }
 

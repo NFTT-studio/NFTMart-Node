@@ -164,7 +164,9 @@ pub mod test_helper {
 	where
 		Runtime: crate::Config,
 	{
-		let cate_id = current_gid::<Runtime>();
+		let cate_id1 = current_gid::<Runtime>();
+		add_category::<Runtime>();
+		let cate_id2 = current_gid::<Runtime>();
 		add_category::<Runtime>();
 		assert_ok!(Runtime::NFT::create_class(
 			&who,
@@ -173,7 +175,7 @@ pub mod test_helper {
 			Vec::from("1"),
 			PerU16::from_percent(5),
 			Properties(ClassProperty::Transferable | ClassProperty::Burnable),
-			cate_id,
+			vec![cate_id1, cate_id2],
 		));
 	}
 

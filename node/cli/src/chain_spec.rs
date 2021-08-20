@@ -314,7 +314,7 @@ pub fn testnet_genesis(
 						br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec(),
 					)
 					.unwrap(),
-					category_id: 0,
+					category_ids: vec![0],
 					name: String::from_utf8(b"class name31".to_vec()).unwrap(),
 					description: String::from_utf8(b"class description31".to_vec()).unwrap(),
 					properties: 1 | 2,
@@ -384,7 +384,7 @@ pub fn testnet_genesis(
 						br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec(),
 					)
 					.unwrap(),
-					category_id: 0,
+					category_ids: vec![0],
 					name: String::from_utf8(b"class name55".to_vec()).unwrap(),
 					description: String::from_utf8(b"class description55".to_vec()).unwrap(),
 					properties: 1 | 2,

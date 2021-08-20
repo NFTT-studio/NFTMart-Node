@@ -9,6 +9,8 @@ pub type Balance = u128;
 /// A unit balance
 pub const ACCURACY: Balance = 1_000_000_000_000u128;
 
+pub const MAX_CATEGORY_PER_CLASS: usize = 2;
+
 /// A type for ORML currency Id
 pub type CurrencyId = u32;
 

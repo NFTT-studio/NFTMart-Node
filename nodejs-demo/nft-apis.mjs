@@ -1238,7 +1238,7 @@ async function create_class(ws, keyring, signer) {
   // 	Transferable = 0b00000001,
   // 	Burnable = 0b00000010,
   let [a, b] = waitTx(Global_ModuleMetadata);
-  await Global_Api.tx.nftmart.createClass(metadata, name, description, royalty_rate, 1 | 2, cate).signAndSend(signer, a);
+  await Global_Api.tx.nftmart.createClass(metadata, name, description, royalty_rate, 1 | 2, [cate]).signAndSend(signer, a);
   await b();
 }
 
