@@ -1,16 +1,16 @@
 # NFTMART
 
-[中文版](./README_zh.md)
+[English Version](./README.md)
 
-## Architecture overview
+## 整体架构
 ![architecture overview](docs/nftmart-architecture-overview.jpeg)
 
-## Installation
+## 安装
 
-### Prerequisite
-Please follow this [link](https://substrate.dev/docs/en/knowledgebase/getting-started/) to prepare an development environment.
+### 环境搭建
+参考文档 [Getting Started](https://substrate.dev/docs/en/knowledgebase/getting-started/) 搭建开发环境.
 
-### Build and run a testing environment locally
+### 在本地构建节点二进制并运行
 
 ```shell
 git clone https://github.com/NFTT-studio/nftmart-node
@@ -29,7 +29,7 @@ target/release/substrate -d target/dev -lruntime=debug \
   --ws-max-connections=10000
 ```
 
-### Build and run a testing docker environment locally
+### 打包 Docker 镜像并启动多节点网络
 
 ```shell
 
@@ -98,7 +98,7 @@ docker run -d --restart unless-stopped --name dev-node1 \
 ```
 
 
-## nftmart-fontend
+## 在本地启动前端 nftmart-fontend
 ```
 docker run -d --restart unless-stopped \
 	--publish 18001:5000 \
@@ -107,7 +107,7 @@ docker run -d --restart unless-stopped \
 	maomaotp/nftmart-fontend:040201 sh /start.sh
 ```
 
-## polkadot-js-apps
+## 在本地运行区块浏览器 polkadot-js-apps
 ```
 docker run -d  \
 	--name polkadot-ui  \
@@ -118,7 +118,7 @@ docker run -d  \
 
 
 
-## Use Nodejs to access nftmart blockchain
+## 用 Node.js 脚本提交链上交易 / 查询链上状态
 
 ```shell
 git clone https://github.com/NFTT-studio/nftmart-node
