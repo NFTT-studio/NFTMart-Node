@@ -13,8 +13,8 @@
 ### 在本地构建节点二进制并运行
 
 ```shell
-git clone https://github.com/NFTT-studio/nftmart
-cd nftmart
+git clone https://github.com/NFTT-studio/nftmart-node
+cd nftmart-node
 cargo build --release --bin substrate
 target/release/substrate -d target/dev -lruntime=debug \
   --max-runtime-instances=30 \
@@ -34,8 +34,8 @@ target/release/substrate -d target/dev -lruntime=debug \
 ```shell
 
 # To build a docker image.
-git clone https://github.com/NFTT-studio/nftmart
-cd nftmart
+git clone https://github.com/NFTT-studio/nftmart-node
+cd nftmart-node
 NFTMARTROOT=`pwd`
 cargo build --release --bin substrate
 cd $NFTMARTROOT/target/release
@@ -121,8 +121,8 @@ docker run -d  \
 ## 用 Node.js 脚本提交链上交易 / 查询链上状态
 
 ```shell
-git clone https://github.com/NFTT-studio/nftmart
-cd nftmart/nodejs-demo
+git clone https://github.com/NFTT-studio/nftmart-node
+cd nftmart-node/nodejs-demo
 yarn install
 
 # Create a class(ID: 0) by Alice with local testing node.
