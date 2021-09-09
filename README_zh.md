@@ -10,6 +10,14 @@
 ### 环境搭建
 参考文档 [Getting Started](https://substrate.dev/docs/en/knowledgebase/getting-started/) 搭建开发环境.
 
+然后将工具链版本设为 `nightly-2021-09-01`，之后的版本下编译可能失败
+```
+NIGHTLY=nightly-2021-09-01
+rustup install $NIGHTLY
+rustup target add wasm32-unknown-unknown --toolchain $NIGHTLY
+rustup default $NIGHTLY
+```
+
 ### 在本地构建节点二进制并运行
 
 ```shell

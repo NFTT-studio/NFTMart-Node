@@ -10,6 +10,14 @@
 ### Prerequisite
 Please follow this [link](https://substrate.dev/docs/en/knowledgebase/getting-started/) to prepare an development environment.
 
+Remember to set your nightly toolchain version to `nightly-2021-09-01`, later versions may fail to compile.
+```
+NIGHTLY=nightly-2021-09-01
+rustup install $NIGHTLY
+rustup target add wasm32-unknown-unknown --toolchain $NIGHTLY
+rustup default $NIGHTLY
+```
+
 ### Build and run a testing environment locally
 
 ```shell
