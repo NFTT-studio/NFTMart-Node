@@ -4,10 +4,11 @@
 pub use enumflags2::BitFlags;
 use frame_support::pallet_prelude::*;
 pub use orml_traits::nft::{AccountToken, ClassInfo, TokenInfo};
+use scale_info::{build::Fields, meta_type, Path, Type, TypeInfo, TypeParameter};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::PerU16;
-use sp_std::vec::Vec;
+use sp_std::{vec, vec::Vec};
 
 pub mod constants_types;
 pub use crate::constants_types::*;
@@ -100,7 +101,7 @@ pub trait NftmartNft<AccountId, ClassId, TokenId> {
 }
 
 #[repr(u8)]
-#[derive(Encode, Decode, Clone, Copy, BitFlags, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, Copy, BitFlags, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 pub enum ClassProperty {
 	/// Token can be transferred
 	Transferable = 0b00000001,
@@ -124,8 +125,17 @@ impl Decode for Properties {
 		Ok(Self(<BitFlags<ClassProperty>>::from_bits(field as u8).map_err(|_| "invalid value")?))
 	}
 }
+impl TypeInfo for Properties {
+	type Identity = Self;
+	fn type_info() -> Type {
+		Type::builder()
+			.path(Path::new("BitFlags", module_path!()))
+			.type_params(vec![TypeParameter::new("T", Some(meta_type::<ClassProperty>()))])
+			.composite(Fields::unnamed().field(|f| f.ty::<u64>().type_name("ClassProperty")))
+	}
+}
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ClassData<BlockNumber> {
 	/// The minimum balance to create class
@@ -145,7 +155,7 @@ pub struct ClassData<BlockNumber> {
 	pub category_ids: Vec<GlobalId>,
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TokenData<AccountId, BlockNumber> {
 	/// The minimum balance to create token
@@ -162,7 +172,7 @@ pub struct TokenData<AccountId, BlockNumber> {
 	pub royalty_beneficiary: AccountId,
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct CategoryData {
 	/// The category metadata.
@@ -172,7 +182,7 @@ pub struct CategoryData {
 	pub count: Balance,
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderItem<ClassId, TokenId> {
 	/// class id
@@ -187,7 +197,9 @@ pub struct OrderItem<ClassId, TokenId> {
 }
 
 #[cfg(feature = "std")]
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(
+	Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Serialize, Deserialize, Default, TypeInfo,
+)]
 pub struct ClassConfig<ClassId, AccountId, TokenId> {
 	pub class_id: ClassId,
 	pub class_metadata: String,
@@ -201,7 +213,9 @@ pub struct ClassConfig<ClassId, AccountId, TokenId> {
 }
 
 #[cfg(feature = "std")]
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(
+	Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Serialize, Deserialize, Default, TypeInfo,
+)]
 pub struct TokenConfig<AccountId, TokenId> {
 	pub token_id: TokenId,
 	pub token_metadata: String,

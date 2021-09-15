@@ -4,6 +4,7 @@ pub use frame_support::{
 	traits::{BalanceStatus, LockIdentifier},
 	Parameter,
 };
+use scale_info::TypeInfo;
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, Bounded, MaybeSerializeDeserialize, Member},
 	DispatchError, DispatchResult,
@@ -35,7 +36,8 @@ pub trait MultiCurrency<AccountId> {
 		+ Copy
 		+ MaybeSerializeDeserialize
 		+ Debug
-		+ Default;
+		+ Default
+		+ TypeInfo;
 
 	// Public immutables
 
@@ -112,6 +114,7 @@ pub trait MultiCurrencyExtended<AccountId>: MultiCurrency<AccountId> {
 		+ Copy
 		+ MaybeSerializeDeserialize
 		+ Debug
+		+ TypeInfo
 		+ Default;
 
 	/// Add or remove abs(`by_amount`) from the balance of `who` under

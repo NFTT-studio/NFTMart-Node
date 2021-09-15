@@ -6,6 +6,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use scale_info::{TypeInfo};
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	traits::{Everything, InstanceFilter, Nothing},
@@ -339,6 +340,7 @@ parameter_types! {
 /// The type used to represent the kinds of proxying allowed.
 #[derive(
 	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
+	TypeInfo
 )]
 pub enum ProxyType {
 	Any,
@@ -553,7 +555,7 @@ impl_runtime_apis! {
 
 	impl sp_api::Metadata<Block> for Runtime {
 		fn metadata() -> OpaqueMetadata {
-			Runtime::metadata().into()
+			OpaqueMetadata::new(Runtime::metadata().into())
 		}
 	}
 
