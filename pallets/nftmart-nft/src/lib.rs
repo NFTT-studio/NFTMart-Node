@@ -8,6 +8,7 @@ use frame_support::{
 };
 use frame_system::pallet_prelude::*;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
+use scale_info::TypeInfo;
 use sp_runtime::{
 	traits::{
 		AccountIdConversion, AtLeast32BitUnsigned, Bounded, CheckedAdd, One, StaticLookup, Zero,
@@ -33,7 +34,7 @@ pub type CurrencyIdOf<T> = <<T as module::Config>::MultiCurrency as MultiCurrenc
 >>::CurrencyId;
 pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
 
-#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 enum Releases {
 	V1_0_0,
 	V2_0_0,
@@ -60,7 +61,7 @@ pub mod migrations {
 		TokenData<<T as frame_system::Config>::AccountId, BlockNumberOf<T>>,
 	>;
 
-	#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+	#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 	pub struct OldClassData {
 		#[codec(compact)]
 		pub deposit: Balance,
@@ -69,7 +70,7 @@ pub mod migrations {
 		pub description: Vec<u8>,
 	}
 
-	#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+	#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 	pub struct OldTokenData {
 		#[codec(compact)]
 		pub deposit: Balance,

@@ -4,7 +4,7 @@ use crate as nftmart_config;
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Filter, InstanceFilter},
+	traits::{Contains, InstanceFilter},
 	RuntimeDebug,
 };
 use nftmart_traits::constants_types::*;
@@ -76,6 +76,7 @@ parameter_types! {
 }
 #[derive(
 	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
+	scale_info::TypeInfo,
 )]
 pub enum ProxyType {
 	Any,
@@ -92,7 +93,7 @@ impl InstanceFilter<Call> for ProxyType {
 		match self {
 			ProxyType::Any => true,
 			ProxyType::JustTransfer => {
-				matches!(c, Call::Balances(pallet_balances::Call::transfer(..)))
+				matches!(c, Call::Balances(pallet_balances::Call::transfer{..}))
 			},
 			ProxyType::JustUtility => matches!(c, Call::Utility(..)),
 		}
@@ -102,11 +103,11 @@ impl InstanceFilter<Call> for ProxyType {
 	}
 }
 pub struct BaseFilter;
-impl Filter<Call> for BaseFilter {
-	fn filter(c: &Call) -> bool {
-		match *c {
+impl Contains<Call> for BaseFilter {
+    fn contains(call: &Call) -> bool {
+		match *call {
 			// Remark is used as a no-op call in the benchmarking
-			Call::System(SystemCall::remark(_)) => true,
+			Call::System(SystemCall::remark{..}) => true,
 			Call::System(_) => false,
 			_ => true,
 		}

@@ -8,6 +8,7 @@ use frame_support::{
 use frame_system::pallet_prelude::*;
 pub use nftmart_traits::*;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::{
@@ -21,7 +22,7 @@ mod tests;
 
 pub use module::*;
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Order<CurrencyId, BlockNumber, ClassId, TokenId> {
 	/// currency ID.
@@ -43,7 +44,7 @@ pub struct Order<CurrencyId, BlockNumber, ClassId, TokenId> {
 	pub commission_rate: PerU16,
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Offer<CurrencyId, BlockNumber, ClassId, TokenId> {
 	/// currency ID.
@@ -62,7 +63,7 @@ pub struct Offer<CurrencyId, BlockNumber, ClassId, TokenId> {
 	pub commission_rate: PerU16,
 }
 
-#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo)]
 enum Releases {
 	V1_0_0,
 }
@@ -148,10 +149,6 @@ pub mod module {
 	}
 
 	#[pallet::event]
-	#[pallet::metadata(
-		T::AccountId = "AccountId",
-		Option<(bool, T::AccountId, PerU16)> = "Option<(bool, AccountId, PerU16)>",
-	)]
 	#[pallet::generate_deposit(pub(crate) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// CreatedOrder \[who, order_id\]
