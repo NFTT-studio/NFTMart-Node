@@ -101,7 +101,10 @@ pub mod module {
 				<Pallet<T> as NftmartConfig<T::AccountId, T::BlockNumber>>::do_add_whitelist(a);
 			}
 			for c in &self.category_list {
-				<Pallet<T> as NftmartConfig<T::AccountId, T::BlockNumber>>::do_create_category(c.clone()).unwrap();
+				<Pallet<T> as NftmartConfig<T::AccountId, T::BlockNumber>>::do_create_category(
+					c.clone(),
+				)
+				.unwrap();
 			}
 		}
 	}
