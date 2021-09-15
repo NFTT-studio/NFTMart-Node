@@ -4218,6 +4218,7 @@ dependencies = [
  "sc-rpc",
  "sc-service",
  "sc-service-test",
+ "sc-sync-state-rpc",
  "sc-telemetry",
  "sc-tracing",
  "sc-transaction-pool",
