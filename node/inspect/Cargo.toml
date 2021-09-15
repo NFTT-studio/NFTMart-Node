@@ -14,11 +14,11 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "2.0.0" }
 derive_more = "0.99"
 log = "0.4.8"
-sc-cli = { version = "0.10.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sc-client-api = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sc-service = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sc-executor = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sp-blockchain = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sp-core = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
+sc-cli = { version = "0.10.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sc-client-api = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sc-service = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sc-executor = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sp-blockchain = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sp-core = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
 structopt = "0.3.8"

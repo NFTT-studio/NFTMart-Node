@@ -10,12 +10,12 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-sp-std = { default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
+sp-std = { default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
 enumflags2 = { version = "0.6.3" }
 orml-traits = { default-features = false, path = "../orml-traits" }
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
 contract-types = { path = "contract-types", default-features = false }
 log = { version = "0.4.14", default-features = false }
 smallvec = "1.6.1"

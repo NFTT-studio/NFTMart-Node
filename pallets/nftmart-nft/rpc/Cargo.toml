@@ -11,7 +11,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 jsonrpc-core = "18.0.0"
 jsonrpc-core-client = "18.0.0"
 jsonrpc-derive = "18.0.0"
-sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sp-api = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
-sp-blockchain = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce1746ddf6588c8f9ecfb77411c3cac7a2c09db3' }
+sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sp-api = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
+sp-blockchain = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'e1ddbb3ffec3c8f05de6cb05d9f5f7a922788c3f' }
 nftmart-rpc-runtime-api = { path = "runtime-api" }
