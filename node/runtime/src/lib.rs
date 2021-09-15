@@ -26,8 +26,8 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		Everything, Currency, Nothing, Imbalance, InstanceFilter, KeyOwnerProofSystem,
-		LockIdentifier, OnUnbalanced, U128CurrencyToVote,
+		Currency, Everything, Imbalance, InstanceFilter, KeyOwnerProofSystem, LockIdentifier,
+		Nothing, OnUnbalanced, U128CurrencyToVote,
 	},
 	weights::{DispatchClass, Weight},
 	PalletId, RuntimeDebug,
@@ -572,23 +572,23 @@ pub const MINER_MAX_ITERATIONS: u32 = 10;
 /// A source of random balance for NposSolver, which is meant to be run by the OCW election miner.
 pub struct OffchainRandomBalancing;
 impl frame_support::pallet_prelude::Get<Option<(usize, sp_npos_elections::ExtendedBalance)>>
-       for OffchainRandomBalancing
+	for OffchainRandomBalancing
 {
-       fn get() -> Option<(usize, sp_npos_elections::ExtendedBalance)> {
-               use sp_runtime::traits::TrailingZeroInput;
-               let iters = match MINER_MAX_ITERATIONS {
-                       0 => 0,
-                       max @ _ => {
-                               let seed = sp_io::offchain::random_seed();
-                               let random = <u32>::decode(&mut TrailingZeroInput::new(&seed))
-                                       .expect("input is padded with zeroes; qed") %
-                                       max.saturating_add(1);
-                               random as usize
-                       },
-               };
+	fn get() -> Option<(usize, sp_npos_elections::ExtendedBalance)> {
+		use sp_runtime::traits::TrailingZeroInput;
+		let iters = match MINER_MAX_ITERATIONS {
+			0 => 0,
+			max @ _ => {
+				let seed = sp_io::offchain::random_seed();
+				let random = <u32>::decode(&mut TrailingZeroInput::new(&seed))
+					.expect("input is padded with zeroes; qed") %
+					max.saturating_add(1);
+				random as usize
+			},
+		};
 
-               Some((iters, 0))
-       }
+		Some((iters, 0))
+	}
 }
 
 impl pallet_election_provider_multi_phase::Config for Runtime {
@@ -613,11 +613,11 @@ impl pallet_election_provider_multi_phase::Config for Runtime {
 	type DataProvider = Staking;
 	type Solution = NposSolution16;
 	type Fallback = pallet_election_provider_multi_phase::NoFallback<Self>;
-    type Solver = frame_election_provider_support::SequentialPhragmen<
-            AccountId,
-            pallet_election_provider_multi_phase::SolutionAccuracyOf<Self>,
-            OffchainRandomBalancing,
-    >;
+	type Solver = frame_election_provider_support::SequentialPhragmen<
+		AccountId,
+		pallet_election_provider_multi_phase::SolutionAccuracyOf<Self>,
+		OffchainRandomBalancing,
+	>;
 	type WeightInfo = pallet_election_provider_multi_phase::weights::SubstrateWeight<Self>;
 	type ForceOrigin = EnsureRootOrHalfCouncil;
 	type BenchmarkingConfig = BenchmarkConfig;
@@ -1453,58 +1453,58 @@ impl_runtime_apis! {
 
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
-               fn benchmark_metadata(extra: bool) -> (
-                       Vec<frame_benchmarking::BenchmarkList>,
-                       Vec<frame_support::traits::StorageInfo>,
-               ) {
-                       use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
-                       use frame_support::traits::StorageInfoTrait;
+			   fn benchmark_metadata(extra: bool) -> (
+					   Vec<frame_benchmarking::BenchmarkList>,
+					   Vec<frame_support::traits::StorageInfo>,
+			   ) {
+					   use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
+					   use frame_support::traits::StorageInfoTrait;
 
-                       // Trying to add benchmarks directly to the Session Pallet caused cyclic dependency
-                       // issues. To get around that, we separated the Session benchmarks into its own crate,
-                       // which is why we need these two lines below.
-                       use pallet_session_benchmarking::Pallet as SessionBench;
-                       use pallet_offences_benchmarking::Pallet as OffencesBench;
-                       use frame_system_benchmarking::Pallet as SystemBench;
+					   // Trying to add benchmarks directly to the Session Pallet caused cyclic dependency
+					   // issues. To get around that, we separated the Session benchmarks into its own crate,
+					   // which is why we need these two lines below.
+					   use pallet_session_benchmarking::Pallet as SessionBench;
+					   use pallet_offences_benchmarking::Pallet as OffencesBench;
+					   use frame_system_benchmarking::Pallet as SystemBench;
 
-                       let mut list = Vec::<BenchmarkList>::new();
+					   let mut list = Vec::<BenchmarkList>::new();
 
-                       // list_benchmark!(list, extra, pallet_assets, Assets);
-                       list_benchmark!(list, extra, pallet_babe, Babe);
-                       list_benchmark!(list, extra, pallet_balances, Balances);
-                       // list_benchmark!(list, extra, pallet_bounties, Bounties);
-                       list_benchmark!(list, extra, pallet_collective, Council);
-                       list_benchmark!(list, extra, pallet_contracts, Contracts);
-                       list_benchmark!(list, extra, pallet_democracy, Democracy);
-                       list_benchmark!(list, extra, pallet_election_provider_multi_phase, ElectionProviderMultiPhase);
-                       list_benchmark!(list, extra, pallet_elections_phragmen, Elections);
-                       // list_benchmark!(list, extra, pallet_gilt, Gilt);
-                       list_benchmark!(list, extra, pallet_grandpa, Grandpa);
-                       list_benchmark!(list, extra, pallet_identity, Identity);
-                       list_benchmark!(list, extra, pallet_im_online, ImOnline);
-                       list_benchmark!(list, extra, pallet_indices, Indices);
-                       // list_benchmark!(list, extra, pallet_lottery, Lottery);
-                       // list_benchmark!(list, extra, pallet_membership, TechnicalMembership);
-                       // list_benchmark!(list, extra, pallet_mmr, Mmr);
-                       list_benchmark!(list, extra, pallet_multisig, Multisig);
-                       list_benchmark!(list, extra, pallet_offences, OffencesBench::<Runtime>);
-                       list_benchmark!(list, extra, pallet_proxy, Proxy);
-                       list_benchmark!(list, extra, pallet_scheduler, Scheduler);
-                       list_benchmark!(list, extra, pallet_session, SessionBench::<Runtime>);
-                       list_benchmark!(list, extra, pallet_staking, Staking);
-                       list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
-                       list_benchmark!(list, extra, pallet_timestamp, Timestamp);
-                       // list_benchmark!(list, extra, pallet_tips, Tips);
-                       // list_benchmark!(list, extra, pallet_transaction_storage, TransactionStorage);
-                       list_benchmark!(list, extra, pallet_treasury, Treasury);
-                       // list_benchmark!(list, extra, pallet_uniques, Uniques);
-                       list_benchmark!(list, extra, pallet_utility, Utility);
-                       // list_benchmark!(list, extra, pallet_vesting, Vesting);
+					   // list_benchmark!(list, extra, pallet_assets, Assets);
+					   list_benchmark!(list, extra, pallet_babe, Babe);
+					   list_benchmark!(list, extra, pallet_balances, Balances);
+					   // list_benchmark!(list, extra, pallet_bounties, Bounties);
+					   list_benchmark!(list, extra, pallet_collective, Council);
+					   list_benchmark!(list, extra, pallet_contracts, Contracts);
+					   list_benchmark!(list, extra, pallet_democracy, Democracy);
+					   list_benchmark!(list, extra, pallet_election_provider_multi_phase, ElectionProviderMultiPhase);
+					   list_benchmark!(list, extra, pallet_elections_phragmen, Elections);
+					   // list_benchmark!(list, extra, pallet_gilt, Gilt);
+					   list_benchmark!(list, extra, pallet_grandpa, Grandpa);
+					   list_benchmark!(list, extra, pallet_identity, Identity);
+					   list_benchmark!(list, extra, pallet_im_online, ImOnline);
+					   list_benchmark!(list, extra, pallet_indices, Indices);
+					   // list_benchmark!(list, extra, pallet_lottery, Lottery);
+					   // list_benchmark!(list, extra, pallet_membership, TechnicalMembership);
+					   // list_benchmark!(list, extra, pallet_mmr, Mmr);
+					   list_benchmark!(list, extra, pallet_multisig, Multisig);
+					   list_benchmark!(list, extra, pallet_offences, OffencesBench::<Runtime>);
+					   list_benchmark!(list, extra, pallet_proxy, Proxy);
+					   list_benchmark!(list, extra, pallet_scheduler, Scheduler);
+					   list_benchmark!(list, extra, pallet_session, SessionBench::<Runtime>);
+					   list_benchmark!(list, extra, pallet_staking, Staking);
+					   list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
+					   list_benchmark!(list, extra, pallet_timestamp, Timestamp);
+					   // list_benchmark!(list, extra, pallet_tips, Tips);
+					   // list_benchmark!(list, extra, pallet_transaction_storage, TransactionStorage);
+					   list_benchmark!(list, extra, pallet_treasury, Treasury);
+					   // list_benchmark!(list, extra, pallet_uniques, Uniques);
+					   list_benchmark!(list, extra, pallet_utility, Utility);
+					   // list_benchmark!(list, extra, pallet_vesting, Vesting);
 
-                       let storage_info = AllPalletsWithSystem::storage_info();
+					   let storage_info = AllPalletsWithSystem::storage_info();
 
-                       return (list, storage_info)
-               }
+					   return (list, storage_info)
+			   }
 
 		fn dispatch_benchmark(
 			config: frame_benchmarking::BenchmarkConfig

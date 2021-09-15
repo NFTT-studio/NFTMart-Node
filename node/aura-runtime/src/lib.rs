@@ -8,7 +8,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
-	traits::{Everything, Nothing, InstanceFilter},
+	traits::{Everything, InstanceFilter, Nothing},
 	PalletId, RuntimeDebug,
 };
 pub use nftmart_traits::{currency::*, *};
@@ -621,9 +621,9 @@ impl_runtime_apis! {
 			Grandpa::grandpa_authorities()
 		}
 
-        fn current_set_id() -> fg_primitives::SetId {
-            Grandpa::current_set_id()
-        }
+		fn current_set_id() -> fg_primitives::SetId {
+			Grandpa::current_set_id()
+		}
 
 		fn submit_report_equivocation_unsigned_extrinsic(
 			_equivocation_proof: fg_primitives::EquivocationProof<
