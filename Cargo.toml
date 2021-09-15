@@ -3,6 +3,16 @@ panic = 'unwind'
 
 [workspace]
 members = [
-	'node/*',
+# 'node/*',
+	'node/testing',
+	'node/aura-cli',
+	'node/aura-runtime',
+	'node/chain_extension',
+	'node/cli',
+	'node/executor',
+	'node/inspect',
+	'node/primitives',
+	'node/rpc',
+	'node/runtime',
 	'pallets/*',
 ]

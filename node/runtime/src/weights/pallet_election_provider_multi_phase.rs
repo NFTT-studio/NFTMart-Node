@@ -50,7 +50,7 @@ impl<T: frame_system::Config> pallet_election_provider_multi_phase::WeightInfo f
 			.saturating_add(T::DbWeight::get().reads(10 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))
 	}
-	fn on_initialize_open_unsigned_with_snapshot() -> Weight {
+	fn on_initialize_open_unsigned() -> Weight {
 		(81_883_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(10 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))

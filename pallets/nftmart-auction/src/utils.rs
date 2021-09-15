@@ -137,6 +137,7 @@ pub mod test_helper {
 	use frame_support::assert_ok;
 	use sp_std::vec;
 	use sp_std::vec::Vec;
+	use sp_std::vec;
 
 	#[macro_export]
 	macro_rules! balances {

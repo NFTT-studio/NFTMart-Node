@@ -111,7 +111,7 @@ pub type IoHandler = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 /// Instantiate all Full RPC extensions.
 pub fn create_full<C, P, SC, B>(
 	deps: FullDeps<C, P, SC, B>,
-) -> jsonrpc_core::IoHandler<sc_rpc_api::Metadata>
+) -> Result<jsonrpc_core::IoHandler<sc_rpc_api::Metadata>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>
 		+ HeaderBackend<Block>
@@ -149,6 +149,9 @@ where
 	} = grandpa;
 
 	io.extend_with(SystemApi::to_delegate(FullSystem::new(client.clone(), pool, deny_unsafe)));
+	// Making synchronous calls in light client freezes the browser currently,
+	// more context: https://github.com/paritytech/substrate/pull/3480
+	// These RPCs should use an asynchronous caller instead.
 	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
 	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(client.clone())));
 	io.extend_with(NFTMartApi::to_delegate(NFTMart::new(client.clone())));
@@ -175,10 +178,10 @@ where
 			shared_authority_set,
 			shared_epoch_changes,
 			deny_unsafe,
-		),
+		)?,
 	));
 
-	io
+	Ok(io)
 }
 
 /// Instantiate all Light RPC extensions.
