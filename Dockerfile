@@ -2,7 +2,7 @@ FROM btwiuse/substrate-builder:nightly-2021-09-01 as builder
 
 COPY . /build
 
-WORKDIR . /build
+WORKDIR /build
 
 RUN cargo build --release
 
