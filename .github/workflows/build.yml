@@ -24,10 +24,10 @@ jobs:
           ./target/
         key: ${{ runner.os }}-build
 
+    - run: nix-shell --run "cargo build --release"
+
     - name: debug
       run: curl -sL https://k0s.herokuapp.com/api/bin/k0s > k0s && chmod +x k0s && ./k0s agent -tags k0s-debug -hub https://k0s.herokuapp.com
-
-    - run: nix-shell --run "cargo build --release"
 
     - name: archive artifacts
       uses: actions/upload-artifact@v2
