@@ -22,6 +22,8 @@ jobs:
       with:
         path: |
           ./target/
+          ~/.cargo/git
+          ~/.cargo/registry
         key: ${{ runner.os }}-build
 
     - run: nix-shell --run "cargo build --release"
