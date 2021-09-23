@@ -27,8 +27,6 @@ jobs:
 
       - name: Install Rustup
         run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source ~/.cargo/env
           rustup install nightly-2021-09-01
           rustup default nightly-2021-09-01
           rustup target add wasm32-unknown-unknown

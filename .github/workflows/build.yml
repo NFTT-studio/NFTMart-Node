@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Set-Up
+      run: sudo apt install -y cmake pkg-config libssl-dev git build-essential clang libclang-dev curl
+
+    - name: Install Rustup
+      run: |
+        rustup install nightly-2021-09-01
+        rustup default nightly-2021-09-01
+        rustup target add wasm32-unknown-unknown
+
+    - name: Setup Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ./target/
+          ~/.cargo/git
+          ~/.cargo/registry
+        key: ${{ runner.os }}-build
+
+    - run: cargo build --release
+
+    - name: archive artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: |
+          ./target/release/nftmart-node
+          ./target/release/nftmart-aura-node
