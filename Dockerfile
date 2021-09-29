@@ -18,10 +18,6 @@ RUN apt install -y locales && locale-gen --purge en_US.UTF-8
 
 RUN apt install -y curl jq tmux vim git
 
-# RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt install -y nodejs
-
-# RUN npm install -g subgenius
-
 WORKDIR /data
 
 COPY --from=builder /build/target/release/nftmart-node /usr/bin/nftmart-node

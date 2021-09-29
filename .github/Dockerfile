@@ -1,11 +1,3 @@
-# FROM btwiuse/substrate-builder:nightly-2021-09-01 as builder
-
-# COPY . /build
-
-# WORKDIR /build
-
-# RUN cargo build --release
-
 FROM denoland/deno:ubuntu
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,19 +10,11 @@ RUN apt install -y locales && locale-gen --purge en_US.UTF-8
 
 RUN apt install -y curl jq tmux vim git
 
-# RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt install -y nodejs
-
-# RUN npm install -g subgenius
-
 WORKDIR /data
-
-# COPY --from=builder /build/target/release/nftmart-node /usr/bin/nftmart-node
 
 COPY ./bin/nftmart-node /usr/bin/nftmart-node
 
 RUN chmod +x /usr/bin/nftmart-node
-
-# COPY --from=builder /build/target/release/nftmart-aura-node /usr/bin/nftmart-aura-node
 
 COPY ./bin/nftmart-aura-node /usr/bin/nftmart-aura-node
 
