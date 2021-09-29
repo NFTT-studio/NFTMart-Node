@@ -41,7 +41,7 @@ jobs:
           ./target/release/nftmart-aura-node
 
   push:
-    after:
+    needs:
     - build
     runs-on: ubuntu-latest
     steps:
