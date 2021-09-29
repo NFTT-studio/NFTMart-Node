@@ -39,3 +39,29 @@ jobs:
         path: |
           ./target/release/nftmart-node
           ./target/release/nftmart-aura-node
+
+  push:
+    after:
+    - build
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - uses: actions/download-artifact@v2
+      name: download artifacts
+      with:
+        name: build
+        path: ./bin/
+
+    - run: docker build -f .github/Dockerfile -t nftmart/node:${{ github.sha }} .
+      name: docker build
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - run: docker push nftmart/node:${{ github.sha }}
+      name: docker push
