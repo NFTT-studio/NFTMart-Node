@@ -74,6 +74,16 @@ pub trait NftmartNft<AccountId, ClassId, TokenId> {
 		properties: Properties,
 		category_ids: Vec<GlobalId>,
 	) -> ResultPost<(AccountId, ClassId)>;
+	fn update_class(
+		who: &AccountId,
+		class_id: ClassId,
+		metadata: NFTMetadata,
+		name: Vec<u8>,
+		description: Vec<u8>,
+		royalty_rate: PerU16,
+		properties: Properties,
+		category_ids: Vec<GlobalId>,
+	) -> ResultPost<(AccountId, ClassId)>;
 	fn proxy_mint(
 		delegate: &AccountId,
 		to: &AccountId,
