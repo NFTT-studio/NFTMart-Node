@@ -220,6 +220,8 @@ pub mod module {
 	pub enum Event<T: Config> {
 		/// Created NFT class. \[owner, class_id\]
 		CreatedClass(T::AccountId, ClassIdOf<T>),
+		/// Updated NFT class. \[owner, class_id\]
+		UpdatedClass(T::AccountId, ClassIdOf<T>),
 		/// Minted NFT token. \[from, to, class_id, token_id, quantity\]
 		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>),
 		/// Transferred NFT token. \[from, to, class_id, token_id, quantity\]
@@ -397,6 +399,39 @@ pub mod module {
 			let who = ensure_signed(origin)?;
 			Self::do_create_class(
 				&who,
+				metadata,
+				name,
+				description,
+				royalty_rate,
+				properties,
+				category_ids,
+			)?;
+			Ok(().into())
+		}
+
+		/// Update NFT class.
+		///
+		/// - `class_id`: class id
+		/// - `metadata`: external metadata
+		/// - `properties`: class property, include `Transferable` `Burnable`
+		/// - `name`: class name, with len limitation.
+		/// - `description`: class description, with len limitation.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn update_class(
+			origin: OriginFor<T>,
+			#[pallet::compact] class_id: ClassIdOf<T>,
+			metadata: NFTMetadata,
+			name: Vec<u8>,
+			description: Vec<u8>,
+			#[pallet::compact] royalty_rate: PerU16,
+			properties: Properties,
+			category_ids: Vec<GlobalId>,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			Self::do_update_class(
+				&who,
+				class_id,
 				metadata,
 				name,
 				description,
@@ -772,6 +807,49 @@ impl<T: Config> Pallet<T> {
 	}
 
 	#[transactional]
+	pub fn do_update_class(
+		who: &T::AccountId,
+		class_id: ClassIdOf<T>,
+		metadata: NFTMetadata,
+		name: Vec<u8>,
+		description: Vec<u8>,
+		royalty_rate: PerU16,
+		properties: Properties,
+		category_ids: Vec<GlobalId>,
+	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
+		let old_class_info =
+			orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+		let owner = old_class_info.owner;
+		ensure!(who == &owner, Error::<T>::NoPermission);
+
+		ensure!(category_ids.len() <= MAX_CATEGORY_PER_CLASS, Error::<T>::CategoryOutOfBound);
+		ensure!(category_ids.len() >= 1, Error::<T>::CategoryOutOfBound);
+		if category_ids.len() == 2 {
+			ensure!(category_ids[0] != category_ids[1], Error::<T>::DuplicatedCategories);
+		}
+
+		ensure!(name.len() <= 20, Error::<T>::NameTooLong); // TODO: pass configurations from runtime configuration.
+		ensure!(description.len() <= 256, Error::<T>::DescriptionTooLong); // TODO: pass configurations from runtime configuration.
+
+		let old_data = old_class_info.data;
+		let data: ClassData<BlockNumberOf<T>> = ClassData {
+			deposit: old_data.deposit,
+			properties,
+			name,
+			description,
+			create_block: old_data.create_block,
+			royalty_rate,
+			category_ids,
+		};
+
+		orml_nft::Pallet::<T>::create_class(&owner, metadata, data)?;
+
+		Self::deposit_event(Event::UpdatedClass(owner.clone(), class_id));
+
+		Ok((owner, class_id))
+	}
+
+	#[transactional]
 	pub fn do_transfer(
 		from: &T::AccountId,
 		to: &T::AccountId,
@@ -970,6 +1048,28 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
 		Self::do_create_class(
 			who,
+			metadata,
+			name,
+			description,
+			royalty_rate,
+			properties,
+			category_ids,
+		)
+	}
+
+	fn update_class(
+		who: &T::AccountId,
+		class_id: ClassIdOf<T>,
+		metadata: NFTMetadata,
+		name: Vec<u8>,
+		description: Vec<u8>,
+		royalty_rate: PerU16,
+		properties: Properties,
+		category_ids: Vec<GlobalId>,
+	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
+		Self::do_update_class(
+			who,
+			class_id,
 			metadata,
 			name,
 			description,
