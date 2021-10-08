@@ -321,15 +321,15 @@ pub fn testnet_genesis(
 					royalty_rate: PerU16::from_percent(20),
 					admins: vec![
 						AccountId::from_ss58check(
-							"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+							"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
 						)
 						.unwrap(),
 						AccountId::from_ss58check(
-							"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 						)
 						.unwrap(),
 						AccountId::from_ss58check(
-							"63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P",
+							"nmuEVMePZv8BaY33S19zmAEwBgNgokknFHGWSLGKB6tSzh9mS",
 						)
 						.unwrap(),
 					],
@@ -342,15 +342,15 @@ pub fn testnet_genesis(
 							.unwrap(),
 							royalty_rate: PerU16::from_percent(10),
 							token_owner: AccountId::from_ss58check(
-								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
 							)
 							.unwrap(),
 							token_creator: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							royalty_beneficiary: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							quantity: 11,
@@ -363,15 +363,15 @@ pub fn testnet_genesis(
 							.unwrap(),
 							royalty_rate: PerU16::zero(),
 							token_owner: AccountId::from_ss58check(
-								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
 							)
 							.unwrap(),
 							token_creator: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							royalty_beneficiary: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							quantity: 12,
@@ -391,15 +391,15 @@ pub fn testnet_genesis(
 					royalty_rate: PerU16::from_percent(15),
 					admins: vec![
 						AccountId::from_ss58check(
-							"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+							"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
 						)
 						.unwrap(),
 						AccountId::from_ss58check(
-							"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+							"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 						)
 						.unwrap(),
 						AccountId::from_ss58check(
-							"63dincXNMbR8kAQrVyGz5kB9yH1jCeoVp8FabVvDiYHWgn3P",
+							"nmuEVMePZv8BaY33S19zmAEwBgNgokknFHGWSLGKB6tSzh9mS",
 						)
 						.unwrap(),
 					],
@@ -412,15 +412,15 @@ pub fn testnet_genesis(
 							.unwrap(),
 							royalty_rate: PerU16::from_percent(10),
 							token_owner: AccountId::from_ss58check(
-								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
 							)
 							.unwrap(),
 							token_creator: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							royalty_beneficiary: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							quantity: 21,
@@ -433,15 +433,15 @@ pub fn testnet_genesis(
 							.unwrap(),
 							royalty_rate: PerU16::zero(),
 							token_owner: AccountId::from_ss58check(
-								"65ADzWZUAKXQGZVhQ7ebqRdqEzMEftKytB8a7rknW82EASXB",
+								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
 							)
 							.unwrap(),
 							token_creator: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							royalty_beneficiary: AccountId::from_ss58check(
-								"63b4iSPL2bXW7Z1ByBgf65is99LMDLvePLzF4Vd7S96zPYnw",
+								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
 							)
 							.unwrap(),
 							quantity: 22,
