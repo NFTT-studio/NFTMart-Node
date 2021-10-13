@@ -71,3 +71,9 @@ jobs:
 
     - run: docker push nftmart/node:${{ github.sha }}
       name: docker push
+
+    - run: |
+        docker tag nftmart/node:${{ github.sha }} nftmart/node
+        docker push nftmart/node
+      if: github.ref == 'refs/heads/master'
+      name: docker push latest
