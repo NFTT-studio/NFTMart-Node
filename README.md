@@ -11,17 +11,11 @@ Implementation of a https://nftmart.io node in Rust based on the Substrate frame
 ## Architecture overview
 ![architecture overview](docs/nftmart-architecture-overview.jpeg)
 
-# Networks
+## Networks
 
-This repository contains code for NFTMart Mainnet, Staging and Dev network.
+This repository contains code for NFTMart Mainnet, Staging and Dev network. These networks share the same nftmart-node binary. You can switch between different networks by specifying the correct chain spec when starting your node.
 
-Those networks share the same nftmart-node binary, you can switch between different networks by specifying the correct chain spec when starting your node:
-
-- Mainnet: `--chain=./specs/mainnetRaw.json`
-- Staging Network: `--chain=./specs/stagingRaw.json`
-- Dev Network: `--dev`
-
-## NFTMart Mainnet
+### Mainnet
 
 You can connect to NFTMart Mainnet using the following public addresses
 
@@ -32,9 +26,12 @@ Or you can start a node locally and sync with the Mainnet
 
 ```
 docker-compose up mainnet
+
+# If you prefer using your own binary, try this instead
+./target/release/nftmart-node --chain=/specs/mainnetRaw.json
 ```
 
-## NFTMart Staging Network
+### Staging Network
 
 You can connect to NFTMart Staging Network using the following public addresses
 
@@ -45,14 +42,20 @@ Alternatively, you can start a node locally and sync with the Staging Network
 
 ```
 docker-compose up staging
+
+# If you prefer using your own binary, try this instead
+./target/release/nftmart-node --chain=/specs/stagingRaw.json
 ```
 
-## Dev Network
+### Dev Network
 
 To start a Dev Network, you must run your own node:
 
 ```
 docker-compose up dev
+
+# If you prefer using your own binary, try this instead
+./target/release/nftmart-node --dev --alice
 ```
 
 then connect to it from the following rpc endpoints:
@@ -60,9 +63,9 @@ then connect to it from the following rpc endpoints:
 - ws://127.0.0.1:9944
 - http://127.0.0.1:9933
 
-# Build From Source
+## Build From Source
 
-## Prepare Toolchain
+### Prepare Toolchain
 Please follow this [link](https://substrate.dev/docs/en/knowledgebase/getting-started/) to prepare an development environment.
 
 Remember to set your nightly toolchain version to `nightly-2021-09-01`, later versions may fail to compile.
@@ -73,15 +76,11 @@ rustup target add wasm32-unknown-unknown --toolchain $NIGHTLY
 rustup default $NIGHTLY
 ```
 
-## Compile
+### Compile And Run
 
 ```
 cargo build --release -p nftmart-node
-```
 
-## Run
-
-```
 ./target/release/nftmart-node --dev --alice --rpc-cors=all --rpc-methods=Unsafe --unsafe-ws-external
 ```
 
