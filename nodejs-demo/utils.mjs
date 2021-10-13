@@ -241,7 +241,7 @@ export async function getApi(dest) {
 }
 
 export function ensureAddress(keyring, account) {
-  if (account.length !== '62qUEaQwPx7g4vDz88cT36XXuEUQmYo3Y5dxnxScsiDkb8wy'.length) {
+  if (account.length !== 'nmtSEocH8xUt7rnrZdKLE7bHZcL9VKemo1DtpXiqaG4PEbhTz'.length) {
     account = keyring.addFromUri(account);
     account = account.address;
   }
