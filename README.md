@@ -1,5 +1,5 @@
 [![Build](https://github.com/NFTT-studio/NFTMart-Node/actions/workflows/build.yml/badge.svg)](https://github.com/NFTT-studio/NFTMart-Node/actions/workflows/build.yml)
-[![License](https://img.shields.io/github/license/nftt-studio/nftmart-node?color=%23000&style=flat-round)](https://github.com/nftt-studio/nftmart/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/nftt-studio/nftmart-node?color=%23000&style=flat-round)](https://github.com/nftt-studio/nftmart-node/blob/master/LICENSE)
 [![DockerHub](https://img.shields.io/docker/pulls/nftmart/node.svg)](https://hub.docker.com/r/nftmart/node)
 
 # NFTMart Node
