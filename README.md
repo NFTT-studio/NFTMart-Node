@@ -6,10 +6,7 @@ Implementation of a https://nftmart.io node in Rust based on the Substrate frame
 [![License](https://img.shields.io/github/license/nftt-studio/nftmart-node?color=%23000&style=flat-round)](https://github.com/nftt-studio/nftmart/blob/master/LICENSE)
 [![DockerHub](https://img.shields.io/docker/pulls/nftmart/node.svg)](https://hub.docker.com/r/nftmart/node)
 
-[中文版](./README_zh.md)
-
-## Architecture overview
-![architecture overview](docs/nftmart-architecture-overview.jpeg)
+![cover](docs/cover.png)
 
 ## Networks
 
@@ -19,8 +16,8 @@ This repository contains code for NFTMart Mainnet, Staging and Dev network. Thes
 
 You can connect to NFTMart Mainnet using the following public addresses
 
-- wss://mainnet.nftmart.io/rpc/ws
-- https://mainnet.nftmart.io/rpc/http
+- `wss://mainnet.nftmart.io/rpc/ws`
+- `https://mainnet.nftmart.io/rpc/http`
 
 Or you can start a node locally and sync with the Mainnet
 
@@ -35,8 +32,8 @@ docker-compose up mainnet
 
 You can connect to NFTMart Staging Network using the following public addresses
 
-- wss://staging.nftmart.io/rpc/ws
-- https://staging.nftmart.io/rpc/http
+- `wss://staging.nftmart.io/rpc/ws`
+- `https://staging.nftmart.io/rpc/http`
 
 Alternatively, you can start a node locally and sync with the Staging Network
 
@@ -60,8 +57,8 @@ docker-compose up dev
 
 then connect to it from the following rpc endpoints:
 
-- ws://127.0.0.1:9944
-- http://127.0.0.1:9933
+- `ws://127.0.0.1:9944`
+- `http://127.0.0.1:9933`
 
 ## Build From Source
 
@@ -84,7 +81,7 @@ cargo build --release -p nftmart-node
 ./target/release/nftmart-node --dev --alice --rpc-cors=all --rpc-methods=Unsafe --unsafe-ws-external
 ```
 
-## Use Nodejs to access nftmart blockchain
+## Use Node.js to access nftmart blockchain
 
 ```shell
 git clone https://github.com/NFTT-studio/nftmart-node
