@@ -1,9 +1,9 @@
 import { Keyring } from "@polkadot/api";
-import * as BN from 'bn.js';
-import fs from 'fs';
-import {getApi, getModules, waitTx, hexToUtf8} from "./utils.mjs";
-import {Command} from "commander";
-import yaml from 'yaml';
+import * as BN from "bn.js";
+import fs from "fs";
+import { getApi, getModules, waitTx, hexToUtf8 } from "./utils.mjs";
+import { Command } from "commander";
+import yaml from "yaml";
 
 const MNEMONIC_WORDS_COUNT = 12;
 
@@ -19,8 +19,8 @@ class Validator {
   controllerBalance;
   */
 
-  constructor(config){
-    this.env = yaml.parse(fs.readFileSync(config, 'utf8'));
+  constructor(config) {
+    this.env = yaml.parse(fs.readFileSync(config, "utf8"));
     console.log(`initializing new validator from config file ${config}`);
     console.log(this.env);
   }
@@ -47,14 +47,14 @@ class Validator {
     const response = await this.api.rpc.system.health();
 
     if (response.isSyncing.valueOf()) {
-      throw new Error("Node is syncing")
+      throw new Error("Node is syncing");
     }
   }
 
-  async setIdentity(account, name){
-    const identityInfo = this.api.createType('IdentityInfo', {
+  async setIdentity(account, name) {
+    const identityInfo = this.api.createType("IdentityInfo", {
       additional: [],
-      display: { raw: name},
+      display: { raw: name },
       legal: { none: null },
       web: { none: null },
       riot: { none: null },
@@ -63,7 +63,8 @@ class Validator {
       twitter: { none: null },
     });
     return new Promise((res, rej) => {
-      this.api.tx.identity.setIdentity(identityInfo)
+      this.api.tx.identity
+        .setIdentity(identityInfo)
         .signAndSend(account, this.sendStatusCb.bind(this, res, rej))
         .catch((err) => rej(err));
     });
@@ -79,9 +80,13 @@ class Validator {
     console.log(`Loading root`);
     this.rootAccount = keyring.addFromMnemonic(this.env.ROOT_ACCOUNT_MNEMONIC);
     console.log(`Loading stash`);
-    this.stashAccount = keyring.addFromMnemonic(this.env.STASH_ACCOUNT_MNEMONIC);
+    this.stashAccount = keyring.addFromMnemonic(
+      this.env.STASH_ACCOUNT_MNEMONIC
+    );
     console.log(`Loading controller`);
-    this.controllerAccount = keyring.addFromMnemonic(this.env.CONTROLLER_ACCOUNT_MNEMONIC);
+    this.controllerAccount = keyring.addFromMnemonic(
+      this.env.CONTROLLER_ACCOUNT_MNEMONIC
+    );
 
     console.log(`Requesting endowment`);
     await this.requestEndowment(this.stashAccount);
@@ -89,11 +94,14 @@ class Validator {
 
     console.log(`Setting identities`);
     await this.setIdentity(this.stashAccount, this.env.STASH_ACCOUNT_MNEMONIC);
-    await this.setIdentity(this.controllerAccount, this.env.CONTROLLER_ACCOUNT_MNEMONIC);
+    await this.setIdentity(
+      this.controllerAccount,
+      this.env.CONTROLLER_ACCOUNT_MNEMONIC
+    );
 
-    this.rootBalance = await this.getBalance(this.rootAccount)
-    this.stashBalance = await this.getBalance(this.stashAccount)
-    this.controllerBalance = await this.getBalance(this.controllerAccount)
+    this.rootBalance = await this.getBalance(this.rootAccount);
+    this.stashBalance = await this.getBalance(this.stashAccount);
+    this.controllerBalance = await this.getBalance(this.controllerAccount);
 
     console.log(
       `Your Root Account is ${this.rootAccount.address} and balance is ${this.rootBalance}`
@@ -125,7 +133,9 @@ class Validator {
     const bondValue = BigInt(Number(this.env.BOND_VALUE));
     console.log(`Bond value is ${bondValue}`);
     if (this.stashBalance <= Number(bondValue)) {
-      throw new Error(`Bond value needs to be lesser than balance. (Bond ${bondValue} should be less than stash balance ${this.stashBalance})`);
+      throw new Error(
+        `Bond value needs to be lesser than balance. (Bond ${bondValue} should be less than stash balance ${this.stashBalance})`
+      );
     }
 
     const transaction = this.api.tx.staking.bond(
@@ -200,17 +210,20 @@ class Validator {
   }
 
   async requestEndowment(account) {
-    console.log('Requesting endowment for account', account.address);
+    console.log("Requesting endowment for account", account.address);
     const oldBalance = await this.getBalance(account);
-    const transfer = this.api.tx.balances.transfer(account.address, 1000000000000000);
-    const hash = await transfer.signAndSend(this.rootAccount, {nonce: -1});
+    const transfer = this.api.tx.balances.transfer(
+      account.address,
+      1000000000000000
+    );
+    const hash = await transfer.signAndSend(this.rootAccount, { nonce: -1 });
 
     while (true) {
       let newBalance = await this.getBalance(account);
       if (newBalance > oldBalance) {
         break;
       }
-      console.log("please wait for transaction to finalize...")
+      console.log("please wait for transaction to finalize...");
       await this.sleep(1000);
     }
   }
@@ -225,10 +238,10 @@ class Validator {
   }
 
   async sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async callWithRetry(fn, options = { maxDepth: 5}, depth = 0) {
+  async callWithRetry(fn, options = { maxDepth: 5 }, depth = 0) {
     try {
       return await fn();
     } catch (e) {
@@ -243,10 +256,7 @@ class Validator {
     }
   }
 
-  sendStatusCb(res, rej, {
-    events = [],
-    status,
-  }) {
+  sendStatusCb(res, rej, { events = [], status }) {
     if (status.isInvalid) {
       console.info("Transaction invalid");
       rej("Transaction invalid");
@@ -274,7 +284,7 @@ class Validator {
   }
 }
 
-async function newValidator(config){
+async function newValidator(config) {
   const validator = new Validator(config);
   await validator.init();
   await validator.loadAccounts();
@@ -289,14 +299,16 @@ async function newValidator(config){
 async function main() {
   var program = new Command();
 
-  program.arguments('<config...>').action(async () => {
-    for (const config of program.args){
+  program.arguments("<config...>").action(async () => {
+    for (const config of program.args) {
       console.log(`Adding validator from config ${config}`);
       await newValidator(config);
-    };
+    }
   });
 
   await program.parseAsync(process.argv);
 }
 
-main().catch(console.error).finally(() => process.exit());
+main()
+  .catch(console.error)
+  .finally(() => process.exit());
