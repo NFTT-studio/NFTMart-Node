@@ -12,7 +12,7 @@ import { bnToBn } from "@polkadot/util";
 import { Command } from "commander";
 
 async function main() {
-  const ss58Format = 50;
+  const ss58Format = 12191;
   const keyring = new Keyring({ type: "sr25519", ss58Format });
   const program = new Command();
   program.option("--ws <url>", "node ws addr", "ws://192.168.0.2:9944");

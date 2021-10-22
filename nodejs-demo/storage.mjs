@@ -6,7 +6,7 @@ import { bnToBn } from "@polkadot/util";
 const unit = bnToBn("1000000000000");
 
 function main() {
-  const ss58Format = 50;
+  const ss58Format = 12191;
   const keyring = new Keyring({ type: "sr25519", ss58Format });
   const program = new Command();
   program.command("get-version").action(async () => {
