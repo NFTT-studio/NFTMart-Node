@@ -67,7 +67,7 @@ pub mod module {
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
-				platform_fee_rate: PerU16::from_rational(1u32, 10000u32),
+				platform_fee_rate: PerU16::from_rational(200u32, 10000u32),
 				royalties_rate: PerU16::from_percent(20),
 				max_commission_reward_rate: PerU16::from_percent(100),
 				min_commission_agent_deposit: ACCURACY,
