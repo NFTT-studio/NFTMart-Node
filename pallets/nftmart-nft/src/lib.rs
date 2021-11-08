@@ -638,8 +638,9 @@ pub mod module {
 			let dest = T::Lookup::lookup(dest)?;
 			let class_info =
 				orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+            let existing_nft_number = orml_nft::Tokens::<T>::iter_prefix_values(class_id).count();
 			ensure!(who == class_info.owner, Error::<T>::NoPermission);
-			ensure!(class_info.total_issuance == Zero::zero(), Error::<T>::CannotDestroyClass);
+			ensure!(class_info.total_issuance == Zero::zero() || existing_nft_number == 0, Error::<T>::CannotDestroyClass);
 
 			let owner: T::AccountId = T::ModuleId::get().into_sub_account(class_id);
 			let data = class_info.data;
