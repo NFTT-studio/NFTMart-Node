@@ -842,7 +842,16 @@ impl<T: Config> Pallet<T> {
 			category_ids,
 		};
 
-		orml_nft::Pallet::<T>::create_class(&owner, metadata, data)?;
+		orml_nft::Classes::<T>::try_mutate(class_id, |maybe_class| -> DispatchResult {
+			let class_info : &mut ClassInfoOf<T> =
+				maybe_class.as_mut().ok_or(Error::<T>::ClassIdNotFound)?;
+			ensure!(class_info.owner == owner.clone(), Error::<T>::NoPermission);
+
+			class_info.metadata = metadata;
+			class_info.data = data;
+
+			Ok(())
+		})?;
 
 		Self::deposit_event(Event::UpdatedClass(owner.clone(), class_id));
 
