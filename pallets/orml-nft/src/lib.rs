@@ -8,12 +8,11 @@
 //! ## Overview
 //!
 //! This module provides basic functions to create and manager
-//! NFT(non fungible token) such as `create_class`, `update_class`, `transfer`, `mint`, `burn`.
+//! NFT(non fungible token) such as `create_class`, `transfer`, `mint`, `burn`.
 
 //! ### Module Functions
 //!
 //! - `create_class` - Create NFT(non fungible token) class
-//! - `update_class` - Update NFT(non fungible token) class
 //! - `transfer` - Transfer NFT(non fungible token) to another account.
 //! - `mint` - Mint NFT(non fungible token)
 //! - `burn` - Burn NFT(non fungible token)
@@ -213,29 +212,6 @@ impl<T: Config> Pallet<T> {
 		Classes::<T>::insert(class_id, info);
 
 		Ok(class_id)
-	}
-
-	/// Update NFT(non fungible token) class
-	pub fn update_class(
-		owner: &T::AccountId,
-		class_id: T::ClassId,
-		metadata: Vec<u8>,
-		data: T::ClassData,
-	) -> DispatchResult {
-		Classes::<T>::try_mutate_exists(class_id, |class_info| -> DispatchResult {
-			let old_info = class_info.take().ok_or(Error::<T>::ClassNotFound)?;
-			ensure!(old_info.owner == *owner, Error::<T>::NoPermission);
-
-			let new_info = ClassInfo {
-				metadata,
-				data,
-				total_issuance: old_info.total_issuance.clone(),
-				owner: owner.clone(),
-			};
-			Classes::<T>::insert(class_id, new_info);
-
-			Ok(())
-		})
 	}
 
 	/// Transfer NFT(non fungible token) from `from` account to `to` account
