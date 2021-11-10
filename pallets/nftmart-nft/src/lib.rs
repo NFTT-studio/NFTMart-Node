@@ -843,7 +843,7 @@ impl<T: Config> Pallet<T> {
 		};
 
 		orml_nft::Classes::<T>::try_mutate(class_id, |maybe_class| -> DispatchResult {
-			let class_info : &mut ClassInfoOf<T> =
+			let class_info: &mut ClassInfoOf<T> =
 				maybe_class.as_mut().ok_or(Error::<T>::ClassIdNotFound)?;
 			ensure!(class_info.owner == owner.clone(), Error::<T>::NoPermission);
 
