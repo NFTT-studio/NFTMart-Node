@@ -502,6 +502,29 @@ pub mod module {
 			)
 		}
 
+		/// Update token metadata.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn update_token_metadata(
+			origin: OriginFor<T>,
+			#[pallet::compact] class_id: ClassIdOf<T>,
+			#[pallet::compact] token_id: TokenIdOf<T>,
+			metadata: NFTMetadata,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			orml_nft::Tokens::<T>::try_mutate(
+				class_id,
+				token_id,
+				|maybe_token| -> DispatchResultWithPostInfo {
+					let token_info: &mut TokenInfoOf<T> =
+						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
+					ensure!(who == token_info.data.creator, Error::<T>::NoPermission);
+					token_info.metadata = metadata;
+					Ok(().into())
+				},
+			)
+		}
+
 		/// Mint NFT token
 		///
 		/// - `to`: the token owner's account
