@@ -224,6 +224,12 @@ pub mod module {
 		UpdatedClass(T::AccountId, ClassIdOf<T>),
 		/// Minted NFT token. \[from, to, class_id, token_id, quantity\]
 		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>),
+		/// Updated NFT token metadata. \[owner, class_id, token_id\]
+		UpdatedTokenMetadata(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
+		/// Updated NFT token royalty. \[beneficiary, class_id, token_id, royalty\]
+		UpdatedTokenRoyalty(T::AccountId, ClassIdOf<T>, TokenIdOf<T>, Option<PerU16>),
+		/// Updated NFT token royalty beneficiary. \[from, class_id, token_id, to\]
+		UpdatedTokenRoyaltyBeneficiary(T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::AccountId),
 		/// Transferred NFT token. \[from, to, class_id, token_id, quantity\]
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id, quantity, unreserved\]
@@ -475,7 +481,14 @@ pub mod module {
 						.or_else(core::convert::identity)?;
 					Ok(().into())
 				},
-			)
+			)?;
+			Self::deposit_event(Event::UpdatedTokenRoyalty(
+				who,
+				class_id,
+				token_id,
+				charge_royalty,
+			));
+			Ok(().into())
 		}
 
 		/// Update token royalty beneficiary.
@@ -488,6 +501,7 @@ pub mod module {
 			to: <T::Lookup as StaticLookup>::Source,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
+			let target = T::Lookup::lookup(to)?;
 			orml_nft::Tokens::<T>::try_mutate(
 				class_id,
 				token_id,
@@ -495,11 +509,14 @@ pub mod module {
 					let token_info: &mut TokenInfoOf<T> =
 						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
 					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
-					let to = T::Lookup::lookup(to)?;
-					token_info.data.royalty_beneficiary = to;
+					token_info.data.royalty_beneficiary = target.clone();
 					Ok(().into())
 				},
-			)
+			)?;
+			Self::deposit_event(Event::UpdatedTokenRoyaltyBeneficiary(
+				who, class_id, token_id, target,
+			));
+			Ok(().into())
 		}
 
 		/// Update token metadata.
@@ -522,7 +539,9 @@ pub mod module {
 					token_info.metadata = metadata;
 					Ok(().into())
 				},
-			)
+			)?;
+			Self::deposit_event(Event::UpdatedTokenMetadata(who, class_id, token_id));
+			Ok(().into())
 		}
 
 		/// Mint NFT token
