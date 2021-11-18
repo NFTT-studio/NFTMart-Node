@@ -505,3 +505,9 @@ impl<T: Config> Pallet<T> {
 		)
 	}
 }
+
+impl<T: Config> nftmart_traits::NftmartOrder<ClassIdOf<T>, TokenIdOf<T>> for Pallet<T> {
+	fn burn_orders(_class_id: ClassIdOf<T>, _token_id: TokenIdOf<T>) {
+		// TODO
+	}
+}
