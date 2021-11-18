@@ -157,6 +157,9 @@ pub mod module {
 		/// Extra Configurations
 		type ExtraConfig: NftmartConfig<Self::AccountId, BlockNumberFor<Self>>;
 
+		/// Order Configurations
+		type OrderConfig: NftmartOrder<ClassIdOf<Self>, TokenIdOf<Self>>;
+
 		/// The minimum balance to create class
 		#[pallet::constant]
 		type CreateClassDeposit: Get<Balance>;
@@ -635,6 +638,8 @@ pub mod module {
 			let who = ensure_signed(origin)?;
 			ensure!(Self::is_burnable(class_id)?, Error::<T>::NonBurnable);
 			ensure!(quantity >= One::one(), Error::<T>::InvalidQuantity);
+
+			T::OrderConfig::burn_orders(class_id, token_id);
 
 			if let Some(token_info) =
 				orml_nft::Pallet::<T>::burn(&who, (class_id, token_id), quantity)?

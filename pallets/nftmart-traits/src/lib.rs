@@ -35,6 +35,10 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn get_min_commission_agent_deposit() -> Balance;
 }
 
+pub trait NftmartOrder<ClassId, TokenId> {
+	fn burn_orders(class_id: ClassId, token_id: TokenId);
+}
+
 pub trait NftmartNft<AccountId, ClassId, TokenId> {
 	fn peek_next_class_id() -> ClassId;
 	fn transfer(
