@@ -177,6 +177,8 @@ pub mod module {
 		),
 		/// CreatedOffer \[who, order_id\]
 		CreatedOffer(T::AccountId, GlobalId),
+		/// FoundOrders \[order_ids\]
+		FoundOrders(Vec<GlobalId>),
 	}
 
 	#[pallet::pallet]
@@ -506,8 +508,29 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> nftmart_traits::NftmartOrder<ClassIdOf<T>, TokenIdOf<T>> for Pallet<T> {
-	fn burn_orders(_class_id: ClassIdOf<T>, _token_id: TokenIdOf<T>) {
-		// TODO
+impl<T: Config> nftmart_traits::NftmartOrder<T::AccountId, ClassIdOf<T>, TokenIdOf<T>>
+	for Pallet<T>
+{
+	fn burn_orders(
+		who: &T::AccountId,
+		class_id: ClassIdOf<T>,
+		token_id: TokenIdOf<T>,
+	) -> DispatchResult {
+		let all_orders: Vec<GlobalId> = Orders::<T>::iter()
+			.filter(|(owner, _order_id, order)| {
+				let items = &order.items;
+				owner == who &&
+					items
+						.into_iter()
+						.any(|item| item.class_id == class_id && item.token_id == token_id)
+			})
+			.map(|(_owner, order_id, _order)| order_id)
+			.collect();
+		Self::deposit_event(Event::FoundOrders(all_orders.clone()));
+		for order_id in all_orders {
+			Self::delete_order(&who, order_id)?;
+			Self::deposit_event(Event::RemovedOrder(who.clone(), order_id));
+		}
+		Ok(())
 	}
 }
