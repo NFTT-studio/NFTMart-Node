@@ -312,11 +312,8 @@ pub mod module {
 
 			let order: OrderOf<T> = Self::delete_order(&order_owner, order_id)?;
 
-			// Check deadline of this order
-			ensure!(
-				frame_system::Pallet::<T>::block_number() < order.deadline,
-				Error::<T>::TakeExpiredOrderOrOffer
-			);
+			// Skip check deadline of orders
+			// Orders are supposed to be valid until taken or cancelled
 
 			let (items, commission_agent) = to_item_vec!(order, commission_agent);
 			let (beneficiary, royalty_rate) = ensure_one_royalty!(items);
