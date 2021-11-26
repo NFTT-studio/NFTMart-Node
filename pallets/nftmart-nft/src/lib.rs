@@ -227,6 +227,8 @@ pub mod module {
 		UpdatedClass(T::AccountId, ClassIdOf<T>),
 		/// Minted NFT token. \[from, to, class_id, token_id, quantity\]
 		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>),
+		/// Updated NFT token beneficiary, quantity, metadata, royalty. \[owner, class_id, token_id\]
+		UpdatedToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Updated NFT token metadata. \[owner, class_id, token_id\]
 		UpdatedTokenMetadata(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
 		/// Updated NFT token royalty. \[beneficiary, class_id, token_id, royalty\]
@@ -544,6 +546,60 @@ pub mod module {
 				},
 			)?;
 			Self::deposit_event(Event::UpdatedTokenMetadata(who, class_id, token_id));
+			Ok(().into())
+		}
+
+		/// Update token royalty_beneficiary, quantity, metadata, and royalty.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn update_token(
+			origin: OriginFor<T>,
+			to: <T::Lookup as StaticLookup>::Source,
+			#[pallet::compact] class_id: ClassIdOf<T>,
+			#[pallet::compact] token_id: TokenIdOf<T>,
+			#[pallet::compact] quantity: TokenIdOf<T>,
+			metadata: NFTMetadata,
+			charge_royalty: Option<PerU16>,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			let target = T::Lookup::lookup(to)?;
+			orml_nft::Tokens::<T>::try_mutate(
+				class_id,
+				token_id,
+				|maybe_token| -> DispatchResultWithPostInfo {
+					let token_info: &mut TokenInfoOf<T> =
+						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
+
+					// update royalty beneficiary
+					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
+					token_info.data.royalty_beneficiary = target.clone();
+
+					// update royalty
+					ensure!(
+						orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) ==
+							token_info.quantity,
+						Error::<T>::NoPermission
+					);
+
+					token_info.data.royalty_rate = charge_royalty
+						.ok_or_else(|| -> Result<PerU16, DispatchError> {
+							let class_info: ClassInfoOf<T> =
+								orml_nft::Pallet::<T>::classes(class_id)
+									.ok_or(Error::<T>::ClassIdNotFound)?;
+							Ok(class_info.data.royalty_rate)
+						})
+						.or_else(core::convert::identity)?;
+
+					// update metadata
+					token_info.metadata = metadata;
+
+					// update quantity
+					token_info.quantity = quantity;
+
+					Ok(().into())
+				},
+			)?;
+			Self::deposit_event(Event::UpdatedToken(who, class_id, token_id));
 			Ok(().into())
 		}
 
