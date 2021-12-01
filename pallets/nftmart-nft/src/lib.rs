@@ -470,11 +470,15 @@ pub mod module {
 					let token_info: &mut TokenInfoOf<T> =
 						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
 					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
-					ensure!(
-						orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) ==
-							token_info.quantity,
-						Error::<T>::NoPermission
-					);
+					if charge_royalty.is_some() &&
+						(charge_royalty.unwrap() > token_info.data.royalty_rate)
+					{
+						ensure!(
+							orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) ==
+								token_info.quantity,
+							Error::<T>::NoPermission
+						);
+					}
 
 					token_info.data.royalty_rate = charge_royalty
 						.ok_or_else(|| -> Result<PerU16, DispatchError> {
