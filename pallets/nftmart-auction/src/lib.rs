@@ -456,6 +456,25 @@ pub mod module {
 			Ok(().into())
 		}
 
+		/// remove an expired dutch auction by auction owner.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn remove_expired_dutch_auction(
+			origin: OriginFor<T>,
+			auction_owner: T::AccountId,
+			#[pallet::compact] auction_id: GlobalId,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			let auction: DutchAuctionOf<T> = Self::dutch_auctions(&auction_owner, auction_id)
+				.ok_or(Error::<T>::DutchAuctionNotFound)?;
+			let current_block = frame_system::Pallet::<T>::block_number();
+			ensure!(current_block >= auction.deadline, Error::<T>::CannotRemoveAuction);
+			let (_, bid) = Self::delete_dutch_auction(&auction_owner, auction_id)?;
+			ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
+			Self::deposit_event(Event::RemovedDutchAuction(who, auction_id));
+			Ok(().into())
+		}
+
 		/// Create an British auction.
 		///
 		/// - `currency_id`: Currency Id
@@ -677,6 +696,25 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let (_, bid) = Self::delete_british_auction(&who, auction_id)?;
+			ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
+			Self::deposit_event(Event::RemovedBritishAuction(who, auction_id));
+			Ok(().into())
+		}
+
+		/// remove an expired british auction by auction owner.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn remove_expired_british_auction(
+			origin: OriginFor<T>,
+			auction_owner: T::AccountId,
+			#[pallet::compact] auction_id: GlobalId,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			let auction: BritishAuctionOf<T> = Self::british_auctions(&auction_owner, auction_id)
+				.ok_or(Error::<T>::BritishAuctionNotFound)?;
+			let current_block = frame_system::Pallet::<T>::block_number();
+			ensure!(current_block >= auction.deadline, Error::<T>::CannotRemoveAuction);
+			let (_, bid) = Self::delete_british_auction(&auction_owner, auction_id)?;
 			ensure!(bid.last_bid_account.is_none(), Error::<T>::CannotRemoveAuction);
 			Self::deposit_event(Event::RemovedBritishAuction(who, auction_id));
 			Ok(().into())
