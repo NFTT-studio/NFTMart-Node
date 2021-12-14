@@ -157,6 +157,9 @@ pub mod module {
 		/// Extra Configurations
 		type ExtraConfig: NftmartConfig<Self::AccountId, BlockNumberFor<Self>>;
 
+		/// Order Configurations
+		type OrderConfig: NftmartOrder<Self::AccountId, ClassIdOf<Self>, TokenIdOf<Self>>;
+
 		/// The minimum balance to create class
 		#[pallet::constant]
 		type CreateClassDeposit: Get<Balance>;
@@ -220,8 +223,18 @@ pub mod module {
 	pub enum Event<T: Config> {
 		/// Created NFT class. \[owner, class_id\]
 		CreatedClass(T::AccountId, ClassIdOf<T>),
+		/// Updated NFT class. \[owner, class_id\]
+		UpdatedClass(T::AccountId, ClassIdOf<T>),
 		/// Minted NFT token. \[from, to, class_id, token_id, quantity\]
 		MintedToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>),
+		/// Updated NFT token beneficiary, quantity, metadata, royalty. \[owner, class_id, token_id\]
+		UpdatedToken(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
+		/// Updated NFT token metadata. \[owner, class_id, token_id\]
+		UpdatedTokenMetadata(T::AccountId, ClassIdOf<T>, TokenIdOf<T>),
+		/// Updated NFT token royalty. \[beneficiary, class_id, token_id, royalty\]
+		UpdatedTokenRoyalty(T::AccountId, ClassIdOf<T>, TokenIdOf<T>, Option<PerU16>),
+		/// Updated NFT token royalty beneficiary. \[from, class_id, token_id, to\]
+		UpdatedTokenRoyaltyBeneficiary(T::AccountId, ClassIdOf<T>, TokenIdOf<T>, T::AccountId),
 		/// Transferred NFT token. \[from, to, class_id, token_id, quantity\]
 		TransferredToken(T::AccountId, T::AccountId, ClassIdOf<T>, TokenIdOf<T>, TokenIdOf<T>),
 		/// Burned NFT token. \[owner, class_id, token_id, quantity, unreserved\]
@@ -407,6 +420,39 @@ pub mod module {
 			Ok(().into())
 		}
 
+		/// Update NFT class.
+		///
+		/// - `class_id`: class id
+		/// - `metadata`: external metadata
+		/// - `properties`: class property, include `Transferable` `Burnable`
+		/// - `name`: class name, with len limitation.
+		/// - `description`: class description, with len limitation.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn update_class(
+			origin: OriginFor<T>,
+			#[pallet::compact] class_id: ClassIdOf<T>,
+			metadata: NFTMetadata,
+			name: Vec<u8>,
+			description: Vec<u8>,
+			#[pallet::compact] royalty_rate: PerU16,
+			properties: Properties,
+			category_ids: Vec<GlobalId>,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			Self::do_update_class(
+				&who,
+				class_id,
+				metadata,
+				name,
+				description,
+				royalty_rate,
+				properties,
+				category_ids,
+			)?;
+			Ok(().into())
+		}
+
 		/// Update token royalty.
 		#[pallet::weight(100_000)]
 		#[transactional]
@@ -424,6 +470,115 @@ pub mod module {
 					let token_info: &mut TokenInfoOf<T> =
 						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
 					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
+					if charge_royalty.is_some() &&
+						(charge_royalty.unwrap() > token_info.data.royalty_rate)
+					{
+						ensure!(
+							orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) ==
+								token_info.quantity,
+							Error::<T>::NoPermission
+						);
+					}
+
+					token_info.data.royalty_rate = charge_royalty
+						.ok_or_else(|| -> Result<PerU16, DispatchError> {
+							let class_info: ClassInfoOf<T> =
+								orml_nft::Pallet::<T>::classes(class_id)
+									.ok_or(Error::<T>::ClassIdNotFound)?;
+							Ok(class_info.data.royalty_rate)
+						})
+						.or_else(core::convert::identity)?;
+					Ok(().into())
+				},
+			)?;
+			Self::deposit_event(Event::UpdatedTokenRoyalty(
+				who,
+				class_id,
+				token_id,
+				charge_royalty,
+			));
+			Ok(().into())
+		}
+
+		/// Update token royalty beneficiary.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn update_token_royalty_beneficiary(
+			origin: OriginFor<T>,
+			#[pallet::compact] class_id: ClassIdOf<T>,
+			#[pallet::compact] token_id: TokenIdOf<T>,
+			to: <T::Lookup as StaticLookup>::Source,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			let target = T::Lookup::lookup(to)?;
+			orml_nft::Tokens::<T>::try_mutate(
+				class_id,
+				token_id,
+				|maybe_token| -> DispatchResultWithPostInfo {
+					let token_info: &mut TokenInfoOf<T> =
+						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
+					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
+					token_info.data.royalty_beneficiary = target.clone();
+					Ok(().into())
+				},
+			)?;
+			Self::deposit_event(Event::UpdatedTokenRoyaltyBeneficiary(
+				who, class_id, token_id, target,
+			));
+			Ok(().into())
+		}
+
+		/// Update token metadata.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn update_token_metadata(
+			origin: OriginFor<T>,
+			#[pallet::compact] class_id: ClassIdOf<T>,
+			#[pallet::compact] token_id: TokenIdOf<T>,
+			metadata: NFTMetadata,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			orml_nft::Tokens::<T>::try_mutate(
+				class_id,
+				token_id,
+				|maybe_token| -> DispatchResultWithPostInfo {
+					let token_info: &mut TokenInfoOf<T> =
+						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
+					ensure!(who == token_info.data.creator, Error::<T>::NoPermission);
+					token_info.metadata = metadata;
+					Ok(().into())
+				},
+			)?;
+			Self::deposit_event(Event::UpdatedTokenMetadata(who, class_id, token_id));
+			Ok(().into())
+		}
+
+		/// Update token royalty_beneficiary, quantity, metadata, and royalty.
+		#[pallet::weight(100_000)]
+		#[transactional]
+		pub fn update_token(
+			origin: OriginFor<T>,
+			to: <T::Lookup as StaticLookup>::Source,
+			#[pallet::compact] class_id: ClassIdOf<T>,
+			#[pallet::compact] token_id: TokenIdOf<T>,
+			#[pallet::compact] quantity: TokenIdOf<T>,
+			metadata: NFTMetadata,
+			charge_royalty: Option<PerU16>,
+		) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+			let target = T::Lookup::lookup(to)?;
+			orml_nft::Tokens::<T>::try_mutate(
+				class_id,
+				token_id,
+				|maybe_token| -> DispatchResultWithPostInfo {
+					let token_info: &mut TokenInfoOf<T> =
+						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
+
+					// update royalty beneficiary
+					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
+					token_info.data.royalty_beneficiary = target.clone();
+
+					// update royalty
 					ensure!(
 						orml_nft::Pallet::<T>::total_count(&who, (class_id, token_id)) ==
 							token_info.quantity,
@@ -438,33 +593,18 @@ pub mod module {
 							Ok(class_info.data.royalty_rate)
 						})
 						.or_else(core::convert::identity)?;
-					Ok(().into())
-				},
-			)
-		}
 
-		/// Update token royalty beneficiary.
-		#[pallet::weight(100_000)]
-		#[transactional]
-		pub fn update_token_royalty_beneficiary(
-			origin: OriginFor<T>,
-			#[pallet::compact] class_id: ClassIdOf<T>,
-			#[pallet::compact] token_id: TokenIdOf<T>,
-			to: <T::Lookup as StaticLookup>::Source,
-		) -> DispatchResultWithPostInfo {
-			let who = ensure_signed(origin)?;
-			orml_nft::Tokens::<T>::try_mutate(
-				class_id,
-				token_id,
-				|maybe_token| -> DispatchResultWithPostInfo {
-					let token_info: &mut TokenInfoOf<T> =
-						maybe_token.as_mut().ok_or(Error::<T>::TokenIdNotFound)?;
-					ensure!(who == token_info.data.royalty_beneficiary, Error::<T>::NoPermission);
-					let to = T::Lookup::lookup(to)?;
-					token_info.data.royalty_beneficiary = to;
+					// update metadata
+					token_info.metadata = metadata;
+
+					// update quantity
+					token_info.quantity = quantity;
+
 					Ok(().into())
 				},
-			)
+			)?;
+			Self::deposit_event(Event::UpdatedToken(who, class_id, token_id));
+			Ok(().into())
 		}
 
 		/// Mint NFT token
@@ -558,6 +698,9 @@ pub mod module {
 			let who = ensure_signed(origin)?;
 			ensure!(Self::is_burnable(class_id)?, Error::<T>::NonBurnable);
 			ensure!(quantity >= One::one(), Error::<T>::InvalidQuantity);
+
+			T::OrderConfig::burn_orders(&who, class_id, token_id)?;
+			T::OrderConfig::burn_offers(&who, class_id, token_id)?;
 
 			if let Some(token_info) =
 				orml_nft::Pallet::<T>::burn(&who, (class_id, token_id), quantity)?
@@ -772,6 +915,58 @@ impl<T: Config> Pallet<T> {
 	}
 
 	#[transactional]
+	pub fn do_update_class(
+		who: &T::AccountId,
+		class_id: ClassIdOf<T>,
+		metadata: NFTMetadata,
+		name: Vec<u8>,
+		description: Vec<u8>,
+		royalty_rate: PerU16,
+		properties: Properties,
+		category_ids: Vec<GlobalId>,
+	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
+		let old_class_info =
+			orml_nft::Pallet::<T>::classes(class_id).ok_or(Error::<T>::ClassIdNotFound)?;
+		let owner = old_class_info.owner;
+		ensure!(who == &owner, Error::<T>::NoPermission);
+
+		ensure!(category_ids.len() <= MAX_CATEGORY_PER_CLASS, Error::<T>::CategoryOutOfBound);
+		ensure!(category_ids.len() >= 1, Error::<T>::CategoryOutOfBound);
+		if category_ids.len() == 2 {
+			ensure!(category_ids[0] != category_ids[1], Error::<T>::DuplicatedCategories);
+		}
+
+		ensure!(name.len() <= 20, Error::<T>::NameTooLong); // TODO: pass configurations from runtime configuration.
+		ensure!(description.len() <= 256, Error::<T>::DescriptionTooLong); // TODO: pass configurations from runtime configuration.
+
+		let old_data = old_class_info.data;
+		let data: ClassData<BlockNumberOf<T>> = ClassData {
+			deposit: old_data.deposit,
+			properties,
+			name,
+			description,
+			create_block: old_data.create_block,
+			royalty_rate,
+			category_ids,
+		};
+
+		orml_nft::Classes::<T>::try_mutate(class_id, |maybe_class| -> DispatchResult {
+			let class_info: &mut ClassInfoOf<T> =
+				maybe_class.as_mut().ok_or(Error::<T>::ClassIdNotFound)?;
+			ensure!(class_info.owner == owner.clone(), Error::<T>::NoPermission);
+
+			class_info.metadata = metadata;
+			class_info.data = data;
+
+			Ok(())
+		})?;
+
+		Self::deposit_event(Event::UpdatedClass(owner.clone(), class_id));
+
+		Ok((owner, class_id))
+	}
+
+	#[transactional]
 	pub fn do_transfer(
 		from: &T::AccountId,
 		to: &T::AccountId,
@@ -970,6 +1165,28 @@ impl<T: Config> nftmart_traits::NftmartNft<T::AccountId, ClassIdOf<T>, TokenIdOf
 	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
 		Self::do_create_class(
 			who,
+			metadata,
+			name,
+			description,
+			royalty_rate,
+			properties,
+			category_ids,
+		)
+	}
+
+	fn update_class(
+		who: &T::AccountId,
+		class_id: ClassIdOf<T>,
+		metadata: NFTMetadata,
+		name: Vec<u8>,
+		description: Vec<u8>,
+		royalty_rate: PerU16,
+		properties: Properties,
+		category_ids: Vec<GlobalId>,
+	) -> ResultPost<(T::AccountId, ClassIdOf<T>)> {
+		Self::do_update_class(
+			who,
+			class_id,
 			metadata,
 			name,
 			description,

@@ -505,3 +505,50 @@ impl<T: Config> Pallet<T> {
 		)
 	}
 }
+
+impl<T: Config> nftmart_traits::NftmartOrder<T::AccountId, ClassIdOf<T>, TokenIdOf<T>>
+	for Pallet<T>
+{
+	fn burn_orders(
+		who: &T::AccountId,
+		class_id: ClassIdOf<T>,
+		token_id: TokenIdOf<T>,
+	) -> DispatchResult {
+		let all_orders: Vec<GlobalId> = Orders::<T>::iter()
+			.filter(|(owner, _order_id, order)| {
+				let items = &order.items;
+				owner == who &&
+					items
+						.into_iter()
+						.any(|item| item.class_id == class_id && item.token_id == token_id)
+			})
+			.map(|(_owner, order_id, _order)| order_id)
+			.collect();
+		for order_id in all_orders {
+			Self::delete_order(&who, order_id)?;
+			Self::deposit_event(Event::RemovedOrder(who.clone(), order_id));
+		}
+		Ok(())
+	}
+	fn burn_offers(
+		who: &T::AccountId,
+		class_id: ClassIdOf<T>,
+		token_id: TokenIdOf<T>,
+	) -> DispatchResult {
+		let all_offers: Vec<GlobalId> = Offers::<T>::iter()
+			.filter(|(owner, _offer_id, offer)| {
+				let items = &offer.items;
+				owner == who &&
+					items
+						.into_iter()
+						.any(|item| item.class_id == class_id && item.token_id == token_id)
+			})
+			.map(|(_owner, offer_id, _offer)| offer_id)
+			.collect();
+		for offer_id in all_offers {
+			Self::delete_offer(&who, offer_id)?;
+			Self::deposit_event(Event::RemovedOffer(who.clone(), offer_id));
+		}
+		Ok(())
+	}
+}

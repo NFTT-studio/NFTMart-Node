@@ -35,6 +35,11 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 	fn get_min_commission_agent_deposit() -> Balance;
 }
 
+pub trait NftmartOrder<AccountId, ClassId, TokenId> {
+	fn burn_orders(owner: &AccountId, class_id: ClassId, token_id: TokenId) -> DispatchResult;
+	fn burn_offers(owner: &AccountId, class_id: ClassId, token_id: TokenId) -> DispatchResult;
+}
+
 pub trait NftmartNft<AccountId, ClassId, TokenId> {
 	fn peek_next_class_id() -> ClassId;
 	fn transfer(
@@ -67,6 +72,16 @@ pub trait NftmartNft<AccountId, ClassId, TokenId> {
 	) -> Result<(AccountId, PerU16), DispatchError>;
 	fn create_class(
 		who: &AccountId,
+		metadata: NFTMetadata,
+		name: Vec<u8>,
+		description: Vec<u8>,
+		royalty_rate: PerU16,
+		properties: Properties,
+		category_ids: Vec<GlobalId>,
+	) -> ResultPost<(AccountId, ClassId)>;
+	fn update_class(
+		who: &AccountId,
+		class_id: ClassId,
 		metadata: NFTMetadata,
 		name: Vec<u8>,
 		description: Vec<u8>,
