@@ -37,6 +37,7 @@ pub trait NftmartConfig<AccountId, BlockNumber> {
 
 pub trait NftmartOrder<AccountId, ClassId, TokenId> {
 	fn burn_orders(owner: &AccountId, class_id: ClassId, token_id: TokenId) -> DispatchResult;
+	fn burn_offers(owner: &AccountId, class_id: ClassId, token_id: TokenId) -> DispatchResult;
 }
 
 pub trait NftmartNft<AccountId, ClassId, TokenId> {

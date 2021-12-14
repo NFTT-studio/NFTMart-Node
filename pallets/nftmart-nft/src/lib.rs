@@ -700,6 +700,7 @@ pub mod module {
 			ensure!(quantity >= One::one(), Error::<T>::InvalidQuantity);
 
 			T::OrderConfig::burn_orders(&who, class_id, token_id)?;
+			T::OrderConfig::burn_offers(&who, class_id, token_id)?;
 
 			if let Some(token_info) =
 				orml_nft::Pallet::<T>::burn(&who, (class_id, token_id), quantity)?
