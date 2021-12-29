@@ -93,6 +93,8 @@ pub mod constants;
 use constants::{currency::*, time::*};
 use sp_runtime::generic::Era;
 
+mod voter_bags;
+
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
@@ -512,6 +514,7 @@ impl pallet_staking::Config for Runtime {
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
 	type ElectionProvider = ElectionProviderMultiPhase;
 	type GenesisElectionProvider = onchain::OnChainSequentialPhragmen<Self>;
+	type SortedListProvider = BagsList;
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
 }
 
@@ -540,6 +543,18 @@ parameter_types! {
 		*RuntimeBlockLength::get()
 		.max
 		.get(DispatchClass::Normal);
+	pub const VoterSnapshotPerBlock: u32 = 10_000;
+}
+
+parameter_types! {
+	pub const BagThresholds: &'static [u64] = &voter_bags::THRESHOLDS;
+}
+
+impl pallet_bags_list::Config for Runtime {
+	type Event = Event;
+	type VoteWeightProvider = Staking;
+	type WeightInfo = pallet_bags_list::weights::SubstrateWeight<Runtime>;
+	type BagThresholds = BagThresholds;
 }
 
 sp_npos_elections::generate_solution_type!(
@@ -622,6 +637,7 @@ impl pallet_election_provider_multi_phase::Config for Runtime {
 	type WeightInfo = pallet_election_provider_multi_phase::weights::SubstrateWeight<Self>;
 	type ForceOrigin = EnsureRootOrHalfCouncil;
 	type BenchmarkingConfig = BenchmarkConfig;
+	type VoterSnapshotPerBlock = VoterSnapshotPerBlock;
 }
 
 parameter_types! {
@@ -885,6 +901,9 @@ parameter_types! {
 	/// We prioritize im-online heartbeats over election solution submission.
 	pub const StakingUnsignedPriority: TransactionPriority = TransactionPriority::max_value() / 2;
 	pub const MaxAuthorities: u32 = 100;
+	pub const MaxKeys: u32 = 10_000;
+	pub const MaxPeerInHeartbeats: u32 = 10_000;
+	pub const MaxPeerDataEncodingSize: u32 = 1_000;
 }
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
@@ -949,6 +968,9 @@ impl pallet_im_online::Config for Runtime {
 	type ReportUnresponsiveness = Offences;
 	type UnsignedPriority = ImOnlineUnsignedPriority;
 	type WeightInfo = pallet_im_online::weights::SubstrateWeight<Runtime>;
+	type MaxKeys = MaxKeys;
+	type MaxPeerInHeartbeats = MaxPeerInHeartbeats;
+	type MaxPeerDataEncodingSize = MaxPeerDataEncodingSize;
 }
 
 impl pallet_offences::Config for Runtime {
@@ -1161,6 +1183,7 @@ construct_runtime!(
 		Nftmart: nftmart_nft::{Pallet, Call, Storage, Event<T>, Config<T>},
 		NftmartOrder: nftmart_order::{Pallet, Call, Storage, Event<T>, Config<T>},
 		NftmartAuction: nftmart_auction::{Pallet, Call, Storage, Event<T>, Config<T>},
+		BagsList: pallet_bags_list::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -1501,6 +1524,7 @@ impl_runtime_apis! {
 					   // list_benchmark!(list, extra, pallet_uniques, Uniques);
 					   list_benchmark!(list, extra, pallet_utility, Utility);
 					   // list_benchmark!(list, extra, pallet_vesting, Vesting);
+					   list_benchmark!(list, extra, pallet_bags_list, BagsList);
 
 					   let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -1565,6 +1589,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_treasury, Treasury);
 			add_benchmark!(params, batches, pallet_utility, Utility);
 			add_benchmark!(params, batches, nftmart_auction, NftmartAuction);
+			add_benchmark!(params, batches, pallet_bags_list, BagsList);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)

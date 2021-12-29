@@ -8,9 +8,9 @@ edition = "2018"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-sp-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
+sp-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
 nftmart-traits = { default-features = false, path = "../../../nftmart-traits" }
 
 [features]

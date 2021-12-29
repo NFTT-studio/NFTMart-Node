@@ -7,22 +7,22 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
-sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-pallet-proxy = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+pallet-proxy = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
 orml-traits = { version = "0.4.1-dev", default-features = false, path = "../orml-traits" }
 nftmart-traits = { default-features = false, path = "../nftmart-traits" }
-frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128', optional = true }
+frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d', optional = true }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
-sp-io = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-pallet-balances = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
-pallet-utility = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = '88b4fc861129b63b445492e3088d7f12382f0128' }
+sp-io = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+pallet-balances = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+pallet-utility = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
 orml-currencies = { version = "0.4.1-dev", path = "../orml-currencies" }
 orml-tokens = { version = "0.4.1-dev", path = "../orml-tokens" }
 orml-nft = { path = "../orml-nft" }
