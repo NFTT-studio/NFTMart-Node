@@ -10,12 +10,12 @@ edition = "2021"
 [dependencies]
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-io = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-io = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 
-frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 
 orml-traits = { path = "../orml-traits", version = "0.4.1-dev", default-features = false }
 orml-utilities = { path = "../orml-utilities", version = "0.4.1-dev", default-features = false }
@@ -24,8 +24,8 @@ funty = { version = "=1.1.0", default-features = false } # https://github.com/bi
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
-sp-core = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-pallet-balances = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
+sp-core = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+pallet-balances = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 orml_tokens = { version = "0.4.1-dev", package = "orml-tokens", path = "../orml-tokens" }
 
 [features]

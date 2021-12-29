@@ -14,11 +14,11 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "2.0.0" }
 derive_more = "0.99"
 log = "0.4.8"
-sc-cli = { version = "0.10.0-dev", git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sc-client-api = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sc-service = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sc-executor = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-blockchain = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-core = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
+sc-cli = { version = "0.10.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sc-client-api = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sc-service = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sc-executor = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-blockchain = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-core = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 structopt = "0.3.8"

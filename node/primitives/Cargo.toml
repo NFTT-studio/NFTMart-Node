@@ -12,15 +12,15 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-application-crypto = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
+frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-application-crypto = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 nftmart-traits = { default-features = false, path = "../../pallets/nftmart-traits" }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
-sp-serializer = { git = 'https://github.com/purestake/substrate.git', rev = '3a5aa8c1a48b015b12e2419fa76b2e2530b3ac75' }
+sp-serializer = { git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 pretty_assertions = "0.6.1"
 
 [features]
