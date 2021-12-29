@@ -14,16 +14,16 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-frame-support = { default-features = false, version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
-frame-system = { default-features = false,  version = "4.0.0-dev",  git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
-frame-benchmarking = { default-features = false,  version = "4.0.0-dev",  git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735', optional = true }
+frame-support = { default-features = false, version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
+frame-system = { default-features = false,  version = "4.0.0-dev",  git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
+frame-benchmarking = { default-features = false,  version = "4.0.0-dev",  git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498', optional = true }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
 serde = { version = "1.0.119" }
-sp-core = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
-sp-io = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
-sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
+sp-core = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
+sp-io = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
+sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
 
 [features]
 default = ['std']

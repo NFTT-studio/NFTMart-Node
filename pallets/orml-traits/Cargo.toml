@@ -11,14 +11,14 @@ edition = "2018"
 serde = { version = "1.0.111", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
 
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
-sp-io = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
-sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
+sp-io = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
 
 num-traits = { version = "0.2.11", default-features = false }
 impl-trait-for-tuples = "0.1.3"
 
-frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '12b6441ef138303f50fa2fb20895fbf57c8e4735' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'e09e70a3d14b3757de0be427c6ac22dfc6fcd498' }
 orml-utilities = { version = "0.4.1-dev", default-features = false, path = "../orml-utilities" }
 
 funty = { version = "=1.1.0", default-features = false } # https://github.com/bitvecto-rs/bitvec/issues/105
