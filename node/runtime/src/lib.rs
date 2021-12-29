@@ -75,6 +75,15 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 use static_assertions::const_assert;
 
+// Imports added while install Frontier
+use pallet_evm::{
+	EnsureAddressNever, EnsureAddressRoot, HashedAddressMapping, SubstrateBlockHashMapping,
+};
+use sp_core::U256;
+// pub use it so we can import it in the chain spec.
+#[cfg(feature = "std")]
+pub use pallet_evm::GenesisAccount;
+
 #[cfg(any(feature = "std", test))]
 pub use frame_system::Call as SystemCall;
 #[cfg(any(feature = "std", test))]
@@ -1158,6 +1167,32 @@ impl nftmart_auction::Config for Runtime {
 	type WeightInfo = ();
 }
 
+parameter_types! {
+	   pub const LeetChainId: u64 = 1337;
+	   pub BlockGasLimit: U256 = U256::from(u32::max_value());
+}
+
+impl pallet_evm::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+
+	type BlockGasLimit = BlockGasLimit;
+	type ChainId = LeetChainId;
+	type BlockHashMapping = SubstrateBlockHashMapping<Self>;
+	type Runner = pallet_evm::runner::stack::Runner<Self>;
+
+	type CallOrigin = EnsureAddressRoot<AccountId>;
+	type WithdrawOrigin = EnsureAddressNever<AccountId>;
+	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
+
+	type FeeCalculator = ();
+	type GasWeightMapping = ();
+	type OnChargeTransaction = ();
+	type FindAuthor = ();
+	type PrecompilesType = ();
+	type PrecompilesValue = ();
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -1203,6 +1238,8 @@ construct_runtime!(
 		NftmartOrder: nftmart_order::{Pallet, Call, Storage, Event<T>, Config<T>},
 		NftmartAuction: nftmart_auction::{Pallet, Call, Storage, Event<T>, Config<T>},
 		BagsList: pallet_bags_list::{Pallet, Call, Storage, Event<T>},
+		// Frontier Stuff
+		EVM: pallet_evm::{Pallet, Call, Storage, Config, Event<T>},
 	}
 );
 

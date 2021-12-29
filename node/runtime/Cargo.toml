@@ -13,6 +13,8 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 
+getrandom = { version = "0.2", features = ["js"] }
+
 # third-party dependencies
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
@@ -83,6 +85,12 @@ pallet-treasury = { version = "4.0.0-dev", default-features = false, git = 'http
 pallet-utility = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
 pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', rev = 'c881b9c86df5d0e4e3607921598768a3ab8ccdc8' }
+
+# pallet-evm = { version = "6.0.0-dev", default-features = false, git = 'https://github.com/paritytech/frontier.git', rev = '0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6'}
+# pallet-evm = { default-features = false, git = 'https://github.com/paritytech/frontier.git', rev = '0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6'}
+pallet-evm = { version = "6.0.0-dev", default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+# pallet-evm = { version = "6.0.0-dev", default-features = false, git = 'https://github.com/btwiuse/frontier.git', rev = '921088a6a37042c5aef96f194bc251c21b9f33cf'}
+# pallet-evm = { version = "6.0.0-dev", default-features = false, git = 'https://github.com/btwiuse/frontier.git', rev = '62bd2f3d0f8e93af4f687373a0f40236cf635211'}
 
 node-primitives = { version = "2.0.0", path = "../primitives", default-features = false }
 chain-extension = { path = "../chain_extension", default-features = false }
@@ -160,6 +168,7 @@ std = [
 	"sp-transaction-pool/std",
 	"pallet-utility/std",
 	"sp-version/std",
+	"pallet-evm/std",
 	"pallet-recovery/std",
 	"log/std",
 	"frame-try-runtime/std",
