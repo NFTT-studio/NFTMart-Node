@@ -12,13 +12,13 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
-sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
-sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
-frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
-frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
-pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
-pallet-contracts = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'ce3c31f2bfa7e10817a8a0833faddeaee818910d' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '7fcebc86856164a346f6762d339e8cc3b6ec9d30' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '7fcebc86856164a346f6762d339e8cc3b6ec9d30' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '7fcebc86856164a346f6762d339e8cc3b6ec9d30' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '7fcebc86856164a346f6762d339e8cc3b6ec9d30' }
+frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '7fcebc86856164a346f6762d339e8cc3b6ec9d30' }
+pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '7fcebc86856164a346f6762d339e8cc3b6ec9d30' }
+pallet-contracts = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = '7fcebc86856164a346f6762d339e8cc3b6ec9d30' }
 nftmart-traits = { path = "../../pallets/nftmart-traits", default-features = false }
 nftmart-nft = { path = "../../pallets/nftmart-nft", default-features = false }
 
