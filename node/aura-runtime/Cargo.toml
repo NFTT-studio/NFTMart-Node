@@ -2,7 +2,7 @@
 name = "nftmart-aura-node-runtime"
 version = "4.0.0-dev"
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
-edition = "2018"
+edition = "2021"
 license = "Unlicense"
 homepage = "https://substrate.dev"
 repository = "https://github.com/substrate-developer-hub/substrate-node-template/"

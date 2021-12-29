@@ -36,7 +36,7 @@ use sp_consensus_babe::AuthorityId as BabeId;
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::{
 	traits::{IdentifyAccount, Verify},
-	PerU16, Perbill,
+	Perbill,
 };
 use sp_std::vec::Vec;
 
@@ -235,8 +235,6 @@ pub fn testnet_genesis(
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
 	const STASH: Balance = ENDOWMENT / 1000;
 
-	use sp_core::crypto::Ss58Codec;
-
 	GenesisConfig {
 		system: SystemConfig {
 			code: wasm_binary_unwrap().to_vec(),
@@ -307,158 +305,13 @@ pub fn testnet_genesis(
 				.collect(),
 		},
 		orml_nft: Default::default(),
-		// nftmart: Default::default(),
-		nftmart: node_runtime::NftmartConfig {
-			classes: vec![
-				nftmart_traits::ClassConfig {
-					class_id: 31,
-					class_metadata: String::from_utf8(
-						br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec(),
-					)
-					.unwrap(),
-					category_ids: vec![0],
-					name: String::from_utf8(b"class name31".to_vec()).unwrap(),
-					description: String::from_utf8(b"class description31".to_vec()).unwrap(),
-					properties: 1 | 2,
-					royalty_rate: PerU16::from_percent(20),
-					admins: vec![
-						AccountId::from_ss58check(
-							"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuEVMePZv8BaY33S19zmAEwBgNgokknFHGWSLGKB6tSzh9mS",
-						)
-						.unwrap(),
-					],
-					tokens: vec![
-						nftmart_traits::TokenConfig {
-							token_id: 4,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata4", "e":"ff4"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::from_percent(10),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 11,
-						},
-						nftmart_traits::TokenConfig {
-							token_id: 5,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata5", "e":"ff5"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::zero(),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 12,
-						},
-					],
-				},
-				nftmart_traits::ClassConfig {
-					class_id: 55,
-					class_metadata: String::from_utf8(
-						br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec(),
-					)
-					.unwrap(),
-					category_ids: vec![0],
-					name: String::from_utf8(b"class name55".to_vec()).unwrap(),
-					description: String::from_utf8(b"class description55".to_vec()).unwrap(),
-					properties: 1 | 2,
-					royalty_rate: PerU16::from_percent(15),
-					admins: vec![
-						AccountId::from_ss58check(
-							"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuEVMePZv8BaY33S19zmAEwBgNgokknFHGWSLGKB6tSzh9mS",
-						)
-						.unwrap(),
-					],
-					tokens: vec![
-						nftmart_traits::TokenConfig {
-							token_id: 41,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata41", "e":"ff41"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::from_percent(10),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 21,
-						},
-						nftmart_traits::TokenConfig {
-							token_id: 51,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata51", "e":"ff51"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::zero(),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 22,
-						},
-					],
-				},
-			],
-			..Default::default()
-		},
+		nftmart: Default::default(),
 		nftmart_order: Default::default(),
 		nftmart_auction: Default::default(),
 		nftmart_conf: node_runtime::NftmartConfConfig {
 			white_list: endowed_accounts,
 			auction_close_delay: nftmart_traits::time::MINUTES * 10,
-			category_list: vec![b"saaaa1".to_vec(), b"saaaa2".to_vec(), b"saaaa3".to_vec()],
+			category_list: vec![],
 			..Default::default()
 		},
 	}

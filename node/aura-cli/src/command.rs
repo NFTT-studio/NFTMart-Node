@@ -65,7 +65,7 @@ impl SubstrateCli for Cli {
 
 /// Parse and run command line arguments
 pub fn run() -> sc_cli::Result<()> {
-	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::Custom(
+	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::custom(
 		node_template_runtime::SS58Prefix::get() as u16,
 	));
 
