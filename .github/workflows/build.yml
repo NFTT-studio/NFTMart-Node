@@ -17,8 +17,8 @@ jobs:
 
     - name: Install Rustup
       run: |
-        rustup install nightly-2021-09-01
-        rustup default nightly-2021-09-01
+        rustup install nightly-2021-12-13
+        rustup default nightly-2021-12-13
         rustup target add wasm32-unknown-unknown
 
     - name: Setup Cache
