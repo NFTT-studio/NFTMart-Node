@@ -91,5 +91,6 @@ pub fn config_endowed(code: Option<&[u8]>, extra_endowed: Vec<AccountId>) -> Gen
 		nftmart_order: Default::default(),
 		nftmart_auction: Default::default(),
 		nftmart_conf: Default::default(),
+		evm: Default::default(),
 	}
 }

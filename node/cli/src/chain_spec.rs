@@ -313,6 +313,7 @@ pub fn testnet_genesis(
 			category_list: vec![],
 			..Default::default()
 		},
+		evm: Default::default(),
 	}
 }
 
