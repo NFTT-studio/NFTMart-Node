@@ -314,6 +314,7 @@ pub fn testnet_genesis(
 			..Default::default()
 		},
 		evm: Default::default(),
+		ethereum: Default::default(),
 	}
 }
 

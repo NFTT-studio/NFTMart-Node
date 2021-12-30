@@ -1193,6 +1193,11 @@ impl pallet_evm::Config for Runtime {
 	type PrecompilesValue = ();
 }
 
+impl pallet_ethereum::Config for Runtime {
+	type Event = Event;
+	type StateRoot = pallet_ethereum::IntermediateStateRoot;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -1240,6 +1245,7 @@ construct_runtime!(
 		BagsList: pallet_bags_list::{Pallet, Call, Storage, Event<T>},
 		// Frontier Stuff
 		EVM: pallet_evm::{Pallet, Call, Storage, Config, Event<T>},
+		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, Origin},
 	}
 );
 
