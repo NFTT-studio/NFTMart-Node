@@ -89,6 +89,7 @@ pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-fe
 
 pallet-evm = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
 pallet-ethereum = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+fp-rpc = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
 fp-self-contained = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
 # fp-evm = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
 
@@ -170,6 +171,7 @@ std = [
 	"sp-version/std",
 	"pallet-evm/std",
 	"pallet-ethereum/std",
+	"fp-rpc/std",
 	"fp-self-contained/std",
 	"pallet-recovery/std",
 	"log/std",

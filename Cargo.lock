@@ -4574,6 +4574,7 @@ name = "node-runtime"
 version = "2.0.1"
 dependencies = [
  "chain-extension",
+ "fp-rpc",
  "fp-self-contained",
  "frame-benchmarking",
  "frame-election-provider-support",
