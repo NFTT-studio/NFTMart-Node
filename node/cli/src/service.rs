@@ -166,6 +166,7 @@ pub fn new_partial(
 
 		let client = client.clone();
 		let pool = transaction_pool.clone();
+		let network = network.clone();
 		let select_chain = select_chain.clone();
 		let keystore = keystore_container.sync_keystore();
 		let chain_spec = config.chain_spec.cloned_box();
@@ -189,6 +190,7 @@ pub fn new_partial(
 					subscription_executor,
 					finality_provider: finality_proof_provider.clone(),
 				},
+				network: network.clone(),
 			};
 
 			node_rpc::create_full(deps).map_err(Into::into)
