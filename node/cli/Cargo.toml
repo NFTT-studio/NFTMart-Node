@@ -83,6 +83,9 @@ sc-authority-discovery = { version = "0.10.0-dev",  git = 'https://github.com/pu
 sc-executor = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 sc-sync-state-rpc = { version = "0.10.0-dev", git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 
+fc-mapping-sync = { git = 'https://github.com/purestake/frontier.git', branch = 'moonbeam-polkadot-v0.9.13' }
+fc-db = { git = 'https://github.com/purestake/frontier.git', branch = 'moonbeam-polkadot-v0.9.13' }
+
 # frame dependencies
 pallet-indices = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }

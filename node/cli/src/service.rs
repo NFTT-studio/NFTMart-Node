@@ -24,14 +24,18 @@ use futures::prelude::*;
 use node_executor::ExecutorDispatch;
 use node_primitives::Block;
 use node_runtime::RuntimeApi;
-use sc_client_api::{ExecutorProvider};
+use sc_client_api::{BlockchainEvents, ExecutorProvider};
 use sc_consensus_babe::{self, SlotProportion};
 use sc_executor::NativeElseWasmExecutor;
 use sc_network::{Event, NetworkService};
-use sc_service::{config::Configuration, error::Error as ServiceError, TaskManager};
+use sc_service::{BasePath, config::Configuration, error::Error as ServiceError, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_runtime::traits::Block as BlockT;
 use std::sync::Arc;
+
+use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
+use futures::StreamExt;
+use sc_cli::SubstrateCli;
 
 type FullClient =
 	sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
@@ -39,6 +43,29 @@ type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 type FullGrandpaBlockImport =
 	grandpa::GrandpaBlockImport<FullBackend, Block, FullClient, FullSelectChain>;
+
+pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
+       let config_dir = config
+               .base_path
+               .as_ref()
+               .map(|base_path| base_path.config_dir(config.chain_spec.id()))
+               .unwrap_or_else(|| {
+                       BasePath::from_project("", "", &crate::cli::Cli::executable_name())
+                               .config_dir(config.chain_spec.id())
+               });
+       config_dir.join("frontier").join("db")
+}
+
+pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
+       Ok(Arc::new(fc_db::Backend::<Block>::new(
+               &fc_db::DatabaseSettings {
+                       source: fc_db::DatabaseSettingsSrc::RocksDb {
+                               path: frontier_database_dir(&config),
+                               cache_size: 0,
+                       },
+               },
+       )?))
+}
 
 pub fn new_partial(
 	config: &Configuration,
@@ -60,6 +87,7 @@ pub fn new_partial(
 				sc_consensus_babe::BabeLink<Block>,
 			),
 			grandpa::SharedVoterState,
+			Arc<fc_db::Backend<Block>>,
 			Option<Telemetry>,
 		),
 	>,
@@ -104,6 +132,8 @@ pub fn new_partial(
 		task_manager.spawn_essential_handle(),
 		client.clone(),
 	);
+
+	let frontier_backend = open_frontier_backend(config)?;
 
 	let (grandpa_block_import, grandpa_link) = grandpa::block_import(
 		client.clone(),
@@ -207,7 +237,7 @@ pub fn new_partial(
 		select_chain,
 		import_queue,
 		transaction_pool,
-		other: (rpc_extensions_builder, import_setup, rpc_setup, telemetry),
+		other: (rpc_extensions_builder, import_setup, rpc_setup, frontier_backend, telemetry),
 	})
 }
 
@@ -234,7 +264,7 @@ pub fn new_full_base(
 		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (rpc_extensions_builder, import_setup, rpc_setup, mut telemetry),
+		other: (rpc_extensions_builder, import_setup, rpc_setup, frontier_backend, mut telemetry),
 	} = new_partial(&config)?;
 
 	let shared_voter_state = rpc_setup;
@@ -351,6 +381,19 @@ pub fn new_full_base(
 		let babe = sc_consensus_babe::start_babe(babe_config)?;
 		task_manager.spawn_essential_handle().spawn_blocking("babe-proposer", Some("block-authoring"), babe);
 	}
+
+    task_manager.spawn_essential_handle().spawn(
+            "frontier-mapping-sync-worker",
+            MappingSyncWorker::new(
+                    client.import_notification_stream(),
+                    std::time::Duration::new(6, 0),
+                    client.clone(),
+                    backend.clone(),
+                    frontier_backend.clone(),
+                    SyncStrategy::Normal,
+            )
+            .for_each(|()| futures::future::ready(())),
+    );
 
 	// Spawn authority discovery module.
 	if role.is_authority() {
