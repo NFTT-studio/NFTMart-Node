@@ -32,9 +32,12 @@
 
 use std::sync::Arc;
 
+use fc_rpc::{EthBlockDataCache, OverrideHandle, RuntimeApiStorageOverride};
 use node_primitives::{AccountId, Balance, Block, BlockNumber, Hash, Index};
-use sc_client_api::AuxStore;
-use sc_client_api::backend::{Backend, StorageProvider};
+use sc_client_api::{
+	backend::{Backend, StateBackend, StorageProvider},
+	AuxStore,
+};
 use sc_consensus_babe::{Config, Epoch};
 use sc_consensus_babe_rpc::BabeRpcHandler;
 use sc_consensus_epochs::SharedEpochChanges;
@@ -42,16 +45,19 @@ use sc_finality_grandpa::{
 	FinalityProofProvider, GrandpaJustificationStream, SharedAuthoritySet, SharedVoterState,
 };
 use sc_finality_grandpa_rpc::GrandpaRpcHandler;
+use sc_network::NetworkService;
 use sc_rpc::SubscriptionTaskExecutor;
 pub use sc_rpc_api::DenyUnsafe;
+use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::TransactionPool;
-use sc_network::NetworkService;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_consensus::SelectChain;
 use sp_consensus_babe::BabeApi;
 use sp_keystore::SyncCryptoStorePtr;
+use sp_runtime::traits::BlakeTwo256;
+use std::collections::BTreeMap;
 
 /// Extra dependencies for BABE.
 pub struct BabeDeps {
@@ -78,35 +84,43 @@ pub struct GrandpaDeps<B> {
 }
 
 /// Full client dependencies.
-pub struct FullDeps<C, P, SC, B> {
+pub struct FullDeps<C, P, SC, B, A: ChainApi> {
 	/// The client instance to use.
 	pub client: Arc<C>,
 	/// Transaction pool instance.
 	pub pool: Arc<P>,
+	/// Graph pool instance.
+	pub graph: Arc<Pool<A>>,
 	/// The SelectChain Strategy
 	pub select_chain: SC,
 	/// A copy of the chain spec.
 	pub chain_spec: Box<dyn sc_chain_spec::ChainSpec>,
 	/// Whether to deny unsafe calls
 	pub deny_unsafe: DenyUnsafe,
+	/// The Node authority flag
+	pub is_authority: bool,
 	/// BABE specific dependencies.
 	pub babe: BabeDeps,
 	/// GRANDPA specific dependencies.
 	pub grandpa: GrandpaDeps<B>,
 	/// Network service
 	pub network: Arc<NetworkService<Block, Hash>>,
+	/// Backend:
+	pub backend: Arc<fc_db::Backend<Block>>,
 }
 
 /// A IO handler that uses all Full RPC extensions.
 pub type IoHandler = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 
 /// Instantiate all Full RPC extensions.
-pub fn create_full<C, P, SC, B, BE>(
+pub fn create_full<C, P, SC, B, BE, A>(
 	deps: FullDeps<C, P, SC, B>,
 ) -> Result<jsonrpc_core::IoHandler<sc_rpc_api::Metadata>, Box<dyn std::error::Error + Send + Sync>>
 where
 	BE: Backend<Block> + 'static,
+	BE::State: StateBackend<BlakeTwo256>,
 	C: ProvideRuntimeApi<Block>
+		+ StorageProvider<Block, BE>
 		+ HeaderBackend<Block>
 		+ AuxStore
 		+ HeaderMetadata<Block, Error = BlockChainError>
@@ -121,19 +135,32 @@ where
 	C::Api: BabeApi<Block>,
 	C::Api: BlockBuilder<Block>,
 	C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
-	P: TransactionPool + 'static,
+	P: TransactionPool<Block = Block> + 'static,
 	SC: SelectChain<Block> + 'static,
 	B: sc_client_api::Backend<Block> + Send + Sync + 'static,
 	B::State: sc_client_api::backend::StateBackend<sp_runtime::traits::HashFor<Block>>,
+	A: ChainApi<Block = Block> + 'static,
 {
-	use fc_rpc::{NetApi, NetApiServer};
+	use fc_rpc::{EthApi, EthApiServer, NetApi, NetApiServer};
 	use nftmart_rpc::{NFTMart, NFTMartApi};
 	use pallet_contracts_rpc::{Contracts, ContractsApi};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
 	use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
 	let mut io = jsonrpc_core::IoHandler::default();
-	let FullDeps { client, pool, select_chain, chain_spec, deny_unsafe, babe, grandpa, network } = deps;
+	let FullDeps {
+		client,
+		pool,
+		select_chain,
+		chain_spec,
+		deny_unsafe,
+		babe,
+		grandpa,
+		network,
+		graph,
+		backend,
+		is_authority,
+	} = deps;
 
 	let BabeDeps { keystore, babe_config, shared_epoch_changes } = babe;
 	let GrandpaDeps {
@@ -144,7 +171,11 @@ where
 		finality_provider,
 	} = grandpa;
 
-	io.extend_with(SystemApi::to_delegate(FullSystem::new(client.clone(), pool, deny_unsafe)));
+	io.extend_with(SystemApi::to_delegate(FullSystem::new(
+		client.clone(),
+		pool.clone(),
+		deny_unsafe,
+	)));
 	// Making synchronous calls in light client freezes the browser currently,
 	// more context: https://github.com/paritytech/substrate/pull/3480
 	// These RPCs should use an asynchronous caller instead.
@@ -182,6 +213,36 @@ where
 		network.clone(),
 		// Whether to format the `peer_count` response as Hex (default) or not.
 		true,
+	)));
+
+	// We won't use the override feature
+	let overrides = Arc::new(OverrideHandle {
+		schemas: BTreeMap::new(),
+		fallback: Box::new(RuntimeApiStorageOverride::new(client.clone())),
+	});
+
+	// Nor any signers
+	let signer = Vec::new();
+
+	// Limit the number of queryaale logs. In a production chain, this
+	// could be extended back to the CLI. See Moonbeam for example.
+	let max_past_logs = 1024;
+
+	// Reasonable default caching inspired by the frontier template
+	let block_data_cache = Arc::new(EthBlockDataCache::new(50, 50));
+
+	io.extend_with(EthApiServer::to_delegate(EthApi::new(
+		client.clone(),
+		pool.clone(),
+		graph,
+		node_primitives::TransactionConverter,
+		network.clone(),
+		signers,
+		overrides.clone(),
+		backend.clone(),
+		is_authority,
+		max_past_logs,
+		block_data_cache.clone(),
 	)));
 
 	Ok(io)
