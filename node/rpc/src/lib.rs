@@ -33,8 +33,10 @@
 use std::sync::Arc;
 
 use node_primitives::{AccountId, Balance, Block, BlockNumber, Hash, Index};
-use sc_client_api::AuxStore;
-use sc_client_api::backend::{Backend, StorageProvider};
+use sc_client_api::{
+	backend::{Backend, StorageProvider},
+	AuxStore,
+};
 use sc_consensus_babe::{Config, Epoch};
 use sc_consensus_babe_rpc::BabeRpcHandler;
 use sc_consensus_epochs::SharedEpochChanges;
@@ -42,10 +44,10 @@ use sc_finality_grandpa::{
 	FinalityProofProvider, GrandpaJustificationStream, SharedAuthoritySet, SharedVoterState,
 };
 use sc_finality_grandpa_rpc::GrandpaRpcHandler;
+use sc_network::NetworkService;
 use sc_rpc::SubscriptionTaskExecutor;
 pub use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
-use sc_network::NetworkService;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
@@ -95,15 +97,16 @@ pub struct FullDeps<C, P, SC, B> {
 	pub grandpa: GrandpaDeps<B>,
 	/// Network service
 	pub network: Arc<NetworkService<Block, Hash>>,
+	/// Backend
+	pub backend: Arc<fc_db::Backend<Block>>,
 }
 
 /// A IO handler that uses all Full RPC extensions.
 pub type IoHandler = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 
 /// Instantiate all Full RPC extensions.
-pub fn create_full<C, P, SC, B, BE>(
-	deps: FullDeps<C, P, SC, B>,
-) -> Result<jsonrpc_core::IoHandler<sc_rpc_api::Metadata>, Box<dyn std::error::Error + Send + Sync>>
+//pub fn create_full<C, P, SC, B, BE>(deps: FullDeps<C, P, SC, B>) -> Result<IoHandler, Box<dyn std::error::Error + Send + Sync>>
+pub fn create_full<C, P, SC, B, BE>(deps: FullDeps<C, P, SC, B>) -> IoHandler
 where
 	BE: Backend<Block> + 'static,
 	C: ProvideRuntimeApi<Block>
@@ -133,7 +136,17 @@ where
 	use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
 	let mut io = jsonrpc_core::IoHandler::default();
-	let FullDeps { client, pool, select_chain, chain_spec, deny_unsafe, babe, grandpa, network } = deps;
+	let FullDeps {
+		client,
+		pool,
+		select_chain,
+		chain_spec,
+		deny_unsafe,
+		babe,
+		grandpa,
+		network,
+		backend,
+	} = deps;
 
 	let BabeDeps { keystore, babe_config, shared_epoch_changes } = babe;
 	let GrandpaDeps {
@@ -166,7 +179,6 @@ where
 		subscription_executor,
 		finality_provider,
 	)));
-
 	io.extend_with(sc_sync_state_rpc::SyncStateRpcApi::to_delegate(
 		sc_sync_state_rpc::SyncStateRpcHandler::new(
 			chain_spec,
@@ -174,9 +186,8 @@ where
 			shared_authority_set,
 			shared_epoch_changes,
 			deny_unsafe,
-		)?,
+		).unwrap(),
 	));
-
 	io.extend_with(NetApiServer::to_delegate(NetApi::new(
 		client.clone(),
 		network.clone(),
@@ -184,5 +195,5 @@ where
 		true,
 	)));
 
-	Ok(io)
+	io
 }
