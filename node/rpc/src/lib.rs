@@ -32,7 +32,7 @@
 
 use std::sync::Arc;
 
-use node_primitives::{AccountId, Balance, Block, BlockNumber, Hash, Index};
+use node_runtime::{AccountId, Balance, opaque::Block, BlockNumber, Hash, Index};
 use sc_client_api::{
 	backend::{Backend, StorageProvider},
 	AuxStore,
