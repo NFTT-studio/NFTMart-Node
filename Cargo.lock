@@ -4664,6 +4664,7 @@ version = "2.0.0"
 dependencies = [
  "fc-db",
  "fc-rpc",
+ "fc-rpc-core",
  "fp-rpc",
  "jsonrpc-core",
  "nftmart-rpc",

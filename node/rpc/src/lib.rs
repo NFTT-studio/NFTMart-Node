@@ -30,11 +30,13 @@
 
 #![warn(missing_docs)]
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
-use node_runtime::{AccountId, Balance, opaque::Block, BlockNumber, Hash, Index};
+use node_runtime::{
+	opaque::Block, AccountId, Balance, BlockNumber, Hash, Index, TransactionConverter,
+};
 use sc_client_api::{
-	backend::{Backend, StorageProvider},
+	backend::{Backend, StateBackend, StorageProvider},
 	AuxStore,
 };
 use sc_consensus_babe::{Config, Epoch};
@@ -47,6 +49,13 @@ use sc_finality_grandpa_rpc::GrandpaRpcHandler;
 use sc_network::NetworkService;
 use sc_rpc::SubscriptionTaskExecutor;
 pub use sc_rpc_api::DenyUnsafe;
+
+use fc_rpc::{EthBlockDataCache, OverrideHandle, RuntimeApiStorageOverride};
+use fc_rpc_core::types::FeeHistoryCache;
+use sc_transaction_pool::{ChainApi, Pool};
+use sp_runtime::traits::BlakeTwo256;
+use std::collections::BTreeMap;
+
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -80,7 +89,7 @@ pub struct GrandpaDeps<B> {
 }
 
 /// Full client dependencies.
-pub struct FullDeps<C, P, SC, B> {
+pub struct FullDeps<C, P, SC, B, A: ChainApi> {
 	/// The client instance to use.
 	pub client: Arc<C>,
 	/// Transaction pool instance.
@@ -99,6 +108,10 @@ pub struct FullDeps<C, P, SC, B> {
 	pub network: Arc<NetworkService<Block, Hash>>,
 	/// Backend
 	pub backend: Arc<fc_db::Backend<Block>>,
+	/// The node authority flag.
+	pub is_authority: bool,
+	/// Graph tool instance.
+	pub graph: Arc<Pool<A>>,
 }
 
 /// A IO handler that uses all Full RPC extensions.
@@ -106,7 +119,7 @@ pub type IoHandler = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 
 /// Instantiate all Full RPC extensions.
 //pub fn create_full<C, P, SC, B, BE>(deps: FullDeps<C, P, SC, B>) -> Result<IoHandler, Box<dyn std::error::Error + Send + Sync>>
-pub fn create_full<C, P, SC, B, BE>(deps: FullDeps<C, P, SC, B>) -> IoHandler
+pub fn create_full<C, P, SC, B, BE, A>(deps: FullDeps<C, P, SC, B, A>) -> IoHandler
 where
 	BE: Backend<Block> + 'static,
 	C: ProvideRuntimeApi<Block>
@@ -124,12 +137,14 @@ where
 	C::Api: BabeApi<Block>,
 	C::Api: BlockBuilder<Block>,
 	C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
-	P: TransactionPool + 'static,
+	P: TransactionPool<Block = Block> + 'static,
 	SC: SelectChain<Block> + 'static,
 	B: sc_client_api::Backend<Block> + Send + Sync + 'static,
 	B::State: sc_client_api::backend::StateBackend<sp_runtime::traits::HashFor<Block>>,
+	BE::State: StateBackend<BlakeTwo256>,
+	A: ChainApi<Block = Block> + 'static,
 {
-	use fc_rpc::{NetApi, NetApiServer};
+	use fc_rpc::{EthApi, EthApiServer, NetApi, NetApiServer};
 	use nftmart_rpc::{NFTMart, NFTMartApi};
 	use pallet_contracts_rpc::{Contracts, ContractsApi};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
@@ -146,6 +161,8 @@ where
 		grandpa,
 		network,
 		backend,
+		is_authority,
+		graph,
 	} = deps;
 
 	let BabeDeps { keystore, babe_config, shared_epoch_changes } = babe;
@@ -157,7 +174,11 @@ where
 		finality_provider,
 	} = grandpa;
 
-	io.extend_with(SystemApi::to_delegate(FullSystem::new(client.clone(), pool, deny_unsafe)));
+	io.extend_with(SystemApi::to_delegate(FullSystem::new(
+		client.clone(),
+		pool.clone(),
+		deny_unsafe,
+	)));
 	// Making synchronous calls in light client freezes the browser currently,
 	// more context: https://github.com/paritytech/substrate/pull/3480
 	// These RPCs should use an asynchronous caller instead.
@@ -186,13 +207,51 @@ where
 			shared_authority_set,
 			shared_epoch_changes,
 			deny_unsafe,
-		).unwrap(),
+		)
+		.unwrap(),
 	));
 	io.extend_with(NetApiServer::to_delegate(NetApi::new(
 		client.clone(),
 		network.clone(),
 		// Whether to format the `peer_count` response as Hex (default) or not.
 		true,
+	)));
+
+	// We won't use the override feature
+	let overrides = Arc::new(OverrideHandle {
+		schemas: BTreeMap::new(),
+		fallback: Box::new(RuntimeApiStorageOverride::new(client.clone())),
+	});
+
+	let fee_history_limit = 2048;
+
+	let fee_history_cache: FeeHistoryCache = Arc::new(Mutex::new(BTreeMap::new()));
+
+	// Nor any signers
+	let signers = Vec::new();
+
+	// Limit the number of queryable logs. In a production chain, this
+	// could be extended back to the CLI. See Moonbeam for example.
+	let max_past_logs = 1024;
+
+	// Reasonable default caching inspired by the frontier template
+	let block_data_cache = Arc::new(EthBlockDataCache::new(50, 50));
+
+	io.extend_with(EthApiServer::to_delegate(EthApi::new(
+		client.clone(),
+		pool.clone(),
+		graph,
+		TransactionConverter,
+		network.clone(),
+		signers,
+		overrides.clone(),
+		backend.clone(),
+		is_authority,
+		max_past_logs,
+		block_data_cache.clone(),
+		fc_rpc::format::Geth,
+		fee_history_limit,
+		fee_history_cache,
 	)));
 
 	io

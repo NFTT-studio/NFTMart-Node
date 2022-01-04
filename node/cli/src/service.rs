@@ -20,7 +20,6 @@
 
 //! Service implementation. Specialized wrapper over substrate service.
 
-use futures::prelude::*;
 use node_executor::ExecutorDispatch;
 use node_primitives::Block;
 use node_runtime::RuntimeApi;
@@ -345,8 +344,8 @@ pub fn new_full_base(
 
 		move |deny_unsafe: node_rpc::DenyUnsafe, subscription_executor: sc_rpc::SubscriptionTaskExecutor| {
 			let deps = node_rpc::FullDeps {
-				// graph: pool.pool().clone(),
-				// is_authority,
+				graph: pool.pool().clone(),
+				is_authority,
 				backend: frontier_backend.clone(),
 				client: client.clone(),
 				pool: pool.clone(),
