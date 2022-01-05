@@ -1200,7 +1200,7 @@ impl nftmart_auction::Config for Runtime {
 }
 
 parameter_types! {
-	   pub const LeetChainId: u64 = 1337;
+	   pub const LeetChainId: u64 = 12191;
 	   pub BlockGasLimit: U256 = U256::from(u32::max_value());
 }
 
