@@ -1230,6 +1230,11 @@ impl pallet_ethereum::Config for Runtime {
 	type StateRoot = pallet_ethereum::IntermediateStateRoot;
 }
 
+impl pallet_deposit::Config for Runtime {
+	type Currency = Balances;
+	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -1278,6 +1283,7 @@ construct_runtime!(
 		// Frontier Stuff
 		EVM: pallet_evm::{Pallet, Call, Storage, Config, Event<T>},
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, Origin},
+		Deposit: pallet_deposit::{Pallet, Call},
 	}
 );
 
