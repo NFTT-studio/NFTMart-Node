@@ -87,11 +87,11 @@ pallet-utility = { version = "4.0.0-dev", default-features = false, git = 'https
 pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 
-pallet-evm = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
-pallet-ethereum = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
-fp-rpc = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
-fp-self-contained = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
-# fp-evm = { default-features = false, git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+pallet-evm = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+pallet-ethereum = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+fp-rpc = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+fp-self-contained = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+# fp-evm = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
 
 node-primitives = { version = "2.0.0", path = "../primitives", default-features = false }
 chain-extension = { path = "../chain_extension", default-features = false }

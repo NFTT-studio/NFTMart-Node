@@ -17,11 +17,14 @@ members = [
 	'pallets/*',
 ]
 
-[patch.crates-io]
+# [patch.crates-io]
 
 # RustBlockchain/evm repo: https://github.com/rust-blockchain/evm/pull/63
 # evm-core = { git = "https://github.com/purestake/evm", branch = "joshy-scale-info"}
 # evm = { git = "https://github.com/purestake/evm", branch = "joshy-scale-info"}
+
+# [patch."https://github.com/nftt-studio/frontier.git"]
+# pallet-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13" }
 
 # RustBlockchain/ethereum repo: https://github.com/rust-blockchain/ethereum/pull/22
 # ethereum = { git = "https://github.com/purestake/ethereum", branch = "joshy-scale-info" }

@@ -37,8 +37,8 @@ sc-transaction-pool = { version = "4.0.0-dev", git = 'https://github.com/puresta
 sc-transaction-pool-api = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 substrate-frame-rpc-system = { version = "4.0.0-dev", git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 sc-network = { version = "0.10.0-dev", git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-fc-rpc-core = { git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
-fp-rpc = { git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
-fc-rpc = { git = 'https://github.com/purestake/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
-fc-db = { git = 'https://github.com/purestake/frontier.git', branch = 'moonbeam-polkadot-v0.9.13' }
+fc-rpc-core = { git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+fp-rpc = { git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+fc-rpc = { git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13" }
+fc-db = { git = 'https://github.com/nftt-studio/frontier.git', branch = 'moonbeam-polkadot-v0.9.13' }
 nftmart-rpc = { path = "../../pallets/nftmart-nft/rpc/" }

@@ -18,7 +18,7 @@ frame-support = { git = 'https://github.com/purestake/substrate.git', branch = "
 frame-system = { git = 'https://github.com/purestake/substrate.git', branch = "moonbeam-polkadot-v0.9.13",default-features = false }
 frame-benchmarking = { git = 'https://github.com/purestake/substrate.git', branch = "moonbeam-polkadot-v0.9.13",default-features = false, optional = true }
 
-pallet-evm = { git = "https://github.com/purestake/frontier.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+pallet-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
 
 [dev-dependencies]
 hex = { version = "0.4.3" }
