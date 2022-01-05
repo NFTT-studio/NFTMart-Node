@@ -39,9 +39,11 @@ use sp_runtime::{
 	Perbill,
 };
 use sp_std::vec::Vec;
+use sp_core::{H160, U256};
 
 pub use node_primitives::{AccountId, Balance, Signature};
 pub use node_runtime::GenesisConfig;
+pub use node_runtime::{GenesisAccount, EVMConfig};
 
 type AccountPublic = <Signature as Verify>::Signer;
 
@@ -313,7 +315,34 @@ pub fn testnet_genesis(
 			category_list: vec![],
 			..Default::default()
 		},
-		evm: Default::default(),
+		evm: EVMConfig {
+			accounts: {
+				// Prefund the "Gerald" account
+				let mut accounts = std::collections::BTreeMap::new();
+				accounts.insert(
+					H160::from_slice(&hex_literal::hex!("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b")),
+					GenesisAccount{
+						nonce: U256::zero(),
+						// Using a larger number, so I can tell the accounts apart by balance.
+						balance: U256::from(10_000_000 * DOLLARS),
+						code: vec![],
+						storage: std::collections::BTreeMap::new(),
+					}
+				);
+				accounts.insert(
+					H160::from_slice(&hex_literal::hex!("bdE2f034C17953Ee34B5F4Bf89C63349845d713f")),
+					GenesisAccount{
+						nonce: U256::zero(),
+						// Using a larger number, so I can tell the accounts apart by balance.
+						balance: U256::from(10_000_000 * DOLLARS),
+						code: vec![],
+						storage: std::collections::BTreeMap::new(),
+					}
+				);
+				accounts
+			}
+		},
+
 		ethereum: Default::default(),
 	}
 }
