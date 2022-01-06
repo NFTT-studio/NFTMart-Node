@@ -17,7 +17,8 @@ members = [
 	'pallets/*',
 ]
 
-# [patch.crates-io]
+[patch.crates-io]
+ss58-registry = { git = "https://github.com/nftt-studio/ss58-registry.git", branch = "add-nftmart-prefix-12191" }
 
 # RustBlockchain/evm repo: https://github.com/rust-blockchain/evm/pull/63
 # evm-core = { git = "https://github.com/purestake/evm", branch = "joshy-scale-info"}

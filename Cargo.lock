@@ -9132,8 +9132,7 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 [[package]]
 name = "ss58-registry"
 version = "1.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c83f0afe7e571565ef9aae7b0e4fb30fcaec4ebb9aea2f00489b772782aa03a4"
+source = "git+https://github.com/nftt-studio/ss58-registry.git?branch=add-nftmart-prefix-12191#0e169a5a027e94bfcc111ffe2e2f9cdc85a08092"
 dependencies = [
  "Inflector",
  "proc-macro2",
