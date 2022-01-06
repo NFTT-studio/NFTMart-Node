@@ -1202,11 +1202,13 @@ impl nftmart_auction::Config for Runtime {
 parameter_types! {
 	   pub const LeetChainId: u64 = 12191;
 	   pub BlockGasLimit: U256 = U256::from(u32::max_value());
+	   pub TokenDecimals: u8 = 12;
 }
 
 impl pallet_evm::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+	type TokenDecimals = TokenDecimals;
 
 	type BlockGasLimit = BlockGasLimit;
 	type ChainId = LeetChainId;
