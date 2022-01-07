@@ -82,8 +82,8 @@ use static_assertions::const_assert;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{
-	Account as EVMAccount, EnsureAddressNever, EnsureAddressRoot, FeeCalculator,
-	HashedAddressMapping, Runner,
+	Account as EVMAccount, EnsureAddressTruncated,
+	FeeCalculator, HashedAddressMapping, Runner,
 };
 use sp_core::U256;
 // pub use it so we can import it in the chain spec.
@@ -1215,8 +1215,8 @@ impl pallet_evm::Config for Runtime {
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 
-	type CallOrigin = EnsureAddressRoot<AccountId>;
-	type WithdrawOrigin = EnsureAddressNever<AccountId>;
+	type CallOrigin = EnsureAddressTruncated;
+	type WithdrawOrigin = EnsureAddressTruncated;
 	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 
 	type FeeCalculator = ();
