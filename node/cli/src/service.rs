@@ -33,7 +33,6 @@ use sp_runtime::traits::Block as BlockT;
 use std::sync::Arc;
 
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
-use fc_consensus::FrontierBlockImport;
 use futures::StreamExt;
 use sc_cli::SubstrateCli;
 
@@ -85,8 +84,8 @@ pub fn new_partial(
 			//) -> Result<node_rpc::IoHandler, sc_service::Error>,
 			*/
 			(
-				// sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
-				sc_consensus_babe::BabeBlockImport<Block, FullClient, FrontierBlockImport< Block, FullGrandpaBlockImport, FullClient>>,
+				sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
+				// sc_consensus_babe::BabeBlockImport<Block, FullClient, FrontierBlockImport< Block, FullGrandpaBlockImport, FullClient>>,
 				grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 				sc_consensus_babe::BabeLink<Block>,
 			),
@@ -149,15 +148,9 @@ pub fn new_partial(
 	)?;
 	let justification_import = grandpa_block_import.clone();
 
-	let frontier_block_import = FrontierBlockImport::new(
-		grandpa_block_import.clone(),
-		client.clone(),
-		frontier_backend.clone(),
-	);
-
 	let (block_import, babe_link) = sc_consensus_babe::block_import(
 		sc_consensus_babe::Config::get_or_compute(&*client)?,
-		frontier_block_import,
+		grandpa_block_import,
 		client.clone(),
 	)?;
 
@@ -265,8 +258,8 @@ pub struct NewFullBase {
 pub fn new_full_base(
 	mut config: Configuration,
 	with_startup_data: impl FnOnce(
-		// &sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
-		&sc_consensus_babe::BabeBlockImport<Block, FullClient, FrontierBlockImport<Block, FullGrandpaBlockImport, FullClient>>,
+		&sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
+		// &sc_consensus_babe::BabeBlockImport<Block, FullClient, FrontierBlockImport<Block, FullGrandpaBlockImport, FullClient>>,
 		&sc_consensus_babe::BabeLink<Block>,
 	),
 ) -> Result<NewFullBase, ServiceError> {
