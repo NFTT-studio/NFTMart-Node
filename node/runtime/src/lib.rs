@@ -1237,6 +1237,10 @@ impl pallet_deposit::Config for Runtime {
 	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 }
 
+impl pallet_template::Config for Runtime {
+	type Event = Event;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -1286,6 +1290,7 @@ construct_runtime!(
 		EVM: pallet_evm::{Pallet, Call, Storage, Config, Event<T>},
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, Origin},
 		Deposit: pallet_deposit::{Pallet, Call},
+		Template: pallet_template::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
