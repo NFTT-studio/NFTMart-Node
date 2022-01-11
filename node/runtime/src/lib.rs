@@ -82,8 +82,7 @@ use static_assertions::const_assert;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{
-	Account as EVMAccount, EnsureAddressTruncated,
-	FeeCalculator, HashedAddressMapping, Runner,
+	Account as EVMAccount, EnsureAddressTruncated, FeeCalculator, HashedAddressMapping, Runner,
 };
 use sp_core::U256;
 // pub use it so we can import it in the chain spec.
@@ -1202,13 +1201,11 @@ impl nftmart_auction::Config for Runtime {
 parameter_types! {
 	   pub const LeetChainId: u64 = 12191;
 	   pub BlockGasLimit: U256 = U256::from(u32::max_value());
-	   pub TokenDecimals: u8 = 12;
 }
 
 impl pallet_evm::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
-	type TokenDecimals = TokenDecimals;
 
 	type BlockGasLimit = BlockGasLimit;
 	type ChainId = LeetChainId;
@@ -1225,6 +1222,10 @@ impl pallet_evm::Config for Runtime {
 	type FindAuthor = ();
 	type PrecompilesType = ();
 	type PrecompilesValue = ();
+
+	fn token_decimals() -> u8 {
+		12
+	}
 }
 
 impl pallet_ethereum::Config for Runtime {
