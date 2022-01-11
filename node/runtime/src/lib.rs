@@ -1198,9 +1198,15 @@ impl nftmart_auction::Config for Runtime {
 	type WeightInfo = ();
 }
 
+mod precompiles;
+use precompiles::NftmartPrecompiles;
+
+mod precompile_template;
+
 parameter_types! {
 	   pub const LeetChainId: u64 = 12191;
 	   pub BlockGasLimit: U256 = U256::from(u32::max_value());
+	   pub PrecompilesValue: NftmartPrecompiles<Runtime> = NftmartPrecompiles::<_>::new();
 }
 
 impl pallet_evm::Config for Runtime {
@@ -1220,8 +1226,8 @@ impl pallet_evm::Config for Runtime {
 	type GasWeightMapping = ();
 	type OnChargeTransaction = ();
 	type FindAuthor = ();
-	type PrecompilesType = ();
-	type PrecompilesValue = ();
+	type PrecompilesType = NftmartPrecompiles<Runtime>;
+	type PrecompilesValue = PrecompilesValue;
 
 	fn token_decimals() -> u8 {
 		12
