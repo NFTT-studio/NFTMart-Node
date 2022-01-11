@@ -1,17 +1,11 @@
-use frame_support::{
-	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
-};
-use pallet_evm::{AddressMapping, Precompile, LinearCostPrecompile, ExitError, ExitSucceed};
-use precompile_utils::{
-	EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper,
-};
+use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
+use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
+use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
 
 use fp_evm::{Context, PrecompileOutput};
 
-use sp_std::{
-	fmt::Debug,
-};
 use core::marker::PhantomData;
+use sp_std::fmt::Debug;
 
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
@@ -24,7 +18,6 @@ enum Action {
 	GetValue = "get_value()",
 }
 
-//pub struct PalletTemplatePrecompile<T>(PhantomData<T>);
 pub struct PalletTemplatePrecompile<T>(PhantomData<T>);
 
 impl<T> Precompile for PalletTemplatePrecompile<T>
@@ -38,16 +31,15 @@ where
 		input: &[u8], //Reminder this is big-endian
 		target_gas: Option<u64>,
 		context: &Context,
-		is_static: bool,
+		_is_static: bool,
 	) -> EvmResult<PrecompileOutput> {
-        let mut gasometer = Gasometer::new(target_gas);
-        let gasometer = &mut gasometer;
+		let mut gasometer = Gasometer::new(target_gas);
+		let gasometer = &mut gasometer;
 
-        let (input, selector) =
-                match EvmDataReader::new_with_selector(gasometer, input) {
-                        Ok((input, selector)) => (input, selector),
-                        Err(e) => return Err(e),
-                };
+		let (input, selector) = match EvmDataReader::new_with_selector(gasometer, input) {
+			Ok((input, selector)) => (input, selector),
+			Err(e) => return Err(e),
+		};
 
 		match selector {
 			// Check for accessor methods first. These return results immediately
@@ -79,9 +71,8 @@ where
 		let value = input.read::<u32>(&mut gasometer)?.into();
 
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
-		let origin = T::AddressMapping::into_account_id(context.caller);
-		let call =
-			pallet_template::Call::<T>::do_something{something: value};
+		let _origin = T::AddressMapping::into_account_id(context.caller);
+		let _call = pallet_template::Call::<T>::do_something { something: value };
 
 		// Record the gas used in the gasometer
 		gasometer.record_cost(RuntimeHelper::<T>::db_read_gas_cost())?;
@@ -123,8 +114,6 @@ where
 	}
 }
 
-
 // TODO Mock runtime
 // TODO tests
 // See Moonbeam for examples https://github.com/PureStake/moonbeam/tree/master/precompiles
-
