@@ -7,8 +7,7 @@ use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, Runti
 
 use fp_evm::{Context, PrecompileOutput};
 
-use sp_std::marker::PhantomData;
-use sp_std::fmt::Debug;
+use sp_std::{fmt::Debug, marker::PhantomData};
 
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
@@ -72,11 +71,13 @@ where
 		let value = input.read::<u32>(&mut gasometer)?.into();
 
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
-		let _origin = T::AddressMapping::into_account_id(context.caller);
-		let _call = pallet_template::Call::<T>::do_something { something: value };
+		let origin = T::AddressMapping::into_account_id(context.caller);
+		let call = pallet_template::Call::<T>::do_something { something: value };
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, &mut gasometer)?;
 
+		let used_gas = gasometer.used_gas();
 		// Record the gas used in the gasometer
-		gasometer.record_cost(RuntimeHelper::<T>::db_read_gas_cost())?;
+		gasometer.record_cost(used_gas)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
