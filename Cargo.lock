@@ -4798,6 +4798,7 @@ dependencies = [
  "pallet-staking-reward-curve",
  "pallet-sudo",
  "pallet-template",
+ "pallet-template-precompiles",
  "pallet-timestamp",
  "pallet-tips",
  "pallet-transaction-payment",
@@ -4805,7 +4806,6 @@ dependencies = [
  "pallet-treasury",
  "pallet-utility",
  "parity-scale-codec",
- "precompile-utils",
  "scale-info",
  "sp-api",
  "sp-authority-discovery",
@@ -5878,6 +5878,29 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-runtime",
+]
+
+[[package]]
+name = "pallet-template-precompiles"
+version = "4.0.0-dev"
+dependencies = [
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "num_enum",
+ "pallet-evm",
+ "pallet-template",
+ "parity-scale-codec",
+ "precompile-utils",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

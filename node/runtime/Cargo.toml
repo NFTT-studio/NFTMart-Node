@@ -99,8 +99,8 @@ pallet-evm-precompile-blake2 = { default-features = false, git = 'https://github
 pallet-evm-precompile-bn128 = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13"}
 pallet-evm-precompile-dispatch = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13"}
 pallet-evm-precompile-sha3fips = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13"}
-precompile-utils = { default-features = false, git = 'https://github.com/nftt-studio/moonbeam.git', branch = "master"}
 
+pallet-template-precompiles = { default-features = false, path = "../../precompiles/pallet-template" }
 node-primitives = { version = "2.0.0", path = "../primitives", default-features = false }
 chain-extension = { path = "../chain_extension", default-features = false }
 
@@ -199,7 +199,6 @@ std = [
 	"nftmart-config/std",
 	"nftmart-rpc-runtime-api/std",
 	"pallet-deposit/std",
-	"precompile-utils/std",
 	"num_enum/std",
 ]
 runtime-benchmarks = [

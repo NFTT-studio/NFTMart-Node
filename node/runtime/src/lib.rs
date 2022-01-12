@@ -1201,8 +1201,6 @@ impl nftmart_auction::Config for Runtime {
 mod precompiles;
 use precompiles::NftmartPrecompiles;
 
-mod precompile_template;
-
 parameter_types! {
 	   pub const LeetChainId: u64 = 12191;
 	   pub BlockGasLimit: U256 = U256::from(u32::max_value());

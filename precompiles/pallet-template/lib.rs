@@ -1,16 +1,17 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+#![feature(assert_matches)]
+
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
 use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
 
 use fp_evm::{Context, PrecompileOutput};
 
-use core::marker::PhantomData;
+use sp_std::marker::PhantomData;
 use sp_std::fmt::Debug;
 
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
-/// #[precompile_utils::generate_function_selector]
-/// #[derive(Debug, PartialEq, num_enum::TryFromPrimitive)]
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 enum Action {
