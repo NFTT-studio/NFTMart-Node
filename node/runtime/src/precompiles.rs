@@ -22,6 +22,7 @@ use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+use pallet_evm_precompile_balances_erc20::{Erc20BalancesPrecompile, Erc20Metadata};
 use pallet_template_precompiles::PalletTemplatePrecompile;
 use sp_core::H160;
 use sp_std::marker::PhantomData;
@@ -42,7 +43,7 @@ where
 	/// Return all addresses that contain precompiles. This can be used to populate dummy code
 	/// under the precompile.
 	pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048]
+		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049]
 			.into_iter()
 			.map(hash)
 			.collect()
@@ -56,8 +57,9 @@ where
 impl<R> PrecompileSet for NftmartPrecompiles<R>
 where
 	R: pallet_evm::Config + pallet_template::Config,
-	Dispatch<R>: Precompile,
-	PalletTemplatePrecompile<R>: Precompile,
+	Dispatch::<R>: Precompile,
+	PalletTemplatePrecompile::<R>: Precompile,
+	Erc20BalancesPrecompile::<R, NativeErc20Metadata>: Precompile,
 {
 	fn execute(
 		&self,
@@ -86,7 +88,10 @@ where
 			a if a == hash(1026) =>
 				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static)),
 			// NFTMart specific precompiles :
-			a if a == hash(2048) => Some(<PalletTemplatePrecompile<R> as Precompile>::execute(
+			a if a == hash(2048) => Some(<PalletTemplatePrecompile::<R> as Precompile>::execute(
+				input, target_gas, context, is_static,
+			)),
+			a if a == hash(2049) => Some(<Erc20BalancesPrecompile::<R, NativeErc20Metadata> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),
 			_ => None,
@@ -99,4 +104,24 @@ where
 
 fn hash(a: u64) -> H160 {
 	H160::from_low_u64_be(a)
+}
+
+/// ERC20 metadata for the native token.
+pub struct NativeErc20Metadata;
+
+impl Erc20Metadata for NativeErc20Metadata {
+        /// Returns the name of the token.
+        fn name() -> &'static str {
+                "NFTMart Token"
+        }
+
+        /// Returns the symbol of the token.
+        fn symbol() -> &'static str {
+                "NMT"
+        }
+
+        /// Returns the decimals places of the token.
+        fn decimals() -> u8 {
+                12
+        }
 }
