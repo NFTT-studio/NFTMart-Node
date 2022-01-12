@@ -8,6 +8,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 pub use pallet::*;
 
 use frame_support::traits::{Currency, ExistenceRequirement};
