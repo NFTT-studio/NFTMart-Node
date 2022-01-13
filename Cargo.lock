@@ -5918,6 +5918,7 @@ dependencies = [
  "hex-literal",
  "log",
  "num_enum",
+ "pallet-balances",
  "pallet-evm",
  "pallet-template",
  "parity-scale-codec",
