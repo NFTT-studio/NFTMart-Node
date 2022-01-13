@@ -24,7 +24,8 @@ use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
 use pallet_evm_precompile_balances_erc20::{Erc20BalancesPrecompile, Erc20Metadata};
 use pallet_template_precompiles::PalletTemplatePrecompile;
-use sp_core::H160;
+use withdraw_balance_precompiles::WithdrawBalancePrecompile;
+use sp_core::{H160, H256};
 use sp_std::marker::PhantomData;
 
 /// We include the nine Istanbul precompiles
@@ -34,7 +35,10 @@ pub struct NftmartPrecompiles<R>(PhantomData<R>);
 
 impl<R> NftmartPrecompiles<R>
 where
+	// R: pallet_evm::Config + pallet_template::Config + pallet_balances::Config,
 	R: pallet_evm::Config + pallet_template::Config,
+	// R::AccountId: From<H256>,
+	// R::AccountId: From<sp_core::sr25519::Public>,
 {
 	#[allow(clippy::new_without_default)]
 	pub fn new() -> Self {
@@ -43,7 +47,7 @@ where
 	/// Return all addresses that contain precompiles. This can be used to populate dummy code
 	/// under the precompile.
 	pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049]
+		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049, 2050]
 			.into_iter()
 			.map(hash)
 			.collect()
@@ -56,9 +60,13 @@ where
 /// 2048-4095 NFTMart specific precompiles
 impl<R> PrecompileSet for NftmartPrecompiles<R>
 where
+	// R: pallet_evm::Config + pallet_template::Config + pallet_balances::Config,
 	R: pallet_evm::Config + pallet_template::Config,
+	// R::AccountId: From<H256>,
+	// R: pallet_evm::Config + pallet_balances::Config,
 	Dispatch::<R>: Precompile,
 	PalletTemplatePrecompile::<R>: Precompile,
+	WithdrawBalancePrecompile::<R>: Precompile,
 	Erc20BalancesPrecompile::<R, NativeErc20Metadata>: Precompile,
 {
 	fn execute(
@@ -94,6 +102,11 @@ where
 			a if a == hash(2049) => Some(<Erc20BalancesPrecompile::<R, NativeErc20Metadata> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),
+			a if a == hash(2050) => Some(<WithdrawBalancePrecompile::<R> as Precompile>::execute(
+				input, target_gas, context, is_static,
+			)),
+			/*
+			*/
 			_ => None,
 		}
 	}
