@@ -1201,10 +1201,37 @@ impl nftmart_auction::Config for Runtime {
 mod precompiles;
 use precompiles::NftmartPrecompiles;
 
+pub struct FixedGasPrice;
+impl FeeCalculator for FixedGasPrice {
+	fn min_gas_price() -> U256 {
+		4500.into()
+	}
+}
+
+/// Current approximation of the gas/s consumption considering
+/// EVM execution over compiled WASM (on 4.4Ghz CPU).
+/// Given the 500ms Weight, from which 75% only are used for transactions,
+/// the total EVM execution gas limit is: GAS_PER_SECOND * 0.500 * 0.75 ~= 15_000_000.
+pub const GAS_PER_SECOND: u64 = 40_000_000;
+
+/// Approximate ratio of the amount of Weight per Gas.
+/// u64 works for approximations because Weight is a very small unit compared to gas.
+pub const WEIGHT_PER_GAS: u64 = WEIGHT_PER_SECOND / GAS_PER_SECOND;
+
+pub struct NftmartGasWeightMapping;
+impl pallet_evm::GasWeightMapping for NftmartGasWeightMapping {
+	fn gas_to_weight(gas: u64) -> Weight {
+		gas.saturating_mul(WEIGHT_PER_GAS)
+	}
+	fn weight_to_gas(weight: Weight) -> u64 {
+		weight.wrapping_div(WEIGHT_PER_GAS)
+	}
+}
+
 parameter_types! {
-	   pub const LeetChainId: u64 = 12191;
-	   pub BlockGasLimit: U256 = U256::from(u32::max_value());
-	   pub PrecompilesValue: NftmartPrecompiles<Runtime> = NftmartPrecompiles::<_>::new();
+	pub const NftmartChainId: u64 = 12191;
+	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT / WEIGHT_PER_GAS);
+	pub PrecompilesValue: NftmartPrecompiles<Runtime> = NftmartPrecompiles::<_>::new();
 }
 
 impl pallet_evm::Config for Runtime {
@@ -1212,7 +1239,7 @@ impl pallet_evm::Config for Runtime {
 	type Currency = Balances;
 
 	type BlockGasLimit = BlockGasLimit;
-	type ChainId = LeetChainId;
+	type ChainId = NftmartChainId;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 
@@ -1220,8 +1247,8 @@ impl pallet_evm::Config for Runtime {
 	type WithdrawOrigin = EnsureAddressTruncated;
 	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 
-	type FeeCalculator = ();
-	type GasWeightMapping = ();
+	type FeeCalculator = FixedGasPrice;
+	type GasWeightMapping = NftmartGasWeightMapping;
 	type OnChargeTransaction = ();
 	type FindAuthor = ();
 	type PrecompilesType = NftmartPrecompiles<Runtime>;
