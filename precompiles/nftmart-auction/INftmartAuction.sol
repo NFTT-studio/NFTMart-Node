@@ -3,15 +3,14 @@
 pragma solidity >=0.8.0;
 
 interface INftmartAuction {
-    function burn(uint _classId, uint tokenId, uint _quantity) external;
-    function createClass(string memory _metadata, string memory _name, string memory _description, uint _royaltyRate, uint8 _properties, uint[] memory _categoryIds) external;
-    function destroyClass(uint _classId, bytes32 _dest) external;
-    function mint(bytes32 _to, uint _classId, string memory _metadata, uint _quantity, uint _chargeRoyalty) external;
-    function proxyMint(bytes32 _to, uint _classId, string memory _metadata, uint _quantity, uint _chargeRoyalty) external;
-    function transfer(bytes32 _to, uint[3] memory _items) external;
-    function updateClass(uint _classId, string memory _metadata, string memory _name, string memory _description, uint _royaltyRate, uint8 _properties, uint[] memory _categoryIds) external;
-    function updateToken(bytes32 _to, uint _classId, uint _tokenId, uint _quantity, string memory _metadata, uint _chargeRoyalty) external;
-    function updateTokenMetadata(uint _classId, uint _tokenId, string memory _metadata) external;
-    function updateTokenRoyalty(uint _classId, uint _tokenId, uint _chargeRoyalty) external;
-    function updateTokenRoyaltyBeneficiary(uint _classId, uint _tokenId, bytes32 _to) external;
+    // function redeemBritishAuction(bytes32 _auctionOwner, uint _auctionId) external;
+    // function redeemDutchAuction(bytes32 _auctionOwner, uint _auctionId) external;
+    // function removeExpiredBritishAuction(uint _classId, uint _tokenId, bytes32 _to) external;
+    // function removeExpiredDutchAuction(uint _classId, uint _tokenId, bytes32 _to) external;
+    function bidBritishAuction(uint256 _price, bytes32 _auctionOwner, uint _auctionId, bytes32 _commissionAgent, string memory _commissionData) external;
+    function bidDutchAuction(uint256 _price, bytes32 _auctionOwner, uint _auctionId, bytes32 _commissionAgent, string memory _commissionData) external;
+    function removeBritishAuction(uint _auctionId) external;
+    function removeDutchAuction(uint _auctionId) external;
+    function submitBritishAuction(uint _currencyId, uint256 _hammerPrice, uint _minRaise, uint256 _deposit, uint256 _initPrice, uint _deadline, bool _allowDelay, uint[3][] memory _items, uint _commissionRate) external;
+    function submitDutchAuction(uint _currencyId, uint256 _hammerPrice, uint _minRaise, uint256 _deposit, uint256 _initPrice, uint _deadline, bool _allowDelay, uint[3][] memory _items, uint _commissionRate) external;
 }
