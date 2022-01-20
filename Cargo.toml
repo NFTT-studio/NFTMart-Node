@@ -20,12 +20,27 @@ members = [
 
 [patch.crates-io]
 ss58-registry = { git = "https://github.com/nftt-studio/ss58-registry.git", branch = "add-nftmart-prefix-12191" }
+# wasmtime = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-cache = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-cranelift = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-environ = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-jit = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-runtime = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-types = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
 
 # RustBlockchain/evm repo: https://github.com/rust-blockchain/evm/pull/63
 # evm-core = { git = "https://github.com/purestake/evm", branch = "joshy-scale-info"}
 # evm = { git = "https://github.com/purestake/evm", branch = "joshy-scale-info"}
 
 # [patch."https://github.com/nftt-studio/frontier.git"]
+# pallet-evm = { path = '../../frontier/frame/evm'}
+# pallet-ethereum = { path = '../../frontier/frame/ethereum'}
+# fp-rpc = { path = '../../frontier/primitives/rpc'}
+# fp-evm = { path = '../../frontier/primitives/evm'}
+# fc-rpc = { path = '../../frontier/client/rpc'}
+# fc-rpc-core = { path = '../../frontier/client/rpc-core'}
+# fc-db = { path = '../../frontier/client/db'}
+
 # pallet-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13" }
 
 # RustBlockchain/ethereum repo: https://github.com/rust-blockchain/ethereum/pull/22

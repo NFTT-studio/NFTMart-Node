@@ -1255,7 +1255,7 @@ impl pallet_evm::Config for Runtime {
 	type PrecompilesValue = PrecompilesValue;
 
 	fn token_decimals() -> u8 {
-		12
+		18
 	}
 }
 

@@ -7,7 +7,7 @@ use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, Runti
 
 use fp_evm::{Context, PrecompileOutput};
 
-use sp_std::{fmt::Debug, marker::PhantomData};
+use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
@@ -72,6 +72,14 @@ where
 
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
 		let origin = T::AddressMapping::into_account_id(context.caller);
+		if_std! {
+				// This code is only being compiled and executed when the `std` feature is enabled.
+				/*
+				println!("The caller account is: {:#?}", context.caller);
+				println!("The caller origin is: {:#?}", origin);
+				*/
+		}
+
 		let call = pallet_template::Call::<T>::do_something { something: value };
 		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, &mut gasometer)?;
 
@@ -90,7 +98,7 @@ where
 	fn get_value(
 		input: EvmDataReader,
 		target_gas: Option<u64>,
-		_context: &Context,
+		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		let mut gasometer = Gasometer::new(target_gas);
 
@@ -99,6 +107,16 @@ where
 
 		// fetch data from pallet
 		let stored_value = pallet_template::Something::<T>::get().unwrap_or_default();
+
+		let origin: <T as frame_system::pallet::Config>::AccountId =
+			T::AddressMapping::into_account_id(context.caller);
+		if_std! {
+				// This code is only being compiled and executed when the `std` feature is enabled.
+				/*
+				println!("The caller account is: {:#?}", context.caller);
+				println!("The caller origin is: {:#?}", origin);
+				*/
+		}
 
 		// Record one storage red worth of gas.
 		// The utility internally uses pallet_evm's GasWeightMapping.

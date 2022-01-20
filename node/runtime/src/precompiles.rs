@@ -16,17 +16,17 @@
 
 use fp_evm::Context;
 use pallet_evm::{Precompile, PrecompileResult, PrecompileSet};
+use pallet_evm_precompile_balances_erc20::{Erc20BalancesPrecompile, Erc20Metadata};
 use pallet_evm_precompile_blake2::Blake2F;
 use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
 use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
-use pallet_evm_precompile_balances_erc20::{Erc20BalancesPrecompile, Erc20Metadata};
 use pallet_template_precompiles::PalletTemplatePrecompile;
-use withdraw_balance_precompiles::WithdrawBalancePrecompile;
 use sp_core::{H160, H256};
 use sp_std::marker::PhantomData;
+use withdraw_balance_precompiles::WithdrawBalancePrecompile;
 
 /// We include the nine Istanbul precompiles
 /// (https://github.com/ethereum/go-ethereum/blob/3c46f557/core/vm/contracts.go#L69)
@@ -64,10 +64,10 @@ where
 	R: pallet_evm::Config + pallet_template::Config,
 	// R::AccountId: From<H256>,
 	// R: pallet_evm::Config + pallet_balances::Config,
-	Dispatch::<R>: Precompile,
-	PalletTemplatePrecompile::<R>: Precompile,
-	WithdrawBalancePrecompile::<R>: Precompile,
-	Erc20BalancesPrecompile::<R, NativeErc20Metadata>: Precompile,
+	Dispatch<R>: Precompile,
+	PalletTemplatePrecompile<R>: Precompile,
+	WithdrawBalancePrecompile<R>: Precompile,
+	Erc20BalancesPrecompile<R, NativeErc20Metadata>: Precompile,
 {
 	fn execute(
 		&self,
@@ -96,17 +96,16 @@ where
 			a if a == hash(1026) =>
 				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static)),
 			// NFTMart specific precompiles :
-			a if a == hash(2048) => Some(<PalletTemplatePrecompile::<R> as Precompile>::execute(
+			a if a == hash(2048) => Some(<PalletTemplatePrecompile<R> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),
-			a if a == hash(2049) => Some(<Erc20BalancesPrecompile::<R, NativeErc20Metadata> as Precompile>::execute(
+			a if a == hash(2049) =>
+				Some(<Erc20BalancesPrecompile<R, NativeErc20Metadata> as Precompile>::execute(
+					input, target_gas, context, is_static,
+				)),
+			a if a == hash(2050) => Some(<WithdrawBalancePrecompile<R> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),
-			a if a == hash(2050) => Some(<WithdrawBalancePrecompile::<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			/*
-			*/
 			_ => None,
 		}
 	}
@@ -123,18 +122,18 @@ fn hash(a: u64) -> H160 {
 pub struct NativeErc20Metadata;
 
 impl Erc20Metadata for NativeErc20Metadata {
-        /// Returns the name of the token.
-        fn name() -> &'static str {
-                "NFTMart Token"
-        }
+	/// Returns the name of the token.
+	fn name() -> &'static str {
+		"NFTMart Token"
+	}
 
-        /// Returns the symbol of the token.
-        fn symbol() -> &'static str {
-                "NMT"
-        }
+	/// Returns the symbol of the token.
+	fn symbol() -> &'static str {
+		"NMT"
+	}
 
-        /// Returns the decimals places of the token.
-        fn decimals() -> u8 {
-                12
-        }
+	/// Returns the decimals places of the token.
+	fn decimals() -> u8 {
+		18
+	}
 }
