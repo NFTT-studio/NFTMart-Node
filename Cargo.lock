@@ -4321,6 +4321,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "nftmart-auction-precompiles"
+version = "4.0.0-dev"
+dependencies = [
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "nftmart-auction",
+ "nftmart-nft",
+ "nftmart-order",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-template",
+ "parity-scale-codec",
+ "precompile-utils",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "nftmart-aura-node"
 version = "3.0.0"
 dependencies = [
@@ -4506,6 +4533,33 @@ dependencies = [
  "pallet-timestamp",
  "pallet-utility",
  "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "nftmart-order-precompiles"
+version = "4.0.0-dev"
+dependencies = [
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "nftmart-auction",
+ "nftmart-nft",
+ "nftmart-order",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-template",
+ "parity-scale-codec",
+ "precompile-utils",
  "scale-info",
  "serde",
  "sp-core",
@@ -4781,10 +4835,12 @@ dependencies = [
  "hex-literal",
  "log",
  "nftmart-auction",
+ "nftmart-auction-precompiles",
  "nftmart-config",
  "nftmart-nft",
  "nftmart-nft-precompiles",
  "nftmart-order",
+ "nftmart-order-precompiles",
  "nftmart-rpc-runtime-api",
  "nftmart-traits",
  "node-primitives",

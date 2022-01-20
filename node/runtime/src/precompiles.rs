@@ -28,6 +28,8 @@ use sp_core::{H160, H256};
 use sp_std::marker::PhantomData;
 use withdraw_balance_precompiles::WithdrawBalancePrecompile;
 use nftmart_nft_precompiles::NftmartNftPrecompile;
+use nftmart_order_precompiles::NftmartOrderPrecompile;
+use nftmart_auction_precompiles::NftmartAuctionPrecompile;
 
 /// We include the nine Istanbul precompiles
 /// (https://github.com/ethereum/go-ethereum/blob/3c46f557/core/vm/contracts.go#L69)
@@ -48,7 +50,7 @@ where
 	/// Return all addresses that contain precompiles. This can be used to populate dummy code
 	/// under the precompile.
 	pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049, 2050, 2051]
+		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049, 2050, 2051, 2052, 2053]
 			.into_iter()
 			.map(hash)
 			.collect()
@@ -69,6 +71,8 @@ where
 	PalletTemplatePrecompile<R>: Precompile,
 	WithdrawBalancePrecompile<R>: Precompile,
 	NftmartNftPrecompile<R>: Precompile,
+	NftmartOrderPrecompile<R>: Precompile,
+	NftmartAuctionPrecompile<R>: Precompile,
 	Erc20BalancesPrecompile<R, NativeErc20Metadata>: Precompile,
 {
 	fn execute(
@@ -109,6 +113,12 @@ where
 				input, target_gas, context, is_static,
 			)),
 			a if a == hash(2051) => Some(<NftmartNftPrecompile<R> as Precompile>::execute(
+				input, target_gas, context, is_static,
+			)),
+			a if a == hash(2052) => Some(<NftmartOrderPrecompile<R> as Precompile>::execute(
+				input, target_gas, context, is_static,
+			)),
+			a if a == hash(2053) => Some(<NftmartAuctionPrecompile<R> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),
 			_ => None,
