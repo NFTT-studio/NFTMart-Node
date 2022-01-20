@@ -4462,6 +4462,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "nftmart-nft-precompiles"
+version = "4.0.0-dev"
+dependencies = [
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "nftmart-auction",
+ "nftmart-nft",
+ "nftmart-order",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-template",
+ "parity-scale-codec",
+ "precompile-utils",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "nftmart-order"
 version = "3.0.0"
 dependencies = [
@@ -4756,6 +4783,7 @@ dependencies = [
  "nftmart-auction",
  "nftmart-config",
  "nftmart-nft",
+ "nftmart-nft-precompiles",
  "nftmart-order",
  "nftmart-rpc-runtime-api",
  "nftmart-traits",

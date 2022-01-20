@@ -103,6 +103,7 @@ pallet-evm-precompile-balances-erc20 = { default-features = false, git = 'https:
 
 pallet-template-precompiles = { default-features = false, path = "../../precompiles/pallet-template" }
 withdraw-balance-precompiles = { default-features = false, path = "../../precompiles/withdraw-balance" }
+nftmart-nft-precompiles = { default-features = false, path = "../../precompiles/nftmart-nft" }
 node-primitives = { version = "2.0.0", path = "../primitives", default-features = false }
 chain-extension = { path = "../chain_extension", default-features = false }
 
