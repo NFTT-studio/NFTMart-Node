@@ -16,7 +16,7 @@ use fp_evm::{Context, PrecompileOutput};
 use frame_support::traits::{Currency, ExistenceRequirement};
 
 use sp_core::{H256, U256};
-use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
+use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*, vec};
 
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
