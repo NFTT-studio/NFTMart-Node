@@ -2,9 +2,9 @@
 path = "lib.rs"
 
 [package]
-name = "pallet-template-precompiles"
+name = "pallet-nop-precompiles"
 authors = [ "NFTMart" ]
-description = "A Precompile to make Substrate's pallet-template accessible to pallet-evm"
+description = "A Precompile to make Substrate's pallet-nop accessible to pallet-evm"
 edition = "2021"
 version = "4.0.0-dev"
 
@@ -24,7 +24,7 @@ sp-core = { git = "https://github.com/purestake/substrate.git", branch = "moonbe
 sp-io = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
 sp-std = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
 pallet-balances = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-pallet-template = { default-features = false, path = "../../pallets/template" }
+pallet-nop = { default-features = false, path = "../../pallets/nop" }
 
 
 # Frontier
@@ -48,7 +48,7 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
-	"pallet-template/std",
+	"pallet-nop/std",
 	"pallet-evm/std",
 	"precompile-utils/std",
 	"sp-core/std",

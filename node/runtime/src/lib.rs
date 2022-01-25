@@ -1273,6 +1273,10 @@ impl pallet_template::Config for Runtime {
 	type Event = Event;
 }
 
+impl pallet_nop::emit_t::Config for Runtime {
+	type Event = Event;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -1323,6 +1327,7 @@ construct_runtime!(
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, Origin},
 		Deposit: pallet_deposit::{Pallet, Call},
 		Template: pallet_template::{Pallet, Call, Storage, Event<T>},
+		NopEmitT: pallet_nop::emit_t::{Pallet, Call, Event<T>},
 	}
 );
 

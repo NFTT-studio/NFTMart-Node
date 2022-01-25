@@ -102,6 +102,7 @@ pallet-evm-precompile-sha3fips = { default-features = false, git = 'https://gith
 pallet-evm-precompile-balances-erc20 = { default-features = false, git = 'https://github.com/nftt-studio/moonbeam.git', branch = "master"}
 
 pallet-template-precompiles = { default-features = false, path = "../../precompiles/pallet-template" }
+pallet-nop-precompiles = { default-features = false, path = "../../precompiles/pallet-nop" }
 withdraw-balance-precompiles = { default-features = false, path = "../../precompiles/withdraw-balance" }
 nftmart-nft-precompiles = { default-features = false, path = "../../precompiles/nftmart-nft" }
 nftmart-order-precompiles = { default-features = false, path = "../../precompiles/nftmart-order" }
@@ -122,6 +123,7 @@ nftmart-config = { path = "../../pallets/nftmart-config", default-features = fal
 nftmart-rpc-runtime-api = { default-features = false, path = "../../pallets/nftmart-nft/rpc/runtime-api" }
 pallet-deposit = { default-features = false, path = "../../pallets/deposit" }
 pallet-template = { default-features = false, path = "../../pallets/template" }
+pallet-nop = { default-features = false, path = "../../pallets/nop" }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
@@ -205,6 +207,10 @@ std = [
 	"nftmart-rpc-runtime-api/std",
 	"pallet-deposit/std",
 	"num_enum/std",
+	"pallet-template/std",
+	"pallet-template-precompiles/std",
+	"pallet-nop/std",
+	"pallet-nop-precompiles/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",

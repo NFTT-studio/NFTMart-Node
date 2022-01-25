@@ -24,6 +24,7 @@ use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
 use pallet_template_precompiles::PalletTemplatePrecompile;
+use pallet_nop_precompiles::PalletNopPrecompile;
 use sp_core::{H160, H256};
 use sp_std::marker::PhantomData;
 use withdraw_balance_precompiles::WithdrawBalancePrecompile;
@@ -50,7 +51,7 @@ where
 	/// Return all addresses that contain precompiles. This can be used to populate dummy code
 	/// under the precompile.
 	pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049, 2050, 2051, 2052, 2053]
+		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049, 2050, 2051, 2052, 2053, 2054]
 			.into_iter()
 			.map(hash)
 			.collect()
@@ -69,6 +70,7 @@ where
 	// R: pallet_evm::Config + pallet_balances::Config,
 	Dispatch<R>: Precompile,
 	PalletTemplatePrecompile<R>: Precompile,
+	PalletNopPrecompile<R>: Precompile,
 	WithdrawBalancePrecompile<R>: Precompile,
 	NftmartNftPrecompile<R>: Precompile,
 	NftmartOrderPrecompile<R>: Precompile,
@@ -119,6 +121,9 @@ where
 				input, target_gas, context, is_static,
 			)),
 			a if a == hash(2053) => Some(<NftmartAuctionPrecompile<R> as Precompile>::execute(
+				input, target_gas, context, is_static,
+			)),
+			a if a == hash(2054) => Some(<PalletNopPrecompile<R> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),
 			_ => None,
