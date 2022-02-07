@@ -101,6 +101,7 @@ pallet-evm-precompile-dispatch = { default-features = false, git = 'https://gith
 pallet-evm-precompile-sha3fips = { default-features = false, git = 'https://github.com/nftt-studio/frontier.git', branch = "moonbeam-polkadot-v0.9.13"}
 pallet-evm-precompile-balances-erc20 = { default-features = false, git = 'https://github.com/nftt-studio/moonbeam.git', branch = "master"}
 
+frame-system-precompiles = { default-features = false, path = "../../precompiles/frame-system" }
 pallet-template-precompiles = { default-features = false, path = "../../precompiles/pallet-template" }
 pallet-nop-precompiles = { default-features = false, path = "../../precompiles/pallet-nop" }
 withdraw-balance-precompiles = { default-features = false, path = "../../precompiles/withdraw-balance" }
@@ -207,6 +208,7 @@ std = [
 	"nftmart-rpc-runtime-api/std",
 	"pallet-deposit/std",
 	"num_enum/std",
+	"frame-system-precompiles/std",
 	"pallet-template/std",
 	"pallet-template-precompiles/std",
 	"pallet-nop/std",
