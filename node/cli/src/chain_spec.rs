@@ -24,7 +24,7 @@ use node_runtime::{
 	constants::currency::*, wasm_binary_unwrap, AuthorityDiscoveryConfig, BabeConfig,
 	BalancesConfig, Block, CouncilConfig, DemocracyConfig, ElectionsConfig, GrandpaConfig,
 	ImOnlineConfig, IndicesConfig, SessionConfig, SessionKeys, StakerStatus, StakingConfig,
-	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig, MAX_NOMINATIONS,
+	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig, MAX_NOMINATIONS, Precompiles,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
@@ -237,6 +237,12 @@ pub fn testnet_genesis(
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
 	const STASH: Balance = ENDOWMENT / 1000;
 
+        // This is the simplest bytecode to revert without returning any data.
+        // We will pre-deploy it under all of our precompiles to ensure they can be called from
+        // within contracts.
+        // (PUSH1 0x00 PUSH1 0x00 REVERT)
+        let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
+
 	GenesisConfig {
 		system: SystemConfig {
 			code: wasm_binary_unwrap().to_vec(),
@@ -319,6 +325,19 @@ pub fn testnet_genesis(
 			accounts: {
 				// Prefund the "Gerald" account
 				let mut accounts = std::collections::BTreeMap::new();
+				// We need _some_ code inserted at the precompile address so that
+				// the evm will actually call the address.
+				for addr in Precompiles::used_addresses() {
+					accounts.insert(
+						addr.into(),
+						GenesisAccount {
+							nonce: Default::default(),
+							balance: Default::default(),
+							storage: Default::default(),
+							code: revert_bytecode.clone(),
+						},
+					);
+				}
 				accounts.insert(
 					H160::from_slice(&hex_literal::hex!("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b")),
 					GenesisAccount{
@@ -342,7 +361,6 @@ pub fn testnet_genesis(
 				accounts
 			}
 		},
-
 		ethereum: Default::default(),
 	}
 }

@@ -109,13 +109,13 @@ where
 			a if a == hash(2048) => Some(<PalletTemplatePrecompile<R> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),
-			a if a == hash(2049) =>
+			a if a == hash(2049) => Some(<WithdrawBalancePrecompile<R> as Precompile>::execute(
+				input, target_gas, context, is_static,
+			)),
+			a if a == hash(2050) =>
 				Some(<Erc20BalancesPrecompile<R, NativeErc20Metadata> as Precompile>::execute(
 					input, target_gas, context, is_static,
 				)),
-			a if a == hash(2050) => Some(<WithdrawBalancePrecompile<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
 			a if a == hash(2051) => Some(<NftmartNftPrecompile<R> as Precompile>::execute(
 				input, target_gas, context, is_static,
 			)),

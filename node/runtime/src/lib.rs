@@ -1228,6 +1228,8 @@ impl pallet_evm::GasWeightMapping for NftmartGasWeightMapping {
 	}
 }
 
+pub type Precompiles = NftmartPrecompiles<Runtime>;
+
 parameter_types! {
 	pub const NftmartChainId: u64 = 12191;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT / WEIGHT_PER_GAS);
