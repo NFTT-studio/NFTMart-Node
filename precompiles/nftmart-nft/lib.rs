@@ -7,6 +7,7 @@ use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	sp_runtime::traits::{StaticLookup, IdentifyAccount},
 };
+use nftmart_nft::{Call as NftCall};
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
 use precompile_utils::{
 	Bytes, EvmData, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper,
@@ -39,7 +40,9 @@ pub struct NftmartNftPrecompile<T>(PhantomData<T>);
 
 impl<T> Precompile for NftmartNftPrecompile<T>
 where
-	T: pallet_evm::Config,
+	T: pallet_evm::Config + nftmart_nft::Config + orml_nft::Config,
+	<T as frame_system::Config>::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + From<NftCall<T>>,
+	<<T as frame_system::Config>::Call as Dispatchable>::Origin: From<Option<<T as frame_system::Config>::AccountId>>,
 	// T: pallet_evm::Config + pallet_balances::Config,
 	// T::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	// <T::Call as Dispatchable>::Origin: From<Option<T::AccountId>>,
@@ -66,6 +69,7 @@ where
 		match selector {
 			// Check for accessor methods first. These return results immediately
 			Action::Burn => Self::burn(&mut input, &mut gasometer, context),
+			/*
 			Action::CreateClass => Self::create_class(&mut input, &mut gasometer, context),
 			Action::DestroyClass => Self::destroy_class(&mut input, &mut gasometer, context),
 			Action::Mint => Self::mint(&mut input, &mut gasometer, context),
@@ -78,6 +82,8 @@ where
 				Self::update_token_royalty(&mut input, &mut gasometer, context),
 			Action::UpdateTokenRoyaltyBeneficiary =>
 				Self::update_token_royalty_beneficiary(&mut input, &mut gasometer, context),
+				*/
+			_ => Self::burn(&mut input, &mut gasometer, context),
 		}
 	}
 }
@@ -91,10 +97,13 @@ pub type BalanceOf<Runtime> =
 
 impl<T> NftmartNftPrecompile<T>
 where
-	T: pallet_evm::Config,
+	T: pallet_evm::Config + nftmart_nft::Config + orml_nft::Config,
+	// `<<T as frame_system::Config>::Call as Dispatchable>::PostInfo = PostDispatchInfo`
+	// `<T as frame_system::Config>::Call: GetDispatchInfo`
 	// T: pallet_evm::Config + pallet_balances::Config,
 	// T::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
-	// <T::Call as Dispatchable>::Origin: From<Option<T::AccountId>>,
+	<T as frame_system::Config>::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + From<NftCall<T>>,
+	<<T as frame_system::Config>::Call as Dispatchable>::Origin: From<Option<<T as frame_system::Config>::AccountId>>,
 	// T::Call: From<pallet_balances::Call<T>>,
 	// T::AccountId: EvmData,
 	// T::AccountId: From<H256>,
@@ -133,9 +142,14 @@ where
 		log::debug!(target: "nftmart-evm", "tokenId: {:?}", &token_id);
 		log::debug!(target: "nftmart-evm", "quantity: {:?}", &quantity);
 
-		// let call = pallet_balances::Call::<T>::transfer { dest: T::Lookup::unlookup(to), value: amount };
+		let call = NftCall::<T>::burn {
+			class_id: class_id.into(),
+			token_id: class_id.into(),
+			quantity: quantity.into(),
+		};
 
 		// RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, &mut gasometer)?;
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 		// let _ = T::Currency::transfer(&origin, &to, amount, ExistenceRequirement::AllowDeath);
 
 		// let used_gas = gasometer.used_gas();
@@ -149,7 +163,7 @@ where
 			logs: Default::default(),
 		})
 	}
-
+/*
 	fn mint(
 		input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
@@ -533,4 +547,5 @@ where
 			logs: Default::default(),
 		})
 	}
+*/
 }

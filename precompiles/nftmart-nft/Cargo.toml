@@ -25,6 +25,7 @@ sp-io = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam
 sp-std = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
 pallet-balances = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
 pallet-template = { default-features = false, path = "../../pallets/template" }
+orml-nft = { version = "0.4.1-dev", default-features = false, path = "../../pallets/orml-nft" }
 nftmart-nft = { default-features = false, path = "../../pallets/nftmart-nft" }
 nftmart-auction = { default-features = false, path = "../../pallets/nftmart-auction" }
 nftmart-order = { default-features = false, path = "../../pallets/nftmart-order" }
@@ -50,6 +51,8 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
+	"pallet-template/std",
+	"orml-nft/std",
 	"nftmart-nft/std",
 	"nftmart-auction/std",
 	"nftmart-order/std",
