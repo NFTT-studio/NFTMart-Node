@@ -361,11 +361,13 @@ where
 
 		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
 
-		let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
-		let to = to.into_account();
+		// let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+		// let to = to.into_account();
+		let to = input.read::<H256>(gasometer)?;
+		let to: <T as frame_system::Config>::AccountId = <T as frame_system::Config>::AccountId::from(to.0);
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let metadata = input.read::<Bytes>(gasometer)?;
-		let metadata = metadata.as_str();
+		// let metadata = metadata.as_str();
 		let quantity: u32 = input.read::<u32>(gasometer)?.into();
 		let charge_royalty: u32 = input.read::<u32>(gasometer)?.into();
 
@@ -374,6 +376,16 @@ where
 		log::debug!(target: "nftmart-evm", "metadata: {:?}", &metadata);
 		log::debug!(target: "nftmart-evm", "quantity: {:?}", &quantity);
 		log::debug!(target: "nftmart-evm", "charge_royalty: {:?}", &charge_royalty);
+
+		let call = NftCall::<T>::mint {
+			to: <T as frame_system::Config>::Lookup::unlookup(to),
+			class_id: class_id.into(),
+			metadata: metadata.into(),
+			quantity: quantity.into(),
+			charge_royalty: Some(PerU16::from_parts(charge_royalty.try_into().unwrap())),
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
