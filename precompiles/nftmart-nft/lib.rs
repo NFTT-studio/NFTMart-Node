@@ -5,7 +5,7 @@
 use codec::Decode;
 use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
-	sp_runtime::traits::StaticLookup,
+	sp_runtime::traits::{StaticLookup, IdentifyAccount},
 };
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
 use precompile_utils::{
@@ -160,10 +160,14 @@ where
 
 		let origin: <T as frame_system::pallet::Config>::AccountId =
 			T::AddressMapping::into_account_id(context.caller);
+
 		if_std! {
+				use sp_core::sr25519::{Public as sr25519Public};
+				use sp_core::crypto::{Ss58AddressFormat, Ss58Codec};
 				// This code is only being compiled and executed when the `std` feature is enabled.
 				println!("The caller account is: {:#?}", context.caller);
 				println!("The caller origin is: {:#?}", origin);
+				println!("decode nmt {:?}", sr25519Public::from_string_with_version("nmqxkVdwMn5VnbormnohxxZ4H2MpnJGTmuAxRVwZ1Y6ts5ne5"));
 		}
 
 		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
@@ -173,6 +177,12 @@ where
 		// let to: <T as frame_system::pallet::Config>::AccountId = input.read::<T::AccountId>(gasometer)?.into();
 		// let to: <T as frame_system::pallet::Config>::AccountId = input.read::<Vec<u8>>(&mut gasometer)?.into();
 		let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+
+		if_std! {
+				println!("to: {:?}", to.to_ss58check_with_version(Ss58AddressFormat::custom(12191)));
+		}
+
+		let to = to.into_account();
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		// let metadata: &[u8] = input.read::<Bytes>(gasometer)?.as_bytes();
 		let metadata = input.read::<Bytes>(gasometer)?;
@@ -217,6 +227,7 @@ where
 
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let dest = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+		let dest = dest.into_account();
 		// how do I convert sp_core::sr25519::Public to AccountId?
 		//
 		// AccountId is defined in ../../pallets/nftmart-traits/src/constants_types.rs
@@ -304,6 +315,7 @@ where
 		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
 
 		let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+		let to = to.into_account();
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let metadata = input.read::<Bytes>(gasometer)?;
 		let metadata = metadata.as_str();
@@ -397,6 +409,7 @@ where
 		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
 
 		let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+		let to = to.into_account();
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let token_id: u32 = input.read::<u32>(gasometer)?.into();
 		let quantity: u32 = input.read::<u32>(gasometer)?.into();
@@ -507,6 +520,7 @@ where
 		let token_id: u32 = input.read::<u32>(gasometer)?.into();
 		let royalty_beneficiary =
 			sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+		let royalty_beneficiary = royalty_beneficiary.into_account();
 
 		log::debug!(target: "nftmart-evm", "classId: {:?}", &class_id);
 		log::debug!(target: "nftmart-evm", "tokenId: {:?}", &token_id);
