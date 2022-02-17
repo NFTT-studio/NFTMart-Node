@@ -29,6 +29,7 @@ orml-nft = { version = "0.4.1-dev", default-features = false, path = "../../pall
 nftmart-nft = { default-features = false, path = "../../pallets/nftmart-nft" }
 nftmart-auction = { default-features = false, path = "../../pallets/nftmart-auction" }
 nftmart-order = { default-features = false, path = "../../pallets/nftmart-order" }
+nftmart-traits = { default-features = false, path = "../../pallets/nftmart-traits" }
 
 sp-arithmetic = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13" }
 

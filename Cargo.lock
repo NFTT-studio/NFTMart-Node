@@ -4524,6 +4524,7 @@ dependencies = [
  "nftmart-auction",
  "nftmart-nft",
  "nftmart-order",
+ "nftmart-traits",
  "num_enum",
  "orml-nft",
  "pallet-balances",

@@ -20,6 +20,8 @@ use frame_support::traits::{Currency, ExistenceRequirement};
 use sp_core::{crypto::UncheckedFrom, H256, U256};
 use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 
+use nftmart_traits::{Properties, ClassProperty};
+
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
 #[precompile_utils::generate_function_selector]
@@ -297,19 +299,19 @@ where
 		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
 
 		let metadata = input.read::<Bytes>(gasometer)?;
-		let metadata = metadata.as_str();
+		// let metadata = metadata.as_str();
 
 		let name = input.read::<Bytes>(gasometer)?;
-		let name = name.as_str();
+		// let name = name.as_str();
 
 		let description = input.read::<Bytes>(gasometer)?;
-		let description = description.as_str();
+		// let description = description.as_str();
 
 		let royalty_rate: u32 = input.read::<u32>(gasometer)?.into();
 
 		let properties: u8 = input.read::<u8>(gasometer)?.into();
 
-		let category_ids: Vec<u32> = input.read::<Vec<u32>>(gasometer)?.into();
+		let category_ids: Vec<u64> = input.read::<Vec<u64>>(gasometer)?.into();
 		// how do I convert sp_core::sr25519::Public to AccountId?
 		//
 		// AccountId is defined in ../../pallets/nftmart-traits/src/constants_types.rs
@@ -322,6 +324,17 @@ where
 		log::debug!(target: "nftmart-evm", "royalty_rate: {:?}", &royalty_rate);
 		log::debug!(target: "nftmart-evm", "properties: {:?}", &properties);
 		log::debug!(target: "nftmart-evm", "category_ids: {:?}", &category_ids);
+
+		let call = NftCall::<T>::create_class {
+			metadata: metadata.into(),
+			name: name.into(),
+			description: description.into(),
+			royalty_rate: PerU16::from_parts(royalty_rate.try_into().unwrap()),
+			properties: Properties(ClassProperty::Transferable.into()), // TODO: use real properties,
+			category_ids: category_ids,
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
