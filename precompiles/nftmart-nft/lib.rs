@@ -258,16 +258,18 @@ where
 		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
 
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
-		let dest = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
-		let dest = dest.into_account();
-		// how do I convert sp_core::sr25519::Public to AccountId?
-		//
-		// AccountId is defined in ../../pallets/nftmart-traits/src/constants_types.rs
-		// pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-		//
-		// let desta: <T as frame_system::pallet::Config>::AccountId = dest.into();
+		let dest = input.read::<H256>(gasometer)?;
+		let dest: <T as frame_system::Config>::AccountId = <T as frame_system::Config>::AccountId::from(dest.0);
+
 		log::debug!(target: "nftmart-evm", "classId: {:?}", &class_id);
 		log::debug!(target: "nftmart-evm", "dest: {:?}", &dest);
+
+		let call = NftCall::<T>::destroy_class {
+			class_id: class_id.into(),
+			dest: <T as frame_system::Config>::Lookup::unlookup(dest),
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
