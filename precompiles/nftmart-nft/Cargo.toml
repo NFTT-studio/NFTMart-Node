@@ -31,7 +31,7 @@ nftmart-auction = { default-features = false, path = "../../pallets/nftmart-auct
 nftmart-order = { default-features = false, path = "../../pallets/nftmart-order" }
 nftmart-traits = { default-features = false, path = "../../pallets/nftmart-traits" }
 
-sp-arithmetic = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13" }
+sp-arithmetic = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
 
 # Frontier
 pallet-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
