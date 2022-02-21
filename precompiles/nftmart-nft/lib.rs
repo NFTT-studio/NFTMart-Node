@@ -5,14 +5,14 @@
 use codec::Decode;
 use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
-	sp_runtime::traits::{StaticLookup, IdentifyAccount},
+	sp_runtime::traits::{IdentifyAccount, StaticLookup},
 };
-use sp_arithmetic::{PerU16};
-use nftmart_nft::{Call as NftCall};
+use nftmart_nft::Call as NftCall;
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
 use precompile_utils::{
 	Bytes, EvmData, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper,
 };
+use sp_arithmetic::PerU16;
 
 use fp_evm::{Context, PrecompileOutput};
 use frame_support::traits::{Currency, ExistenceRequirement};
@@ -20,7 +20,7 @@ use frame_support::traits::{Currency, ExistenceRequirement};
 use sp_core::{crypto::UncheckedFrom, H256, U256};
 use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 
-use nftmart_traits::{Properties, ClassProperty};
+use nftmart_traits::{ClassProperty, Properties};
 
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
@@ -44,8 +44,10 @@ pub struct NftmartNftPrecompile<T>(PhantomData<T>);
 impl<T> Precompile for NftmartNftPrecompile<T>
 where
 	T: pallet_evm::Config + nftmart_nft::Config + orml_nft::Config,
-	<T as frame_system::Config>::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + From<NftCall<T>>,
-	<<T as frame_system::Config>::Call as Dispatchable>::Origin: From<Option<<T as frame_system::Config>::AccountId>>,
+	<T as frame_system::Config>::Call:
+		Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + From<NftCall<T>>,
+	<<T as frame_system::Config>::Call as Dispatchable>::Origin:
+		From<Option<<T as frame_system::Config>::AccountId>>,
 	// T: pallet_evm::Config + pallet_balances::Config,
 	// T::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	// <T::Call as Dispatchable>::Origin: From<Option<T::AccountId>>,
@@ -102,8 +104,10 @@ where
 	// `<T as frame_system::Config>::Call: GetDispatchInfo`
 	// T: pallet_evm::Config + pallet_balances::Config,
 	// T::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
-	<T as frame_system::Config>::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + From<NftCall<T>>,
-	<<T as frame_system::Config>::Call as Dispatchable>::Origin: From<Option<<T as frame_system::Config>::AccountId>>,
+	<T as frame_system::Config>::Call:
+		Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + From<NftCall<T>>,
+	<<T as frame_system::Config>::Call as Dispatchable>::Origin:
+		From<Option<<T as frame_system::Config>::AccountId>>,
 	// T::Call: From<pallet_balances::Call<T>>,
 	// T::AccountId: EvmData,
 	// T::AccountId: From<H256>,
@@ -205,7 +209,8 @@ where
 				println!("to: {:?}", to2.to_ss58check_with_version(Ss58AddressFormat::custom(12191)));
 		}
 
-		let to: <T as frame_system::Config>::AccountId = <T as frame_system::Config>::AccountId::from(to.0);
+		let to: <T as frame_system::Config>::AccountId =
+			<T as frame_system::Config>::AccountId::from(to.0);
 
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		// let metadata: &[u8] = input.read::<Bytes>(gasometer)?.as_bytes();
@@ -261,7 +266,8 @@ where
 
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let dest = input.read::<H256>(gasometer)?;
-		let dest: <T as frame_system::Config>::AccountId = <T as frame_system::Config>::AccountId::from(dest.0);
+		let dest: <T as frame_system::Config>::AccountId =
+			<T as frame_system::Config>::AccountId::from(dest.0);
 
 		log::debug!(target: "nftmart-evm", "classId: {:?}", &class_id);
 		log::debug!(target: "nftmart-evm", "dest: {:?}", &dest);
@@ -331,7 +337,7 @@ where
 			description: description.into(),
 			royalty_rate: PerU16::from_parts(royalty_rate.try_into().unwrap()),
 			properties: Properties(ClassProperty::Transferable.into()), // TODO: use real properties,
-			category_ids: category_ids,
+			category_ids,
 		};
 
 		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
@@ -364,7 +370,8 @@ where
 		// let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
 		// let to = to.into_account();
 		let to = input.read::<H256>(gasometer)?;
-		let to: <T as frame_system::Config>::AccountId = <T as frame_system::Config>::AccountId::from(to.0);
+		let to: <T as frame_system::Config>::AccountId =
+			<T as frame_system::Config>::AccountId::from(to.0);
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let metadata = input.read::<Bytes>(gasometer)?;
 		// let metadata = metadata.as_str();
@@ -415,19 +422,19 @@ where
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 
 		let metadata = input.read::<Bytes>(gasometer)?;
-		let metadata = metadata.as_str();
+		// let metadata = metadata.as_str();
 
 		let name = input.read::<Bytes>(gasometer)?;
-		let name = name.as_str();
+		// let name = name.as_str();
 
 		let description = input.read::<Bytes>(gasometer)?;
-		let description = description.as_str();
+		// let description = description.as_str();
 
 		let royalty_rate: u32 = input.read::<u32>(gasometer)?.into();
 
 		let properties: u8 = input.read::<u8>(gasometer)?.into();
 
-		let category_ids: Vec<u32> = input.read::<Vec<u32>>(gasometer)?.into();
+		let category_ids: Vec<u64> = input.read::<Vec<u64>>(gasometer)?.into();
 		// how do I convert sp_core::sr25519::Public to AccountId?
 		//
 		// AccountId is defined in ../../pallets/nftmart-traits/src/constants_types.rs
@@ -441,6 +448,18 @@ where
 		log::debug!(target: "nftmart-evm", "royalty_rate: {:?}", &royalty_rate);
 		log::debug!(target: "nftmart-evm", "properties: {:?}", &properties);
 		log::debug!(target: "nftmart-evm", "category_ids: {:?}", &category_ids);
+
+		let call = NftCall::<T>::update_class {
+			class_id: class_id.into(),
+			metadata: metadata.into(),
+			name: name.into(),
+			description: description.into(),
+			royalty_rate: PerU16::from_parts(royalty_rate.try_into().unwrap()),
+			properties: Properties(ClassProperty::Transferable.into()), // TODO: use real properties,
+			category_ids,
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
@@ -467,13 +486,16 @@ where
 
 		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
 
-		let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
-		let to = to.into_account();
+		// let to = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+		// let to = to.into_account();
+		let to = input.read::<H256>(gasometer)?;
+		let to: <T as frame_system::Config>::AccountId =
+			<T as frame_system::Config>::AccountId::from(to.0);
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let token_id: u32 = input.read::<u32>(gasometer)?.into();
 		let quantity: u32 = input.read::<u32>(gasometer)?.into();
 		let metadata = input.read::<Bytes>(gasometer)?;
-		let metadata = metadata.as_str();
+		// let metadata = metadata.as_str();
 		let charge_royalty: u32 = input.read::<u32>(gasometer)?.into();
 
 		log::debug!(target: "nftmart-evm", "to: {:?}", &to);
@@ -482,6 +504,17 @@ where
 		log::debug!(target: "nftmart-evm", "quantity: {:?}", &quantity);
 		log::debug!(target: "nftmart-evm", "metadata: {:?}", &metadata);
 		log::debug!(target: "nftmart-evm", "charge_royalty: {:?}", &charge_royalty);
+
+		let call = NftCall::<T>::update_token {
+			to: <T as frame_system::Config>::Lookup::unlookup(to),
+			class_id: class_id.into(),
+			token_id: token_id.into(),
+			quantity: quantity.into(),
+			metadata: metadata.into(),
+			charge_royalty: Some(PerU16::from_parts(charge_royalty.try_into().unwrap())),
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
@@ -511,11 +544,19 @@ where
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let token_id: u32 = input.read::<u32>(gasometer)?.into();
 		let metadata = input.read::<Bytes>(gasometer)?;
-		let metadata = metadata.as_str();
+		// let metadata = metadata.as_str();
 
 		log::debug!(target: "nftmart-evm", "classId: {:?}", &class_id);
 		log::debug!(target: "nftmart-evm", "tokenId: {:?}", &token_id);
 		log::debug!(target: "nftmart-evm", "metadata: {:?}", &metadata);
+
+		let call = NftCall::<T>::update_token_metadata {
+			class_id: class_id.into(),
+			token_id: token_id.into(),
+			metadata: metadata.into(),
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
@@ -550,6 +591,14 @@ where
 		log::debug!(target: "nftmart-evm", "tokenId: {:?}", &token_id);
 		log::debug!(target: "nftmart-evm", "charge_royalty: {:?}", &charge_royalty);
 
+		let call = NftCall::<T>::update_token_royalty {
+			class_id: class_id.into(),
+			token_id: token_id.into(),
+			charge_royalty: Some(PerU16::from_parts(charge_royalty.try_into().unwrap())),
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
+
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
 			cost: gasometer.used_gas(),
@@ -577,13 +626,23 @@ where
 
 		let class_id: u32 = input.read::<u32>(gasometer)?.into();
 		let token_id: u32 = input.read::<u32>(gasometer)?.into();
-		let royalty_beneficiary =
-			sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
-		let royalty_beneficiary = royalty_beneficiary.into_account();
+		// let royalty_beneficiary = sp_core::sr25519::Public::unchecked_from(input.read::<H256>(gasometer)?);
+		// let royalty_beneficiary = royalty_beneficiary.into_account();
+		let royalty_beneficiary = input.read::<H256>(gasometer)?;
+		let royalty_beneficiary: <T as frame_system::Config>::AccountId =
+			<T as frame_system::Config>::AccountId::from(royalty_beneficiary.0);
 
 		log::debug!(target: "nftmart-evm", "classId: {:?}", &class_id);
 		log::debug!(target: "nftmart-evm", "tokenId: {:?}", &token_id);
 		log::debug!(target: "nftmart-evm", "royalty_beneficiary: {:?}", &royalty_beneficiary);
+
+		let call = NftCall::<T>::update_token_royalty_beneficiary {
+			class_id: class_id.into(),
+			token_id: token_id.into(),
+			to: <T as frame_system::Config>::Lookup::unlookup(royalty_beneficiary),
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
