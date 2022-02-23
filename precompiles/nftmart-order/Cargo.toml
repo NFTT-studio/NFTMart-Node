@@ -13,7 +13,7 @@ log = "0.4"
 num_enum = { version = "0.5.3", default-features = false }
 
 # Moonbeam
-precompile-utils = { default-features = false, git = 'https://github.com/nftt-studio/moonbeam.git', branch = "master"}
+precompile-utils = { default-features = false, path = '../utils' }
 
 # Substrate
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false }

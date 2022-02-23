@@ -22,6 +22,14 @@ use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 
 use nftmart_traits::{ClassProperty, Properties};
 
+/*
+pub type TokenIdOf<T> = <T as orml_nft::Config>::TokenId;
+pub type ClassIdOf<T> = <T as orml_nft::Config>::ClassId;
+pub type NftItem<T> = (ClassIdOf::<T>, TokenIdOf::<T>, TokenIdOf::<T>);
+pub type NftItems<T> = Vec<(ClassIdOf::<T>, TokenIdOf::<T>, TokenIdOf::<T>)>;
+*/
+pub type NftItem = (u32, u64, u64);
+
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
 #[precompile_utils::generate_function_selector]
@@ -32,6 +40,7 @@ enum Action {
 	DestroyClass = "destroyClass(uint256,bytes32)",
 	Mint = "mint(bytes32,uint256,string,uint256,uint256)",
 	ProxyMint = "proxyMint(bytes32,uint256,string,uint256,uint256)",
+	Transfer = "transfer(bytes32,(uint256,uint256,uint256)[])",
 	UpdateClass = "updateClass(uint256,string,string,string,uint256,uint8,uint256[])",
 	UpdateToken = "updateToken(bytes32,uint256,uint256,uint256,string,uint256)",
 	UpdateTokenMetadata = "updateTokenMetadata(uint256,uint256,string)",
@@ -78,6 +87,7 @@ where
 			Action::DestroyClass => Self::destroy_class(&mut input, &mut gasometer, context),
 			Action::Mint => Self::mint(&mut input, &mut gasometer, context),
 			Action::ProxyMint => Self::proxy_mint(&mut input, &mut gasometer, context),
+			Action::Transfer => Self::transfer(&mut input, &mut gasometer, context),
 			Action::UpdateClass => Self::update_class(&mut input, &mut gasometer, context),
 			Action::UpdateToken => Self::update_token(&mut input, &mut gasometer, context),
 			Action::UpdateTokenMetadata =>
@@ -402,6 +412,49 @@ where
 		};
 
 		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Stopped,
+			cost: gasometer.used_gas(),
+			output: Default::default(),
+			logs: Default::default(),
+		})
+	}
+
+	fn transfer(
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+		context: &Context,
+	) -> EvmResult<PrecompileOutput> {
+		// Bound check. We expect a single argument passed in.
+		input.expect_arguments(gasometer, 2)?;
+
+		let origin: <T as frame_system::pallet::Config>::AccountId =
+			T::AddressMapping::into_account_id(context.caller);
+		if_std! {
+				println!("The caller account is: {:#?}", context.caller);
+				println!("The caller origin is: {:#?}", origin);
+		}
+
+		log::debug!(target: "nftmart-evm", "from(evm): {:?}", &origin);
+
+		let to: H256 = input.read::<H256>(gasometer)?;
+
+		let to: <T as frame_system::Config>::AccountId =
+			<T as frame_system::Config>::AccountId::from(to.0);
+
+		let items: Vec<NftItem> = input.read::<Vec<NftItem>>(gasometer)?.into();
+		log::debug!(target: "nftmart-evm", "to: {:?}", &to);
+		log::debug!(target: "nftmart-evm", "items: {:?}", &items);
+
+		/*
+		let call = NftCall::<T>::transfer {
+			to: <T as frame_system::Config>::Lookup::unlookup(to),
+			items: items.into(),
+		};
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
+		*/
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,

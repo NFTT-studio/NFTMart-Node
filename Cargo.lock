@@ -2147,7 +2147,7 @@ dependencies = [
  "pallet-balances",
  "pallet-evm",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0",
  "scale-info",
  "serde",
  "sp-core",
@@ -4363,7 +4363,7 @@ dependencies = [
  "pallet-evm",
  "pallet-template",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0",
  "scale-info",
  "serde",
  "sp-core",
@@ -4533,7 +4533,7 @@ dependencies = [
  "pallet-evm",
  "pallet-template",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0",
  "scale-info",
  "serde",
  "sp-arithmetic",
@@ -4589,7 +4589,7 @@ dependencies = [
  "pallet-evm",
  "pallet-template",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0",
  "scale-info",
  "serde",
  "sp-core",
@@ -5661,7 +5661,7 @@ dependencies = [
  "pallet-balances",
  "pallet-evm",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0 (git+https://github.com/nftt-studio/moonbeam.git?branch=master)",
  "slices",
  "sp-core",
  "sp-io",
@@ -5857,7 +5857,7 @@ dependencies = [
  "pallet-evm",
  "pallet-nop",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0",
  "scale-info",
  "serde",
  "sp-core",
@@ -6080,7 +6080,7 @@ dependencies = [
  "pallet-evm",
  "pallet-template",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0",
  "scale-info",
  "serde",
  "sp-core",
@@ -6634,6 +6634,26 @@ checksum = "ed0cfbc8191465bed66e1718596ee0b0b35d5ee1f41c5df2189d0fe8bde535ba"
 [[package]]
 name = "precompile-utils"
 version = "0.1.0"
+dependencies = [
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "num_enum",
+ "pallet-evm",
+ "parity-scale-codec",
+ "precompile-utils-macro 0.1.0",
+ "sha3 0.9.1",
+ "sp-core",
+ "sp-io",
+ "sp-std",
+ "xcm",
+]
+
+[[package]]
+name = "precompile-utils"
+version = "0.1.0"
 source = "git+https://github.com/nftt-studio/moonbeam.git?branch=master#b1c58b6bb8d1ba82e0a41c8ade9b6181cfd6447e"
 dependencies = [
  "fp-evm",
@@ -6643,12 +6663,23 @@ dependencies = [
  "num_enum",
  "pallet-evm",
  "parity-scale-codec",
- "precompile-utils-macro",
+ "precompile-utils-macro 0.1.0 (git+https://github.com/nftt-studio/moonbeam.git?branch=master)",
  "sha3 0.9.1",
  "sp-core",
  "sp-io",
  "sp-std",
  "xcm",
+]
+
+[[package]]
+name = "precompile-utils-macro"
+version = "0.1.0"
+dependencies = [
+ "num_enum",
+ "proc-macro2",
+ "quote",
+ "sha3 0.8.2",
+ "syn",
 ]
 
 [[package]]
@@ -10273,7 +10304,7 @@ version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ee73e6e4924fe940354b8d4d98cad5231175d615cd855b758adc658c0aac6a0"
 dependencies = [
- "cfg-if 1.0.0",
+ "cfg-if 0.1.10",
  "rand 0.8.4",
  "static_assertions",
 ]
@@ -10916,7 +10947,7 @@ dependencies = [
  "pallet-evm",
  "pallet-template",
  "parity-scale-codec",
- "precompile-utils",
+ "precompile-utils 0.1.0",
  "scale-info",
  "serde",
  "sp-core",
@@ -10955,7 +10986,7 @@ dependencies = [
 [[package]]
 name = "xcm"
 version = "0.9.13"
-source = "git+https://github.com/purestake/polkadot?branch=moonbeam-polkadot-v0.9.13#ac51d9bef9925b76f0ed63461599577d79c0d491"
+source = "git+https://github.com/purestake/polkadot.git?branch=moonbeam-polkadot-v0.9.13#ac51d9bef9925b76f0ed63461599577d79c0d491"
 dependencies = [
  "derivative",
  "impl-trait-for-tuples 0.2.1",
@@ -10968,7 +10999,7 @@ dependencies = [
 [[package]]
 name = "xcm-procedural"
 version = "0.1.0"
-source = "git+https://github.com/purestake/polkadot?branch=moonbeam-polkadot-v0.9.13#ac51d9bef9925b76f0ed63461599577d79c0d491"
+source = "git+https://github.com/purestake/polkadot.git?branch=moonbeam-polkadot-v0.9.13#ac51d9bef9925b76f0ed63461599577d79c0d491"
 dependencies = [
  "proc-macro2",
  "quote",
