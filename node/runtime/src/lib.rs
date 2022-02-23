@@ -1199,7 +1199,9 @@ impl nftmart_auction::Config for Runtime {
 }
 
 mod precompiles;
-use precompiles::NftmartPrecompiles;
+use precompiles::{NftmartPrecompiles, PrecompileFn};
+extern crate alloc;
+use alloc::collections::BTreeMap;
 
 pub struct FixedGasPrice;
 impl FeeCalculator for FixedGasPrice {
@@ -1228,12 +1230,12 @@ impl pallet_evm::GasWeightMapping for NftmartGasWeightMapping {
 	}
 }
 
-pub type Precompiles = NftmartPrecompiles<Runtime>;
+pub type Precompiles = BTreeMap<H160, PrecompileFn>;
 
 parameter_types! {
 	pub const NftmartChainId: u64 = 12191;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT / WEIGHT_PER_GAS);
-	pub PrecompilesValue: NftmartPrecompiles<Runtime> = NftmartPrecompiles::<_>::new();
+	pub PrecompilesValue: Precompiles = NftmartPrecompiles::<Runtime>::new();
 }
 
 impl pallet_evm::Config for Runtime {
@@ -1253,7 +1255,7 @@ impl pallet_evm::Config for Runtime {
 	type GasWeightMapping = NftmartGasWeightMapping;
 	type OnChargeTransaction = ();
 	type FindAuthor = ();
-	type PrecompilesType = NftmartPrecompiles<Runtime>;
+	type PrecompilesType = Precompiles;
 	type PrecompilesValue = PrecompilesValue;
 
 	fn token_decimals() -> u8 {

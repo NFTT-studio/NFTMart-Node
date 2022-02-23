@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moonbeam.  If not, see <http://www.gnu.org/licenses/>.
 
+use alloc::collections::BTreeMap;
 use fp_evm::Context;
-use pallet_evm::{Precompile, PrecompileResult, PrecompileSet};
+use frame_system_precompiles::FrameSystemWrapper;
+use nftmart_auction_precompiles::NftmartAuctionPrecompile;
+use nftmart_nft_precompiles::NftmartNftPrecompile;
+use nftmart_order_precompiles::NftmartOrderPrecompile;
+use pallet_evm::{Precompile, PrecompileResult};
 use pallet_evm_precompile_balances_erc20::{Erc20BalancesPrecompile, Erc20Metadata};
 use pallet_evm_precompile_blake2::Blake2F;
 use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
@@ -23,52 +28,24 @@ use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
-use pallet_template_precompiles::PalletTemplatePrecompile;
 use pallet_nop_precompiles::PalletNopPrecompile;
-use frame_system_precompiles::FrameSystemWrapper;
+use pallet_template_precompiles::PalletTemplatePrecompile;
 use sp_core::{H160, H256};
 use sp_std::marker::PhantomData;
 use withdraw_balance_precompiles::WithdrawBalancePrecompile;
-use nftmart_nft_precompiles::NftmartNftPrecompile;
-use nftmart_order_precompiles::NftmartOrderPrecompile;
-use nftmart_auction_precompiles::NftmartAuctionPrecompile;
 
 /// We include the nine Istanbul precompiles
 /// (https://github.com/ethereum/go-ethereum/blob/3c46f557/core/vm/contracts.go#L69)
 /// as well as a special precompile for dispatching Substrate extrinsics
 pub struct NftmartPrecompiles<R>(PhantomData<R>);
 
-impl<R> NftmartPrecompiles<R>
-where
-	// R: pallet_evm::Config + pallet_template::Config + pallet_balances::Config,
-	R: pallet_evm::Config + pallet_template::Config,
-	// R::AccountId: From<H256>,
-	// R::AccountId: From<sp_core::sr25519::Public>,
-{
-	#[allow(clippy::new_without_default)]
-	pub fn new() -> Self {
-		Self(PhantomData::<R>)
-	}
-	/// Return all addresses that contain precompiles. This can be used to populate dummy code
-	/// under the precompile.
-	pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 1024, 1025, 1026, 2048, 2049, 2050, 2051, 2052, 2053, 2054, 2057]
-			.into_iter()
-			.map(hash)
-			.collect()
-	}
-}
-
 /// The following distribution has been decided for the precompiles
 /// 0-1023: Ethereum Mainnet Precompiles
 /// 1024-2047 Precompiles that are not in Ethereum Mainnet but are neither NFTMart specific
 /// 2048-4095 NFTMart specific precompiles
-impl<R> PrecompileSet for NftmartPrecompiles<R>
+impl<R> NftmartPrecompiles<R>
 where
-	// R: pallet_evm::Config + pallet_template::Config + pallet_balances::Config,
 	R: pallet_evm::Config + pallet_template::Config,
-	// R::AccountId: From<H256>,
-	// R: pallet_evm::Config + pallet_balances::Config,
 	Dispatch<R>: Precompile,
 	PalletTemplatePrecompile<R>: Precompile,
 	PalletNopPrecompile<R>: Precompile,
@@ -79,63 +56,32 @@ where
 	NftmartAuctionPrecompile<R>: Precompile,
 	Erc20BalancesPrecompile<R, NativeErc20Metadata>: Precompile,
 {
-	fn execute(
-		&self,
-		address: H160,
-		input: &[u8],
-		target_gas: Option<u64>,
-		context: &Context,
-		is_static: bool,
-	) -> Option<PrecompileResult> {
-		match address {
-			// Ethereum precompiles :
-			a if a == hash(1) => Some(ECRecover::execute(input, target_gas, context, is_static)),
-			a if a == hash(2) => Some(Sha256::execute(input, target_gas, context, is_static)),
-			a if a == hash(3) => Some(Ripemd160::execute(input, target_gas, context, is_static)),
-			a if a == hash(4) => Some(Identity::execute(input, target_gas, context, is_static)),
-			a if a == hash(5) => Some(Modexp::execute(input, target_gas, context, is_static)),
-			a if a == hash(6) => Some(Bn128Add::execute(input, target_gas, context, is_static)),
-			a if a == hash(7) => Some(Bn128Mul::execute(input, target_gas, context, is_static)),
-			a if a == hash(8) => Some(Bn128Pairing::execute(input, target_gas, context, is_static)),
-			a if a == hash(9) => Some(Blake2F::execute(input, target_gas, context, is_static)),
-			// Non-NFTMart specific nor Ethereum precompiles :
-			a if a == hash(1024) =>
-				Some(Sha3FIPS256::execute(input, target_gas, context, is_static)),
-			a if a == hash(1025) =>
-				Some(Dispatch::<R>::execute(input, target_gas, context, is_static)),
-			a if a == hash(1026) =>
-				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static)),
-			// NFTMart specific precompiles :
-			a if a == hash(2048) => Some(<PalletTemplatePrecompile<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			a if a == hash(2049) => Some(<WithdrawBalancePrecompile<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			a if a == hash(2050) =>
-				Some(<Erc20BalancesPrecompile<R, NativeErc20Metadata> as Precompile>::execute(
-					input, target_gas, context, is_static,
-				)),
-			a if a == hash(2051) => Some(<NftmartNftPrecompile<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			a if a == hash(2052) => Some(<NftmartOrderPrecompile<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			a if a == hash(2053) => Some(<NftmartAuctionPrecompile<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			a if a == hash(2054) => Some(<PalletNopPrecompile<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			a if a == hash(2057) => Some(<FrameSystemWrapper<R> as Precompile>::execute(
-				input, target_gas, context, is_static,
-			)),
-			_ => None,
-		}
-	}
-	fn is_precompile(&self, address: H160) -> bool {
-		Self::used_addresses().contains(&address)
+	pub fn new() -> BTreeMap<H160, PrecompileFn> {
+		let mut pset = BTreeMap::<H160, PrecompileFn>::new();
+		// Ethereum precompiles :
+		pset.insert(hash(0x0000000000000000000000000000000000000001), ECRecover::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000002), Sha256::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000003), Ripemd160::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000004), Identity::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000005), Modexp::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000006), Bn128Add::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000007), Bn128Mul::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000008), Bn128Pairing::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000009), Blake2F::execute);
+		// Non-NFTMart specific nor Ethereum precompiles :
+		pset.insert(hash(0x0000000000000000000000000000000000000400), Sha3FIPS256::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000401), Dispatch::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000402), ECRecoverPublicKey::execute);
+		// NFTMart specific precompiles :
+		pset.insert(hash(0x0000000000000000000000000000000000000800), PalletTemplatePrecompile::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000801), WithdrawBalancePrecompile::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000802), Erc20BalancesPrecompile::<R, NativeErc20Metadata>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000803), NftmartNftPrecompile::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000804), NftmartOrderPrecompile::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000805), NftmartAuctionPrecompile::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000806), PalletNopPrecompile::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000809), FrameSystemWrapper::<R>::execute);
+		pset
 	}
 }
 
@@ -162,3 +108,5 @@ impl Erc20Metadata for NativeErc20Metadata {
 		18
 	}
 }
+
+pub type PrecompileFn = fn(&[u8], Option<u64>, &Context, bool) -> PrecompileResult;
