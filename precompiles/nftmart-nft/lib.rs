@@ -340,12 +340,21 @@ where
 			category_ids,
 		};
 
+		let class_id = orml_nft::NextClassId::<T>::get();
+
+		let class_id = match class_id.try_into() {
+			Ok(x) => x,
+			_ => 0u32,
+		};
+
 		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
+
+		let output = EvmDataWriter::new().write(U256::from(class_id));
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
 			cost: gasometer.used_gas(),
-			output: Default::default(),
+			output: output.build(),
 			logs: Default::default(),
 		})
 	}
