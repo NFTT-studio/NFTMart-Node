@@ -337,6 +337,6 @@ impl Metadata {
 
 	/// Returns the decimals places of the token.
 	fn decimals() -> u8 {
-		18
+		12
 	}
 }

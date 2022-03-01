@@ -79,7 +79,7 @@ fn session_keys(
 
 fn get_properties() -> sc_service::Properties {
 	let mut prop = sc_service::Properties::new();
-	prop.insert("tokenDecimals".to_string(), 18.into());
+	prop.insert("tokenDecimals".to_string(), 12.into());
 	prop.insert("tokenSymbol".to_string(), "NMT".into()); // NFT Mart Token
 	prop
 }
