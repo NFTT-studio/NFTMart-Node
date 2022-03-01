@@ -57,21 +57,22 @@ where
 		let mut gasometer = Gasometer::new(target_gas);
 		let gasometer = &mut gasometer;
 
-		let (input, selector) = match EvmDataReader::new_with_selector(gasometer, input) {
+		let (mut input, selector) = match EvmDataReader::new_with_selector(gasometer, input) {
 			Ok((input, selector)) => (input, selector),
 			Err(e) => return Err(e),
 		};
+		let input = &mut input;
 
 		match selector {
 			// Check for accessor methods first. These return results immediately
-			Action::WithdrawBalance => Self::withdraw_balance(input, target_gas, context),
-			Action::TotalSupply => Self::total_supply(input, target_gas, context),
-			Action::FreeBalance => Self::free_balance(input, target_gas, context),
-			Action::BalanceOf => Self::balance_of(input, target_gas, context),
-			Action::Name => Self::name(input, target_gas, context),
-			Action::Symbol => Self::symbol(input, target_gas, context),
-			Action::Decimals => Self::decimals(input, target_gas, context),
-			Action::Whoami => Self::whoami(input, target_gas, context),
+			Action::WithdrawBalance => Self::withdraw_balance(input, gasometer, context),
+			Action::TotalSupply => Self::total_supply(input, gasometer, context),
+			Action::FreeBalance => Self::free_balance(input, gasometer, context),
+			Action::BalanceOf => Self::balance_of(input, gasometer, context),
+			Action::Name => Self::name(input, gasometer, context),
+			Action::Symbol => Self::symbol(input, gasometer, context),
+			Action::Decimals => Self::decimals(input, gasometer, context),
+			Action::Whoami => Self::whoami(input, gasometer, context),
 		}
 
 		/*
@@ -103,15 +104,12 @@ where
 	BalanceOf<T>: TryFrom<U256> + Into<U256>,
 {
 	fn withdraw_balance(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
-		// This gasometer is a handy utility that will help us account for gas as we go.
-		let mut gasometer = Gasometer::new(target_gas);
-
 		// Bound check. We expect a single argument passed in.
-		input.expect_arguments(&mut gasometer, 2)?;
+		input.expect_arguments(gasometer, 2)?;
 
 		let origin: <T as frame_system::pallet::Config>::AccountId =
 			T::AddressMapping::into_account_id(context.caller);
@@ -130,17 +128,17 @@ where
 		// let to: <T as frame_system::pallet::Config>::AccountId = input.read::<H256>(&mut gasometer)?.into();
 		// let to: <T as frame_system::pallet::Config>::AccountId = input.read::<[u8; 32]>(&mut gasometer)?.into();
 
-		let to: [u8; 32] = input.read::<H256>(&mut gasometer)?.into();
+		let to: [u8; 32] = input.read::<H256>(gasometer)?.into();
 		let to: T::AccountId = to.into();
 		// log::debug!(target: "nftmart-evm", "to(sub): {:?} {}", &to, &to);
 		log::debug!(target: "nftmart-evm", "to(sub): {:?}", &to);
 
-		let mut amount: U256 = input.read::<U256>(&mut gasometer)?;
+		let mut amount: U256 = input.read::<U256>(gasometer)?;
 		// amount = 1000000000000000000u128.into();
 		log::debug!(target: "nftmart-evm", "amount(sub): {:?}", &amount);
 		// let amount = pallet_evm::Pallet::<T>::convert_decimals_from_evm(amount.low_u256()).unwrap();
 
-		let amount = Self::u256_to_amount(&mut gasometer, amount)?;
+		let amount = Self::u256_to_amount(gasometer, amount)?;
 		log::debug!(target: "nftmart-evm", "amount(sub): {:?}", &amount);
 
 		// let call = pallet_balances::Call::<T>::transfer { dest: T::Lookup::unlookup(to), value: amount };
@@ -167,12 +165,10 @@ where
 	}
 
 	fn total_supply(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
-		let mut gasometer = Gasometer::new(target_gas);
-		let gasometer = &mut gasometer;
 		gasometer.record_cost(RuntimeHelper::<T>::db_read_gas_cost())?;
 
 		// Parse input.
@@ -192,12 +188,10 @@ where
 	}
 
 	fn balance_of(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
-		let mut gasometer = Gasometer::new(target_gas);
-		let gasometer = &mut gasometer;
 		gasometer.record_cost(RuntimeHelper::<T>::db_read_gas_cost())?;
 
 		// Parse input.
@@ -221,12 +215,10 @@ where
 	}
 
 	fn free_balance(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
-		let mut gasometer = Gasometer::new(target_gas);
-		let gasometer = &mut gasometer;
 		gasometer.record_cost(RuntimeHelper::<T>::db_read_gas_cost())?;
 
 		// Parse input.
@@ -252,12 +244,11 @@ where
 	}
 
 	fn whoami(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		// Build output.
-		let mut gasometer = Gasometer::new(target_gas);
 		let origin: <T as frame_system::pallet::Config>::AccountId =
 			T::AddressMapping::into_account_id(context.caller);
 		// log::debug!(target: "nftmart-evm", "origin: {:?} {}", &origin, &origin);
@@ -277,12 +268,10 @@ where
 	}
 
 	fn name(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
-		// Build output.
-		let mut gasometer = Gasometer::new(target_gas);
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
 			cost: gasometer.used_gas(),
@@ -292,12 +281,10 @@ where
 	}
 
 	fn symbol(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
-		// Build output.
-		let mut gasometer = Gasometer::new(target_gas);
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
 			cost: gasometer.used_gas(),
@@ -307,12 +294,10 @@ where
 	}
 
 	fn decimals(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
-		// Build output.
-		let mut gasometer = Gasometer::new(target_gas);
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
 			cost: gasometer.used_gas(),
