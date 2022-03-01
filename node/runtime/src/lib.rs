@@ -88,6 +88,7 @@ use sp_core::U256;
 // pub use it so we can import it in the chain spec.
 #[cfg(feature = "std")]
 pub use pallet_evm::GenesisAccount;
+pub use pallet_evm::PrecompileSet;
 
 #[cfg(any(feature = "std", test))]
 pub use frame_system::Call as SystemCall;
@@ -1199,7 +1200,7 @@ impl nftmart_auction::Config for Runtime {
 }
 
 mod precompiles;
-use precompiles::{NftmartPrecompiles, PrecompileFn};
+pub use precompiles::{NftmartPrecompiles, PrecompileFn};
 extern crate alloc;
 use alloc::collections::BTreeMap;
 
@@ -1230,12 +1231,11 @@ impl pallet_evm::GasWeightMapping for NftmartGasWeightMapping {
 	}
 }
 
-pub type Precompiles = BTreeMap<H160, PrecompileFn>;
+pub type PrecompilesType = BTreeMap<H160, PrecompileFn>;
 
 parameter_types! {
-	pub const NftmartChainId: u64 = 12191;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT / WEIGHT_PER_GAS);
-	pub PrecompilesValue: Precompiles = NftmartPrecompiles::<Runtime>::new();
+	pub PrecompilesValue: PrecompilesType = NftmartPrecompiles::<Runtime>::new();
 }
 
 impl pallet_evm::Config for Runtime {
@@ -1243,7 +1243,7 @@ impl pallet_evm::Config for Runtime {
 	type Currency = Balances;
 
 	type BlockGasLimit = BlockGasLimit;
-	type ChainId = NftmartChainId;
+	type ChainId = EthereumChainId;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 
@@ -1255,7 +1255,7 @@ impl pallet_evm::Config for Runtime {
 	type GasWeightMapping = NftmartGasWeightMapping;
 	type OnChargeTransaction = ();
 	type FindAuthor = ();
-	type PrecompilesType = Precompiles;
+	type PrecompilesType = PrecompilesType;
 	type PrecompilesValue = PrecompilesValue;
 
 	fn token_decimals() -> u8 {
@@ -1280,6 +1280,8 @@ impl pallet_template::Config for Runtime {
 impl pallet_nop::emit_t::Config for Runtime {
 	type Event = Event;
 }
+
+impl pallet_ethereum_chain_id::Config for Runtime {}
 
 construct_runtime!(
 	pub enum Runtime where
@@ -1332,6 +1334,7 @@ construct_runtime!(
 		Deposit: pallet_deposit::{Pallet, Call},
 		Template: pallet_template::{Pallet, Call, Storage, Event<T>},
 		NopEmitT: pallet_nop::emit_t::{Pallet, Call, Event<T>},
+		EthereumChainId: pallet_ethereum_chain_id::{Pallet, Storage, Config},
 	}
 );
 
@@ -1692,7 +1695,7 @@ impl fp_rpc::EthereumRuntimeRPCApi<Block> for Runtime {
 	fn elasticity() -> Option<Permill> { None }
 
 	fn chain_id() -> u64 {
-		<Runtime as pallet_evm::Config>::ChainId::get()
+		<Runtime as pallet_evm::Config>::ChainId::chain_id()
 	}
 
 	fn account_basic(address: H160) -> EVMAccount {

@@ -24,7 +24,8 @@ use node_runtime::{
 	constants::currency::*, wasm_binary_unwrap, AuthorityDiscoveryConfig, BabeConfig,
 	BalancesConfig, Block, CouncilConfig, DemocracyConfig, ElectionsConfig, GrandpaConfig,
 	ImOnlineConfig, IndicesConfig, SessionConfig, SessionKeys, StakerStatus, StakingConfig,
-	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig, MAX_NOMINATIONS, Precompiles,
+	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig, MAX_NOMINATIONS,
+	PrecompilesValue, EthereumChainIdConfig,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
@@ -327,7 +328,7 @@ pub fn testnet_genesis(
 				let mut accounts = std::collections::BTreeMap::new();
 				// We need _some_ code inserted at the precompile address so that
 				// the evm will actually call the address.
-				for addr in Precompiles::used_addresses() {
+				for addr in PrecompilesValue::get().keys().copied().collect::<Vec<_>>() {
 					accounts.insert(
 						addr.into(),
 						GenesisAccount {
@@ -362,6 +363,7 @@ pub fn testnet_genesis(
 			}
 		},
 		ethereum: Default::default(),
+		ethereum_chain_id: EthereumChainIdConfig { chain_id: 12191 },
 	}
 }
 
