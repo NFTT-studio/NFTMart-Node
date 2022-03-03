@@ -17,6 +17,7 @@
 use alloc::collections::BTreeMap;
 use fp_evm::Context;
 use frame_system_precompiles::FrameSystemWrapper;
+use pallet_staking_precompiles::PalletStakingWrapper;
 use nftmart_auction_precompiles::NftmartAuctionPrecompile;
 use nftmart_nft_precompiles::NftmartNftPrecompile;
 use nftmart_order_precompiles::NftmartOrderPrecompile;
@@ -45,10 +46,11 @@ pub struct NftmartPrecompiles<R>(PhantomData<R>);
 /// 2048-4095 NFTMart specific precompiles
 impl<R> NftmartPrecompiles<R>
 where
-	R: pallet_evm::Config + pallet_template::Config,
+	R: pallet_evm::Config + pallet_template::Config + pallet_staking::Config,
 	Dispatch<R>: Precompile,
 	PalletTemplatePrecompile<R>: Precompile,
 	PalletNopPrecompile<R>: Precompile,
+	PalletStakingWrapper<R>: Precompile,
 	FrameSystemWrapper<R>: Precompile,
 	WithdrawBalancePrecompile<R>: Precompile,
 	NftmartNftPrecompile<R>: Precompile,
@@ -80,6 +82,7 @@ where
 		pset.insert(hash(0x0000000000000000000000000000000000000804), NftmartOrderPrecompile::<R>::execute);
 		pset.insert(hash(0x0000000000000000000000000000000000000805), NftmartAuctionPrecompile::<R>::execute);
 		pset.insert(hash(0x0000000000000000000000000000000000000806), PalletNopPrecompile::<R>::execute);
+		pset.insert(hash(0x0000000000000000000000000000000000000808), PalletStakingWrapper::<R>::execute);
 		pset.insert(hash(0x0000000000000000000000000000000000000809), FrameSystemWrapper::<R>::execute);
 		pset
 	}

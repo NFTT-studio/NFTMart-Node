@@ -4921,6 +4921,7 @@ dependencies = [
  "pallet-session",
  "pallet-session-benchmarking",
  "pallet-staking",
+ "pallet-staking-precompiles",
  "pallet-staking-reward-curve",
  "pallet-sudo",
  "pallet-template",
@@ -6035,6 +6036,30 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-staking",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-staking-precompiles"
+version = "4.0.0-dev"
+dependencies = [
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-staking",
+ "parity-scale-codec",
+ "precompile-utils 0.1.0",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
  "sp-std",
 ]
 
