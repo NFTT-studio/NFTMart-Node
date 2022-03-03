@@ -15,6 +15,7 @@ use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 #[derive(Debug, PartialEq)]
 enum Action {
 	RemarkPlaceholder = "remarkPlaceholder(bytes)",
+	Chill = "chill()",
 }
 
 pub struct PalletStakingWrapper<T>(PhantomData<T>);
@@ -44,6 +45,7 @@ where
 		match selector {
 			// Check for accessor methods first. These return results immediately
 			Action::RemarkPlaceholder => Self::remark_with_event(input, gasometer, context),
+			Action::Chill => Self::chill(input, gasometer, context),
 		}
 	}
 }
@@ -58,15 +60,15 @@ where
 	fn remark_with_event(
 		input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
-		context: &Context,
+		_context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		// Bound check. We expect a single argument passed in.
 		input.expect_arguments(gasometer, 1)?;
 
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
+		/*
 		let origin = T::AddressMapping::into_account_id(context.caller);
 		let remark: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
-        /*
 		let call = frame_system::Call::<T>::remark_with_event { remark: remark.clone() };
 
 		if_std! {
@@ -83,7 +85,42 @@ where
 		// Record the gas used in the gasometer
 		gasometer.record_cost(used_gas)?;
 
-        */
+		*/
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Stopped,
+			cost: gasometer.used_gas(),
+			output: Default::default(),
+			logs: Default::default(),
+		})
+	}
+
+	fn chill(
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+		context: &Context,
+	) -> EvmResult<PrecompileOutput> {
+		// Bound check. We expect a single argument passed in.
+		input.expect_arguments(gasometer, 0)?;
+
+		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
+		let origin = T::AddressMapping::into_account_id(context.caller);
+		let remark: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
+		let call = pallet_staking::Call::<T>::chill {};
+
+		if_std! {
+				// This code is only being compiled and executed when the `std` feature is enabled.
+				println!("The caller account is: {:#?}", context.caller);
+				println!("The caller origin is: {:#?}", origin);
+				println!("The remark is: {:#?}", remark);
+				println!("The call is: {:#?}", call);
+		}
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
+
+		let used_gas = gasometer.used_gas();
+		// Record the gas used in the gasometer
+		gasometer.record_cost(used_gas)?;
+
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Stopped,
 			cost: gasometer.used_gas(),
