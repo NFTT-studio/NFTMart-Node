@@ -4907,6 +4907,7 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-identity",
+ "pallet-identity-precompiles",
  "pallet-im-online",
  "pallet-indices",
  "pallet-multisig",
@@ -5783,6 +5784,30 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-identity-precompiles"
+version = "4.0.0-dev"
+dependencies = [
+ "derive_more",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-identity",
+ "parity-scale-codec",
+ "precompile-utils 0.1.0",
+ "scale-info",
+ "serde",
+ "sp-core",
  "sp-io",
  "sp-runtime",
  "sp-std",

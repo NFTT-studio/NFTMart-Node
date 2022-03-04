@@ -103,6 +103,7 @@ pallet-evm-precompile-balances-erc20 = { default-features = false, git = 'https:
 
 frame-system-precompiles = { default-features = false, path = "../../precompiles/frame-system" }
 pallet-staking-precompiles = { default-features = false, path = "../../precompiles/pallet-staking" }
+pallet-identity-precompiles = { default-features = false, path = "../../precompiles/pallet-identity" }
 pallet-template-precompiles = { default-features = false, path = "../../precompiles/pallet-template" }
 pallet-nop-precompiles = { default-features = false, path = "../../precompiles/pallet-nop" }
 withdraw-balance-precompiles = { default-features = false, path = "../../precompiles/withdraw-balance" }
@@ -173,6 +174,7 @@ std = [
 	"sp-runtime/std",
 	"sp-staking/std",
 	"pallet-staking/std",
+	"pallet-identity/std",
 	"sp-keyring",
 	"sp-session/std",
 	"pallet-sudo/std",
@@ -214,8 +216,8 @@ std = [
 	"pallet-deposit/std",
 	"num_enum/std",
 	"frame-system-precompiles/std",
-	"pallet-staking/std",
 	"pallet-staking-precompiles/std",
+	"pallet-identity-precompiles/std",
 	"pallet-template/std",
 	"pallet-template-precompiles/std",
 	"pallet-nop/std",
