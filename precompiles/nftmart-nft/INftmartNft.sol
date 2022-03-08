@@ -8,6 +8,13 @@ interface INftmartNft {
         uint256 _tokenId;
         uint256 _quantity;
     }
+    // read
+    function classMetadata(uint _classId) external view returns (string memory);
+    function ownerOfClass(uint _classId) external view returns (bytes32);
+    function tokenMetadata(uint _classId, uint _tokenId) external view returns (string memory);
+    function tokenName(uint _classId, uint _tokenId) external view returns (string memory);
+    function ownerOfToken(uint _classId, uint _tokenId) external view returns (bytes32);
+    // write
     function burn(uint _classId, uint tokenId, uint _quantity) external;
     function createClass(string memory _metadata, string memory _name, string memory _description, uint _royaltyRate, uint8 _properties, uint[] memory _categoryIds) external returns (uint256);
     function destroyClass(uint _classId, bytes32 _dest) external;
