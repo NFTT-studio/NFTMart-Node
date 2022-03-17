@@ -536,7 +536,7 @@ impl EvmData for Bytes {
 }
 
 impl EvmData for NftItem {
-        fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
+        fn read(_reader: &mut EvmDataReader, _gasometer: &mut Gasometer) -> EvmResult<Self> {
                         /*
                 let mut inner_reader = reader.read_pointer(gasometer)?;
 
