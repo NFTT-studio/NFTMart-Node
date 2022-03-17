@@ -5,11 +5,11 @@ pragma solidity >=0.8.0;
 
 // precompile address: 0x0000000000000000000000000000000000000807 (=2055)
 interface IPalletIdentity {
-    function chill() external;
+    function setName(string memory _name) external;
 }
 
 contract PalletIdentity {
-    function chill() external {
-        IPalletIdentity(0x0000000000000000000000000000000000000807).chill();
+    function setName(string memory _name) external {
+        IPalletIdentity(0x0000000000000000000000000000000000000807).setName(_name);
     }
 }

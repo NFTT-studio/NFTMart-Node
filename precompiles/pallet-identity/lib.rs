@@ -16,6 +16,7 @@ use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 enum Action {
 	RemarkPlaceholder = "remarkPlaceholder(bytes)",
 	Chill = "chill()",
+    SetName = "setName(string)",
 }
 
 pub struct PalletIdentityWrapper<T>(PhantomData<T>);
@@ -46,6 +47,7 @@ where
 			// Check for accessor methods first. These return results immediately
 			Action::RemarkPlaceholder => Self::remark_with_event(input, gasometer, context),
 			Action::Chill => Self::chill(input, gasometer, context),
+			Action::SetName => Self::set_name(input, gasometer, context),
 		}
 	}
 }
@@ -124,6 +126,53 @@ where
 				println!("The caller account is: {:#?}", context.caller);
 				println!("The caller origin is: {:#?}", origin);
 				println!("The remark is: {:#?}", remark);
+				println!("The call is: {:#?}", call);
+		}
+
+		RuntimeHelper::<T>::try_dispatch(Some(origin).into(), call, gasometer)?;
+
+		let used_gas = gasometer.used_gas();
+		// Record the gas used in the gasometer
+		gasometer.record_cost(used_gas)?;
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Stopped,
+			cost: gasometer.used_gas(),
+			output: Default::default(),
+			logs: Default::default(),
+		})
+	}
+
+	fn set_name(
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+		context: &Context,
+	) -> EvmResult<PrecompileOutput> {
+		// Bound check. We expect a single argument passed in.
+		input.expect_arguments(gasometer, 1)?;
+
+		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
+		let origin = T::AddressMapping::into_account_id(context.caller);
+		let name: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
+        let info = Box::new(pallet_identity::IdentityInfo {
+            display: pallet_identity::Data::Raw(name.clone().try_into().unwrap()),
+            additional: Default::default(),
+            email: Default::default(),
+            image: Default::default(),
+            legal: Default::default(),
+            riot: Default::default(),
+            twitter: Default::default(),
+            web: Default::default(),
+            pgp_fingerprint: Default::default(),
+            // ..Default::default()
+        });
+		let call = pallet_identity::Call::<T>::set_identity { info };
+
+		if_std! {
+				// This code is only being compiled and executed when the `std` feature is enabled.
+				println!("The caller account is: {:#?}", context.caller);
+				println!("The caller origin is: {:#?}", origin);
+				println!("The name is: {:#?}", name);
 				println!("The call is: {:#?}", call);
 		}
 
