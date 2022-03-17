@@ -19,13 +19,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::pallet;
-
 pub use pallet::*;
 
 #[pallet]
 pub mod pallet {
 
-	use frame_support::pallet_prelude::*;
+	use frame_support::{pallet_prelude::*, transactional};
+	use frame_system::{ensure_root, pallet_prelude::OriginFor};
 
 	/// The Ethereum Chain Id Pallet
 	#[pallet::pallet]
@@ -49,6 +49,18 @@ pub mod pallet {
 	#[derive(Default)]
 	pub struct GenesisConfig {
 		pub chain_id: u64,
+	}
+
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		/// set chain_id
+		#[pallet::weight((100_000, DispatchClass::Operational))]
+		#[transactional]
+		pub fn set_chain_id(origin: OriginFor<T>, chain_id: u64) -> DispatchResultWithPostInfo {
+			ensure_root(origin)?;
+			ChainId::<T>::put(chain_id);
+			Ok((None, Pays::No).into())
+		}
 	}
 
 	#[pallet::genesis_build]
