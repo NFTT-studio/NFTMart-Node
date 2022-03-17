@@ -62,7 +62,6 @@ where
 {
 	pub fn new() -> BTreeMap<H160, PrecompileFn> {
 		let mut pset = BTreeMap::<H160, PrecompileFn>::new();
-        /*
 		// Ethereum precompiles :
 		pset.insert(hash(0x0000000000000000000000000000000000000001), ECRecover::execute);
 		pset.insert(hash(0x0000000000000000000000000000000000000002), Sha256::execute);
@@ -79,7 +78,6 @@ where
 		pset.insert(hash(0x0000000000000000000000000000000000000402), ECRecoverPublicKey::execute);
 		// NFTMart specific precompiles :
 		pset.insert(hash(0x0000000000000000000000000000000000000800), PalletTemplatePrecompile::<R>::execute);
-        */
 		pset.insert(hash(0x0000000000000000000000000000000000000801), WithdrawBalancePrecompile::<R>::execute);
 		pset.insert(hash(0x0000000000000000000000000000000000000802), Erc20BalancesPrecompile::<R, NativeErc20Metadata>::execute);
 		pset.insert(hash(0x0000000000000000000000000000000000000803), NftmartNftPrecompile::<R>::execute);
