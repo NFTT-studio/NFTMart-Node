@@ -1334,7 +1334,7 @@ construct_runtime!(
 		Deposit: pallet_deposit::{Pallet, Call},
 		Template: pallet_template::{Pallet, Call, Storage, Event<T>},
 		NopEmitT: pallet_nop::emit_t::{Pallet, Call, Event<T>},
-		EthereumChainId: pallet_ethereum_chain_id::{Pallet, Storage, Config},
+		EthereumChainId: pallet_ethereum_chain_id::{Pallet, Call, Storage, Config},
 	}
 );
 
