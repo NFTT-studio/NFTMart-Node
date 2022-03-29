@@ -43,6 +43,15 @@ jobs:
           ./target/release/nftmart-node
           ./target/release/nftmart-aura-node
 
+    - run: cargo doc
+
+    - name: archive doc
+      uses: actions/upload-artifact@v2
+      with:
+        name: doc
+        path: |
+          ./target/doc/
+
   push:
     needs:
     - build
