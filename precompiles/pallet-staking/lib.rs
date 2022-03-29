@@ -8,8 +8,8 @@ use precompile_utils::{EvmDataReader, EvmResult, Gasometer, RuntimeHelper};
 use fp_evm::{Context, PrecompileOutput};
 use frame_support::sp_runtime::traits::StaticLookup;
 
-use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 use sp_core::H256;
+use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 
 /// Each variant represents a method that is exposed in the public Solidity interface
 /// The function selectors will be automatically generated at compile-time by the macros
@@ -118,10 +118,10 @@ where
 		let origin = T::AddressMapping::into_account_id(context.caller);
 		let amount: u32 = input.read::<u32>(gasometer)?.into();
 		let call = pallet_staking::Call::<T>::bond {
-            controller: <T as frame_system::Config>::Lookup::unlookup(origin.clone()),
-            value: amount.into(),
-            payee: pallet_staking::RewardDestination::Account(origin.clone()),
-        };
+			controller: <T as frame_system::Config>::Lookup::unlookup(origin.clone()),
+			value: amount.into(),
+			payee: pallet_staking::RewardDestination::Account(origin.clone()),
+		};
 
 		if_std! {
 				// This code is only being compiled and executed when the `std` feature is enabled.
@@ -156,9 +156,7 @@ where
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
 		let origin = T::AddressMapping::into_account_id(context.caller);
 		let amount: u32 = input.read::<u32>(gasometer)?.into();
-		let call = pallet_staking::Call::<T>::rebond {
-            value: amount.into(),
-        };
+		let call = pallet_staking::Call::<T>::rebond { value: amount.into() };
 
 		if_std! {
 				// This code is only being compiled and executed when the `std` feature is enabled.
@@ -193,9 +191,7 @@ where
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
 		let origin = T::AddressMapping::into_account_id(context.caller);
 		let amount: u32 = input.read::<u32>(gasometer)?.into();
-		let call = pallet_staking::Call::<T>::unbond {
-            value: amount.into(),
-        };
+		let call = pallet_staking::Call::<T>::unbond { value: amount.into() };
 
 		if_std! {
 				// This code is only being compiled and executed when the `std` feature is enabled.
@@ -230,13 +226,14 @@ where
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
 		let origin = T::AddressMapping::into_account_id(context.caller);
 		let targets: Vec<H256> = input.read::<Vec<H256>>(gasometer)?.into();
-		let targets1: Vec<<T as frame_system::Config>::AccountId> = targets.iter().map(
-            |x|<T as frame_system::Config>::AccountId::from(x.0)
-        ).collect();
-		let targets2: Vec<<<T as frame_system::Config>::Lookup as StaticLookup>::Source> = targets1.iter().map(
-            |x|<T as frame_system::Config>::Lookup::unlookup(x.clone()),
-        ).collect();
-
+		let targets1: Vec<<T as frame_system::Config>::AccountId> = targets
+			.iter()
+			.map(|x| <T as frame_system::Config>::AccountId::from(x.0))
+			.collect();
+		let targets2: Vec<<<T as frame_system::Config>::Lookup as StaticLookup>::Source> = targets1
+			.iter()
+			.map(|x| <T as frame_system::Config>::Lookup::unlookup(x.clone()))
+			.collect();
 
 		let call = pallet_staking::Call::<T>::nominate { targets: targets2 };
 

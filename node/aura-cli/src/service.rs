@@ -1,7 +1,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use node_template_runtime::{self, opaque::Block, RuntimeApi};
-use sc_client_api::{ExecutorProvider};
+use sc_client_api::ExecutorProvider;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 pub use sc_executor::NativeElseWasmExecutor;
 use sc_finality_grandpa::SharedVoterState;
@@ -281,7 +281,9 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 
 		// the AURA authoring task is considered essential, i.e. if it
 		// fails we take down the service with it.
-		task_manager.spawn_essential_handle().spawn_blocking("aura", Some("block-authoring"), aura);
+		task_manager
+			.spawn_essential_handle()
+			.spawn_blocking("aura", Some("block-authoring"), aura);
 	}
 
 	// if the node isn't actively participating in consensus then it doesn't

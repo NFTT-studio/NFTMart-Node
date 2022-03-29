@@ -27,6 +27,7 @@ orml-currencies = { version = "0.4.1-dev", path = "../orml-currencies" }
 orml-tokens = { version = "0.4.1-dev", path = "../orml-tokens" }
 orml-nft = { path = "../orml-nft" }
 nftmart-config = { path = "../nftmart-config" }
+nftmart-order = { path = "../nftmart-order" }
 nftmart-nft = { path = "../nftmart-nft" }
 paste = "1.0"
 

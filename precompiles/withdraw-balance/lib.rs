@@ -2,15 +2,9 @@
 #![feature(assert_matches)]
 
 // use sp_std::fmt::Display;
-use codec::Decode;
-use frame_support::{
-	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
-	sp_runtime::traits::StaticLookup,
-};
+
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
-use precompile_utils::{
-	Bytes, EvmData, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper,
-};
+use precompile_utils::{Bytes, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
 
 use fp_evm::{Context, PrecompileOutput};
 use frame_support::traits::{Currency, ExistenceRequirement};
@@ -133,7 +127,7 @@ where
 		// log::debug!(target: "nftmart-evm", "to(sub): {:?} {}", &to, &to);
 		log::debug!(target: "nftmart-evm", "to(sub): {:?}", &to);
 
-		let mut amount: U256 = input.read::<U256>(gasometer)?;
+		let amount: U256 = input.read::<U256>(gasometer)?;
 		// amount = 1000000000000000000u128.into();
 		log::debug!(target: "nftmart-evm", "amount(sub): {:?}", &amount);
 		// let amount = pallet_evm::Pallet::<T>::convert_decimals_from_evm(amount.low_u256()).unwrap();
@@ -167,7 +161,7 @@ where
 	fn total_supply(
 		input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
-		context: &Context,
+		_context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<T>::db_read_gas_cost())?;
 
@@ -190,7 +184,7 @@ where
 	fn balance_of(
 		input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
-		context: &Context,
+		_context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<T>::db_read_gas_cost())?;
 
@@ -244,7 +238,7 @@ where
 	}
 
 	fn whoami(
-		input: &mut EvmDataReader,
+		_input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {
@@ -268,9 +262,9 @@ where
 	}
 
 	fn name(
-		input: &mut EvmDataReader,
+		_input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
-		context: &Context,
+		_context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
@@ -281,9 +275,9 @@ where
 	}
 
 	fn symbol(
-		input: &mut EvmDataReader,
+		_input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
-		context: &Context,
+		_context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
@@ -294,9 +288,9 @@ where
 	}
 
 	fn decimals(
-		input: &mut EvmDataReader,
+		_input: &mut EvmDataReader,
 		gasometer: &mut Gasometer,
-		context: &Context,
+		_context: &Context,
 	) -> EvmResult<PrecompileOutput> {
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,

@@ -98,7 +98,7 @@ impl<'a> EvmDataReader<'a> {
 		T: num_enum::TryFromPrimitive<Primitive = u32>,
 	{
 		if input.len() < 4 {
-			return Err(gasometer.revert("tried to parse selector out of bounds"));
+			return Err(gasometer.revert("tried to parse selector out of bounds"))
 		}
 
 		let mut buffer = [0u8; 4];
@@ -154,13 +154,10 @@ impl<'a> EvmDataReader<'a> {
 			.map_err(|_| gasometer.revert("array offset is too large"))?;
 
 		if offset >= self.input.len() {
-			return Err(gasometer.revert("pointer points out of bounds"));
+			return Err(gasometer.revert("pointer points out of bounds"))
 		}
 
-		Ok(Self {
-			input: &self.input[offset..],
-			cursor: 0,
-		})
+		Ok(Self { input: &self.input[offset..], cursor: 0 })
 	}
 
 	/// Read remaining bytes
@@ -218,22 +215,14 @@ struct OffsetDatum {
 impl EvmDataWriter {
 	/// Creates a new empty output builder (without selector).
 	pub fn new() -> Self {
-		Self {
-			data: vec![],
-			offset_data: vec![],
-			selector: None,
-		}
+		Self { data: vec![], offset_data: vec![], selector: None }
 	}
 
 	/// Creates a new empty output builder with provided selector.
 	/// Selector will only be appended before the data when calling
 	/// `build` to not mess with the offsets.
 	pub fn new_with_selector(selector: impl Into<u32>) -> Self {
-		Self {
-			data: vec![],
-			offset_data: vec![],
-			selector: Some(selector.into()),
-		}
+		Self { data: vec![], offset_data: vec![], selector: Some(selector.into()) }
 	}
 
 	/// Return the built data.
@@ -294,11 +283,7 @@ impl EvmDataWriter {
 		let offset_position = self.data.len();
 		H256::write(self, H256::repeat_byte(0xff));
 
-		self.offset_data.push(OffsetDatum {
-			offset_position,
-			data,
-			offset_shift: 0,
-		});
+		self.offset_data.push(OffsetDatum { offset_position, data, offset_shift: 0 });
 	}
 }
 
@@ -527,36 +512,30 @@ impl EvmData for Bytes {
 		value.resize(padded_size, 0);
 
 		writer.write_pointer(
-			EvmDataWriter::new()
-				.write(U256::from(length))
-				.write_raw_bytes(&value)
-				.build(),
+			EvmDataWriter::new().write(U256::from(length)).write_raw_bytes(&value).build(),
 		);
 	}
 }
 
 impl EvmData for NftItem {
-        fn read(_reader: &mut EvmDataReader, _gasometer: &mut Gasometer) -> EvmResult<Self> {
-                        /*
-                let mut inner_reader = reader.read_pointer(gasometer)?;
+	fn read(_reader: &mut EvmDataReader, _gasometer: &mut Gasometer) -> EvmResult<Self> {
+		/*
+		let mut inner_reader = reader.read_pointer(gasometer)?;
 
-                let num_parents = inner_reader.read(gasometer)?;
+		let num_parents = inner_reader.read(gasometer)?;
 
-                let junctions: Junctions = inner_reader.read(gasometer)?;
-                        */
+		let junctions: Junctions = inner_reader.read(gasometer)?;
+				*/
 
-                Ok((0u32, 0u64, 0u64))
-        }
+		Ok((0u32, 0u64, 0u64))
+	}
 
-        fn write(writer: &mut EvmDataWriter, value: Self) {
-                let inner_writer = EvmDataWriter::new()
-                        .write(value.0)
-                        .write(value.1)
-                        .write(value.2)
-                        .build();
+	fn write(writer: &mut EvmDataWriter, value: Self) {
+		let inner_writer =
+			EvmDataWriter::new().write(value.0).write(value.1).write(value.2).build();
 
-                EvmDataWriter::write_pointer(writer, inner_writer);
-        }
+		EvmDataWriter::write_pointer(writer, inner_writer);
+	}
 }
 
 pub type NftItem = (u32, u64, u64);

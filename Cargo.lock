@@ -4324,6 +4324,7 @@ dependencies = [
  "frame-system",
  "nftmart-config",
  "nftmart-nft",
+ "nftmart-order",
  "nftmart-traits",
  "orml-currencies",
  "orml-nft",

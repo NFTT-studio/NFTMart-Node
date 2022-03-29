@@ -2,19 +2,17 @@
 #![feature(assert_matches)]
 
 // use sp_std::fmt::Display;
-use codec::Decode;
+
 use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	sp_runtime::traits::StaticLookup,
 };
 use nftmart_auction::Call as AuctionCall;
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
-use precompile_utils::{
-	Bytes, EvmData, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper,
-};
+use precompile_utils::{Bytes, EvmDataReader, EvmResult, Gasometer, RuntimeHelper};
 
 use fp_evm::{Context, PrecompileOutput};
-use frame_support::traits::{Currency, ExistenceRequirement};
+use frame_support::traits::Currency;
 
 use sp_core::{H256, U256};
 use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};

@@ -16,7 +16,7 @@ use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 enum Action {
 	RemarkPlaceholder = "remarkPlaceholder(bytes)",
 	Chill = "chill()",
-    SetName = "setName(string)",
+	SetName = "setName(string)",
 }
 
 pub struct PalletIdentityWrapper<T>(PhantomData<T>);
@@ -107,18 +107,18 @@ where
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
 		let origin = T::AddressMapping::into_account_id(context.caller);
 		let remark: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
-        let info = Box::new(pallet_identity::IdentityInfo {
-            display: pallet_identity::Data::Raw(b"placeholder".to_vec().try_into().unwrap()),
-            additional: Default::default(),
-            email: Default::default(),
-            image: Default::default(),
-            legal: Default::default(),
-            riot: Default::default(),
-            twitter: Default::default(),
-            web: Default::default(),
-            pgp_fingerprint: Default::default(),
-            // ..Default::default()
-        });
+		let info = Box::new(pallet_identity::IdentityInfo {
+			display: pallet_identity::Data::Raw(b"placeholder".to_vec().try_into().unwrap()),
+			additional: Default::default(),
+			email: Default::default(),
+			image: Default::default(),
+			legal: Default::default(),
+			riot: Default::default(),
+			twitter: Default::default(),
+			web: Default::default(),
+			pgp_fingerprint: Default::default(),
+			// ..Default::default()
+		});
 		let call = pallet_identity::Call::<T>::set_identity { info };
 
 		if_std! {
@@ -154,18 +154,18 @@ where
 		// Use pallet-evm's account mapping to determine what AccountId to dispatch from.
 		let origin = T::AddressMapping::into_account_id(context.caller);
 		let name: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
-        let info = Box::new(pallet_identity::IdentityInfo {
-            display: pallet_identity::Data::Raw(name.clone().try_into().unwrap()),
-            additional: Default::default(),
-            email: Default::default(),
-            image: Default::default(),
-            legal: Default::default(),
-            riot: Default::default(),
-            twitter: Default::default(),
-            web: Default::default(),
-            pgp_fingerprint: Default::default(),
-            // ..Default::default()
-        });
+		let info = Box::new(pallet_identity::IdentityInfo {
+			display: pallet_identity::Data::Raw(name.clone().try_into().unwrap()),
+			additional: Default::default(),
+			email: Default::default(),
+			image: Default::default(),
+			legal: Default::default(),
+			riot: Default::default(),
+			twitter: Default::default(),
+			web: Default::default(),
+			pgp_fingerprint: Default::default(),
+			// ..Default::default()
+		});
 		let call = pallet_identity::Call::<T>::set_identity { info };
 
 		if_std! {

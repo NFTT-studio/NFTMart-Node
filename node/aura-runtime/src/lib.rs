@@ -6,7 +6,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use scale_info::{TypeInfo};
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	traits::{Everything, InstanceFilter, Nothing},
@@ -17,6 +16,7 @@ use pallet_contracts::weights::WeightInfo;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
+use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
@@ -344,8 +344,17 @@ parameter_types! {
 
 /// The type used to represent the kinds of proxying allowed.
 #[derive(
-	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
-	TypeInfo
+	Copy,
+	Clone,
+	Eq,
+	PartialEq,
+	Ord,
+	PartialOrd,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	TypeInfo,
 )]
 pub enum ProxyType {
 	Any,

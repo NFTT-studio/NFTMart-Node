@@ -23,11 +23,11 @@
 use node_executor::ExecutorDispatch;
 use node_primitives::Block;
 use node_runtime::RuntimeApi;
-use sc_client_api::{ExecutorProvider, BlockchainEvents};
+use sc_client_api::{BlockchainEvents, ExecutorProvider};
 use sc_consensus_babe::{self, SlotProportion};
 use sc_executor::NativeElseWasmExecutor;
 use sc_network::{Event, NetworkService};
-use sc_service::{BasePath, config::Configuration, error::Error as ServiceError, TaskManager};
+use sc_service::{config::Configuration, error::Error as ServiceError, BasePath, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_runtime::traits::Block as BlockT;
 use std::sync::Arc;
@@ -44,26 +44,24 @@ type FullGrandpaBlockImport =
 	grandpa::GrandpaBlockImport<FullBackend, Block, FullClient, FullSelectChain>;
 
 pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
-       let config_dir = config
-               .base_path
-               .as_ref()
-               .map(|base_path| base_path.config_dir(config.chain_spec.id()))
-               .unwrap_or_else(|| {
-                       BasePath::from_project("", "", &crate::cli::Cli::executable_name())
-                               .config_dir(config.chain_spec.id())
-               });
-       config_dir.join("frontier").join("db")
+	let config_dir = config
+		.base_path
+		.as_ref()
+		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
+		.unwrap_or_else(|| {
+			BasePath::from_project("", "", &crate::cli::Cli::executable_name())
+				.config_dir(config.chain_spec.id())
+		});
+	config_dir.join("frontier").join("db")
 }
 
 pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
-       Ok(Arc::new(fc_db::Backend::<Block>::new(
-               &fc_db::DatabaseSettings {
-                       source: fc_db::DatabaseSettingsSrc::RocksDb {
-                               path: frontier_database_dir(&config),
-                               cache_size: 0,
-                       },
-               },
-       )?))
+	Ok(Arc::new(fc_db::Backend::<Block>::new(&fc_db::DatabaseSettings {
+		source: fc_db::DatabaseSettingsSrc::RocksDb {
+			path: frontier_database_dir(&config),
+			cache_size: 0,
+		},
+	})?))
 }
 
 pub fn new_partial(
@@ -243,7 +241,11 @@ pub fn new_partial(
 		select_chain,
 		import_queue,
 		transaction_pool,
-		other: (/*rpc_extensions_builder,*/ import_setup, /* rpc_setup,*/ telemetry, frontier_backend),
+		other: (
+			/*rpc_extensions_builder,*/ import_setup,
+			/* rpc_setup,*/ telemetry,
+			frontier_backend,
+		),
 	})
 }
 
@@ -271,7 +273,12 @@ pub fn new_full_base(
 		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (/*rpc_extensions_builder,*/ import_setup, /*rpc_setup,*/ mut telemetry, frontier_backend),
+		other:
+			(
+				/*rpc_extensions_builder,*/ import_setup,
+				/*rpc_setup,*/ mut telemetry,
+				frontier_backend,
+			),
 	} = new_partial(&config)?;
 
 	// let shared_voter_state = rpc_setup;
@@ -317,7 +324,7 @@ pub fn new_full_base(
 
 	(with_startup_data)(&block_import, &babe_link);
 
-    let rpc_extensions_builder = {
+	let rpc_extensions_builder = {
 		let client = client.clone();
 		let pool = transaction_pool.clone();
 		let network = network.clone();
@@ -335,7 +342,8 @@ pub fn new_full_base(
 		);
 		let select_chain_clone = select_chain.clone();
 
-		move |deny_unsafe: node_rpc::DenyUnsafe, subscription_executor: sc_rpc::SubscriptionTaskExecutor| {
+		move |deny_unsafe: node_rpc::DenyUnsafe,
+		      subscription_executor: sc_rpc::SubscriptionTaskExecutor| {
 			let deps = node_rpc::FullDeps {
 				graph: pool.pool().clone(),
 				is_authority,
@@ -435,22 +443,26 @@ pub fn new_full_base(
 		};
 
 		let babe = sc_consensus_babe::start_babe(babe_config)?;
-		task_manager.spawn_essential_handle().spawn_blocking("babe-proposer", Some("block-authoring"), babe);
+		task_manager.spawn_essential_handle().spawn_blocking(
+			"babe-proposer",
+			Some("block-authoring"),
+			babe,
+		);
 	}
 
-    task_manager.spawn_essential_handle().spawn(
-        "frontier-mapping-sync-worker",
+	task_manager.spawn_essential_handle().spawn(
+		"frontier-mapping-sync-worker",
 		Some("frontier"),
-        MappingSyncWorker::new(
-            client.import_notification_stream(),
-            std::time::Duration::new(6, 0),
-            client.clone(),
-            backend.clone(),
-            frontier_backend.clone(),
-            SyncStrategy::Normal,
-        )
-        .for_each(|()| futures::future::ready(())),
-    );
+		MappingSyncWorker::new(
+			client.import_notification_stream(),
+			std::time::Duration::new(6, 0),
+			client.clone(),
+			backend.clone(),
+			frontier_backend.clone(),
+			SyncStrategy::Normal,
+		)
+		.for_each(|()| futures::future::ready(())),
+	);
 
 	// Spawn authority discovery module.
 	if role.is_authority() {
@@ -476,9 +488,11 @@ pub fn new_full_base(
 				prometheus_registry.clone(),
 			);
 
-		task_manager
-			.spawn_handle()
-			.spawn("authority-discovery-worker", Some("networking"), authority_discovery_worker.run());
+		task_manager.spawn_handle().spawn(
+			"authority-discovery-worker",
+			Some("networking"),
+			authority_discovery_worker.run(),
+		);
 	}
 
 	// if the node isn't actively participating in consensus then it doesn't
@@ -516,9 +530,11 @@ pub fn new_full_base(
 
 		// the GRANDPA voter task is considered infallible, i.e.
 		// if it fails we take down the service with it.
-		task_manager
-			.spawn_essential_handle()
-			.spawn_blocking("grandpa-voter", None, grandpa::run_grandpa_voter(grandpa_config)?);
+		task_manager.spawn_essential_handle().spawn_blocking(
+			"grandpa-voter",
+			None,
+			grandpa::run_grandpa_voter(grandpa_config)?,
+		);
 	}
 
 	network_starter.start_network();
@@ -533,35 +549,14 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 #[cfg(test)]
 mod tests {
 	use crate::service::{new_full_base, NewFullBase};
-	use codec::Encode;
-	use node_primitives::{Block, DigestItem, Signature};
-	use node_runtime::{
-		constants::{currency::CENTS, time::SLOT_DURATION},
-		Address, BalancesCall, Call, UncheckedExtrinsic,
-	};
-	use sc_client_api::BlockBackend;
-	use sc_consensus::{BlockImport, BlockImportParams, ForkChoiceStrategy};
-	use sc_consensus_babe::{BabeIntermediate, CompatibleDigestItem, INTERMEDIATE_KEY};
-	use sc_consensus_epochs::descendent_query;
-	use sc_keystore::LocalKeystore;
-	use sc_service_test::TestNetNode;
-	use sc_transaction_pool_api::{ChainEvent, MaintainedTransactionPool};
-	use sp_consensus::{BlockOrigin, Environment, Proposer};
-	use sp_core::{crypto::Pair as CryptoPair, Public};
-	use sp_inherents::InherentDataProvider;
-	use sp_keyring::AccountKeyring;
-	use sp_keystore::{SyncCryptoStore, SyncCryptoStorePtr};
-	use sp_runtime::{
-		generic::{BlockId, Digest, Era, SignedPayload},
-		key_types::BABE,
-		traits::{Block as BlockT, Header as HeaderT, IdentifyAccount, Verify},
-		RuntimeAppPublic,
-	};
-	use sp_timestamp;
-	use std::{borrow::Cow, convert::TryInto, sync::Arc};
+
+	use node_primitives::Signature;
+
+	use sp_runtime::traits::{Block as BlockT, Header as HeaderT, Verify};
 
 	type AccountPublic = <Signature as Verify>::Signer;
 
+	/*
 	#[test]
 	// It is "ignored", but the node-cli ignored tests are running on the CI.
 	// This can be run locally with `cargo test --release -p node-cli test_sync -- --ignored`.
@@ -724,7 +719,8 @@ mod tests {
 				};
 				let signer = charlie.clone();
 
-				let function = Call::Balances(BalancesCall::transfer{dest: to.into(), value: amount});
+				let function =
+					Call::Balances(BalancesCall::transfer { dest: to.into(), value: amount });
 
 				let check_spec_version = frame_system::CheckSpecVersion::new();
 				let check_tx_version = frame_system::CheckTxVersion::new();
@@ -755,6 +751,7 @@ mod tests {
 			},
 		);
 	}
+	*/
 
 	#[test]
 	#[ignore]
@@ -777,4 +774,3 @@ mod tests {
 		)
 	}
 }
-

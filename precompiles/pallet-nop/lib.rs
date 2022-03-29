@@ -3,7 +3,7 @@
 
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
-use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
+use precompile_utils::{EvmDataReader, EvmResult, Gasometer, RuntimeHelper};
 
 use fp_evm::{Context, PrecompileOutput};
 
@@ -55,7 +55,7 @@ where
 	T::Call: From<pallet_nop::emit_t::Call<T>>,
 {
 	fn emit_event(
-		mut input: EvmDataReader,
+		input: EvmDataReader,
 		target_gas: Option<u64>,
 		context: &Context,
 	) -> EvmResult<PrecompileOutput> {

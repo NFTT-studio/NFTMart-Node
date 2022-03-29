@@ -2,22 +2,20 @@
 #![feature(assert_matches)]
 
 // use sp_std::fmt::Display;
-use codec::Decode;
+
 use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	sp_runtime::traits::{IdentifyAccount, StaticLookup},
 };
 use nftmart_nft::Call as NftCall;
 use pallet_evm::{AddressMapping, ExitSucceed, Precompile};
-use precompile_utils::{
-	Bytes, EvmData, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper,
-};
+use precompile_utils::{Bytes, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
 use sp_arithmetic::PerU16;
 
 use fp_evm::{Context, PrecompileOutput};
-use frame_support::traits::{Currency, ExistenceRequirement};
+use frame_support::traits::Currency;
 
-use sp_core::{crypto::UncheckedFrom, H256, U256};
+use sp_core::{H256, U256};
 use sp_std::{fmt::Debug, if_std, marker::PhantomData, prelude::*};
 
 use nftmart_traits::{ClassProperty, Properties};

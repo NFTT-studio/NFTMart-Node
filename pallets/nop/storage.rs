@@ -14,35 +14,18 @@ mod this {
 
 	#[pallet::storage]
 	#[pallet::getter(fn some_primitive_value)]
-	pub(super) type SomePrimitiveValue<T> = StorageValue<
-		_,
-		u32,
-		ValueQuery,
-	>;
+	pub(super) type SomePrimitiveValue<T> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::storage]
-	pub(super) type SomeComplexValue<T: Config> = StorageValue<
-		_,
-		T::AccountId,
-		ValueQuery,
-	>;
+	pub(super) type SomeComplexValue<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
 
 	#[pallet::storage]
-	pub(super) type SomeMap<T: Config> = StorageMap<
-		_,
-		Blake2_128Concat, T::AccountId,
-		u32,
-		ValueQuery,
-	>;
+	pub(super) type SomeMap<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, u32, ValueQuery>;
 
 	#[pallet::storage]
-	pub(super) type SomeDoubleMap<T: Config> = StorageDoubleMap<
-		_,
-		Blake2_128Concat, u32,
-		Blake2_128Concat, T::AccountId,
-		u32,
-		ValueQuery,
-	>;
+	pub(super) type SomeDoubleMap<T: Config> =
+		StorageDoubleMap<_, Blake2_128Concat, u32, Blake2_128Concat, T::AccountId, u32, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn some_nmap)]

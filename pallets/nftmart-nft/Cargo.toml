@@ -27,6 +27,7 @@ pallet-utility = { version = "4.0.0-dev", git = 'https://github.com/purestake/su
 orml-currencies = { version = "0.4.1-dev", path = "../orml-currencies" }
 orml-tokens = { version = "0.4.1-dev", path = "../orml-tokens" }
 nftmart-config = { path = "../nftmart-config" }
+nftmart-order = { path = "../nftmart-order" }
 nftmart-nft = { path = "../nftmart-nft" }
 
 [features]

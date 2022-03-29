@@ -22,10 +22,10 @@ use grandpa_primitives::AuthorityId as GrandpaId;
 use hex_literal::hex;
 use node_runtime::{
 	constants::currency::*, wasm_binary_unwrap, AuthorityDiscoveryConfig, BabeConfig,
-	BalancesConfig, Block, CouncilConfig, DemocracyConfig, ElectionsConfig, GrandpaConfig,
-	ImOnlineConfig, IndicesConfig, SessionConfig, SessionKeys, StakerStatus, StakingConfig,
-	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig, MAX_NOMINATIONS,
-	PrecompilesValue, EthereumChainIdConfig,
+	BalancesConfig, Block, CouncilConfig, DemocracyConfig, ElectionsConfig, EthereumChainIdConfig,
+	GrandpaConfig, ImOnlineConfig, IndicesConfig, PrecompilesValue, SessionConfig, SessionKeys,
+	StakerStatus, StakingConfig, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig,
+	MAX_NOMINATIONS,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
@@ -34,17 +34,15 @@ use sc_telemetry::TelemetryEndpoints;
 use serde::{Deserialize, Serialize};
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
+use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public, H160, U256};
 use sp_runtime::{
 	traits::{IdentifyAccount, Verify},
 	Perbill,
 };
 use sp_std::vec::Vec;
-use sp_core::{H160, U256};
 
 pub use node_primitives::{AccountId, Balance, Signature};
-pub use node_runtime::GenesisConfig;
-pub use node_runtime::{GenesisAccount, EVMConfig};
+pub use node_runtime::{EVMConfig, GenesisAccount, GenesisConfig};
 
 type AccountPublic = <Signature as Verify>::Signer;
 
@@ -238,16 +236,14 @@ pub fn testnet_genesis(
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
 	const STASH: Balance = ENDOWMENT / 1000;
 
-        // This is the simplest bytecode to revert without returning any data.
-        // We will pre-deploy it under all of our precompiles to ensure they can be called from
-        // within contracts.
-        // (PUSH1 0x00 PUSH1 0x00 REVERT)
-        let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
+	// This is the simplest bytecode to revert without returning any data.
+	// We will pre-deploy it under all of our precompiles to ensure they can be called from
+	// within contracts.
+	// (PUSH1 0x00 PUSH1 0x00 REVERT)
+	let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
 
 	GenesisConfig {
-		system: SystemConfig {
-			code: wasm_binary_unwrap().to_vec(),
-		},
+		system: SystemConfig { code: wasm_binary_unwrap().to_vec() },
 		balances: BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|x| (x, ENDOWMENT)).collect(),
 		},
@@ -340,27 +336,31 @@ pub fn testnet_genesis(
 					);
 				}
 				accounts.insert(
-					H160::from_slice(&hex_literal::hex!("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b")),
-					GenesisAccount{
+					H160::from_slice(&hex_literal::hex!(
+						"6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b"
+					)),
+					GenesisAccount {
 						nonce: U256::zero(),
 						// Using a larger number, so I can tell the accounts apart by balance.
 						balance: U256::from(10_000_000 * DOLLARS),
 						code: vec![],
 						storage: std::collections::BTreeMap::new(),
-					}
+					},
 				);
 				accounts.insert(
-					H160::from_slice(&hex_literal::hex!("bdE2f034C17953Ee34B5F4Bf89C63349845d713f")),
-					GenesisAccount{
+					H160::from_slice(&hex_literal::hex!(
+						"bdE2f034C17953Ee34B5F4Bf89C63349845d713f"
+					)),
+					GenesisAccount {
 						nonce: U256::zero(),
 						// Using a larger number, so I can tell the accounts apart by balance.
 						balance: U256::from(10_000_000 * DOLLARS),
 						code: vec![],
 						storage: std::collections::BTreeMap::new(),
-					}
+					},
 				);
 				accounts
-			}
+			},
 		},
 		ethereum: Default::default(),
 		ethereum_chain_id: EthereumChainIdConfig { chain_id: 12191 },
@@ -421,8 +421,7 @@ pub fn local_testnet_config() -> ChainSpec {
 #[cfg(test)]
 pub(crate) mod tests {
 	use super::*;
-	use crate::service::{new_full_base, new_light_base, NewFullBase};
-	use sc_service_test;
+
 	// use sp_runtime::BuildStorage;
 
 	fn local_testnet_genesis_instant_single() -> GenesisConfig {
@@ -464,32 +463,32 @@ pub(crate) mod tests {
 		)
 	}
 
-	#[test]
-	#[ignore]
-	fn test_connectivity() {
-		sc_service_test::connectivity(
-			integration_test_config_with_two_authorities(),
-			|config| {
-				let NewFullBase { task_manager, client, network, transaction_pool, .. } =
-					new_full_base(config, |_, _| ())?;
-				Ok(sc_service_test::TestNetComponents::new(
-					task_manager,
-					client,
-					network,
-					transaction_pool,
-				))
-			},
-			|config| {
-				let (keep_alive, _, client, network, transaction_pool) = new_light_base(config)?;
-				Ok(sc_service_test::TestNetComponents::new(
-					keep_alive,
-					client,
-					network,
-					transaction_pool,
-				))
-			},
-		);
-	}
+	// #[test]
+	// #[ignore]
+	// fn test_connectivity() {
+	// 	sc_service_test::connectivity(
+	// 		integration_test_config_with_two_authorities(),
+	// 		|config| {
+	// 			let NewFullBase { task_manager, client, network, transaction_pool, .. } =
+	// 				new_full_base(config, |_, _| ())?;
+	// 			Ok(sc_service_test::TestNetComponents::new(
+	// 				task_manager,
+	// 				client,
+	// 				network,
+	// 				transaction_pool,
+	// 			))
+	// 		},
+	// 		|config| {
+	// 			let (keep_alive, _, client, network, transaction_pool) = new_light_base(config)?;
+	// 			Ok(sc_service_test::TestNetComponents::new(
+	// 				keep_alive,
+	// 				client,
+	// 				network,
+	// 				transaction_pool,
+	// 			))
+	// 		},
+	// 	);
+	// }
 
 	// #[test]
 	// fn test_create_development_chain_spec() {
