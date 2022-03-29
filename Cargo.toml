@@ -20,6 +20,7 @@ members = [
 
 [patch.crates-io]
 ss58-registry = { git = "https://github.com/nftt-studio/ss58-registry.git", branch = "add-nftmart-prefix-12191" }
+ethereum = { git = "https://github.com/purestake/ethereum", branch = "tgm-0.11.1-typeinfo-patch" }
 # wasmtime = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
 # wasmtime-cache = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
 # wasmtime-cranelift = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
