@@ -18,13 +18,13 @@ precompile-utils = { default-features = false, path = '../utils' }
 # Substrate
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false }
 fp-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-frame-support = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-frame-system = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-sp-core = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-sp-io = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-sp-std = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-pallet-balances = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
-pallet-identity = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+frame-support = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+frame-system = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+sp-core = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+sp-io = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+sp-std = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+pallet-balances = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+pallet-identity = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
 
 # Frontier
 pallet-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
@@ -36,7 +36,7 @@ serde = "1.0.100"
 
 # Substrate
 scale-info = { version = "1.0", default-features = false, features = [ "derive" ] }
-sp-runtime = { git = "https://github.com/purestake/substrate.git", branch = "moonbeam-polkadot-v0.9.13" }
+sp-runtime = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13" }
 
 [features]
 default = [ "std" ]

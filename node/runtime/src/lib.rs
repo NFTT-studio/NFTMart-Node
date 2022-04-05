@@ -1258,9 +1258,7 @@ impl pallet_evm::Config for Runtime {
 	type PrecompilesType = PrecompilesType;
 	type PrecompilesValue = PrecompilesValue;
 
-	fn token_decimals() -> u8 {
-		12
-	}
+    const TOKEN_DECIMAL: u8 = 12;
 }
 
 impl pallet_ethereum::Config for Runtime {

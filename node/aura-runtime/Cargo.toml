@@ -14,40 +14,40 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
-pallet-aura = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-balances = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-grandpa = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-sudo = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-frame-executive = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-block-builder = { git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', default-features = false, version = "4.0.0-dev"}
-sp-consensus-aura = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-inherents = { git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', default-features = false, version = "4.0.0-dev"}
-sp-offchain = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-session = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-transaction-pool = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-sp-version = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-utility = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-proxy = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-contracts = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-contracts-primitives = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-contracts-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-aura = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-balances = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-grandpa = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-sudo = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+frame-executive = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-block-builder = { git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', default-features = false, version = "4.0.0-dev"}
+sp-consensus-aura = { version = "0.10.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-inherents = { git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', default-features = false, version = "4.0.0-dev"}
+sp-offchain = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-session = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-transaction-pool = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-version = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-utility = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-proxy = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-contracts = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-contracts-primitives = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-contracts-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 
 # Used for the node template's RPCs
-frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
-pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 
 # Used for runtime benchmarking
-frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', optional = true }
-frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', optional = true }
+frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', optional = true }
+frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13', optional = true }
 hex-literal = { version = "0.3.1", optional = true }
 
 # pallets dependencies
@@ -65,7 +65,7 @@ nftmart-rpc-runtime-api = { default-features = false, path = "../../pallets/nftm
 chain-extension = { path = "../chain_extension", default-features = false }
 
 [build-dependencies]
-substrate-wasm-builder = { version = "5.0.0-dev", git = 'https://github.com/purestake/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+substrate-wasm-builder = { version = "5.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 
 [features]
 default = ["std"]
