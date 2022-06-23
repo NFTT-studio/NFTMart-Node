@@ -22,9 +22,10 @@ use grandpa_primitives::AuthorityId as GrandpaId;
 use hex_literal::hex;
 use node_runtime::{
 	constants::currency::*, wasm_binary_unwrap, AuthorityDiscoveryConfig, BabeConfig,
-	BalancesConfig, Block, CouncilConfig, DemocracyConfig, ElectionsConfig, GrandpaConfig,
-	ImOnlineConfig, IndicesConfig, SessionConfig, SessionKeys, StakerStatus, StakingConfig,
-	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig, MAX_NOMINATIONS,
+	BalancesConfig, Block, CouncilConfig, DemocracyConfig, ElectionsConfig, EthereumChainIdConfig,
+	GrandpaConfig, ImOnlineConfig, IndicesConfig, PrecompilesValue, SessionConfig, SessionKeys,
+	StakerStatus, StakingConfig, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TokensConfig,
+	MAX_NOMINATIONS,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
@@ -33,15 +34,15 @@ use sc_telemetry::TelemetryEndpoints;
 use serde::{Deserialize, Serialize};
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
+use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public, H160, U256};
 use sp_runtime::{
 	traits::{IdentifyAccount, Verify},
-	PerU16, Perbill,
+	Perbill,
 };
 use sp_std::vec::Vec;
 
 pub use node_primitives::{AccountId, Balance, Signature};
-pub use node_runtime::GenesisConfig;
+pub use node_runtime::{EVMConfig, GenesisAccount, GenesisConfig};
 
 type AccountPublic = <Signature as Verify>::Signer;
 
@@ -58,6 +59,8 @@ pub struct Extensions {
 	pub fork_blocks: sc_client_api::ForkBlocks<Block>,
 	/// Known bad block hashes.
 	pub bad_blocks: sc_client_api::BadBlocks<Block>,
+	/// The light sync state extension used by sync-state rpc.
+	pub light_sync_state: sc_sync_state_rpc::LightSyncStateExtension,
 }
 
 /// Specialized `ChainSpec`.
@@ -233,13 +236,14 @@ pub fn testnet_genesis(
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
 	const STASH: Balance = ENDOWMENT / 1000;
 
-	use sp_core::crypto::Ss58Codec;
+	// This is the simplest bytecode to revert without returning any data.
+	// We will pre-deploy it under all of our precompiles to ensure they can be called from
+	// within contracts.
+	// (PUSH1 0x00 PUSH1 0x00 REVERT)
+	let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
 
 	GenesisConfig {
-		system: SystemConfig {
-			code: wasm_binary_unwrap().to_vec(),
-			changes_trie_config: Default::default(),
-		},
+		system: SystemConfig { code: wasm_binary_unwrap().to_vec() },
 		balances: BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|x| (x, ENDOWMENT)).collect(),
 		},
@@ -305,160 +309,61 @@ pub fn testnet_genesis(
 				.collect(),
 		},
 		orml_nft: Default::default(),
-		// nftmart: Default::default(),
-		nftmart: node_runtime::NftmartConfig {
-			classes: vec![
-				nftmart_traits::ClassConfig {
-					class_id: 31,
-					class_metadata: String::from_utf8(
-						br#"{"a":"class metadata31", "c":"dd31"}"#.to_vec(),
-					)
-					.unwrap(),
-					category_ids: vec![0],
-					name: String::from_utf8(b"class name31".to_vec()).unwrap(),
-					description: String::from_utf8(b"class description31".to_vec()).unwrap(),
-					properties: 1 | 2,
-					royalty_rate: PerU16::from_percent(20),
-					admins: vec![
-						AccountId::from_ss58check(
-							"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuEVMePZv8BaY33S19zmAEwBgNgokknFHGWSLGKB6tSzh9mS",
-						)
-						.unwrap(),
-					],
-					tokens: vec![
-						nftmart_traits::TokenConfig {
-							token_id: 4,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata4", "e":"ff4"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::from_percent(10),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 11,
-						},
-						nftmart_traits::TokenConfig {
-							token_id: 5,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata5", "e":"ff5"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::zero(),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 12,
-						},
-					],
-				},
-				nftmart_traits::ClassConfig {
-					class_id: 55,
-					class_metadata: String::from_utf8(
-						br#"{"a":"class metadata55", "c":"dd55"}"#.to_vec(),
-					)
-					.unwrap(),
-					category_ids: vec![0],
-					name: String::from_utf8(b"class name55".to_vec()).unwrap(),
-					description: String::from_utf8(b"class description55".to_vec()).unwrap(),
-					properties: 1 | 2,
-					royalty_rate: PerU16::from_percent(15),
-					admins: vec![
-						AccountId::from_ss58check(
-							"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-						)
-						.unwrap(),
-						AccountId::from_ss58check(
-							"nmuEVMePZv8BaY33S19zmAEwBgNgokknFHGWSLGKB6tSzh9mS",
-						)
-						.unwrap(),
-					],
-					tokens: vec![
-						nftmart_traits::TokenConfig {
-							token_id: 41,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata41", "e":"ff41"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::from_percent(10),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 21,
-						},
-						nftmart_traits::TokenConfig {
-							token_id: 51,
-							token_metadata: String::from_utf8(
-								br#"{"a":"token metadata51", "e":"ff51"}"#.to_vec(),
-							)
-							.unwrap(),
-							royalty_rate: PerU16::zero(),
-							token_owner: AccountId::from_ss58check(
-								"nmvkzZYRfirHr4S8GuJNNuvPrx62KDzJjMKPRrd9jtUBiB9hJ",
-							)
-							.unwrap(),
-							token_creator: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							royalty_beneficiary: AccountId::from_ss58check(
-								"nmuBqHUFXb8HwuRdmUNQSAaUtrF1RmSuPrVF6oG24pVGUQ83X",
-							)
-							.unwrap(),
-							quantity: 22,
-						},
-					],
-				},
-			],
-			..Default::default()
-		},
+		nftmart: Default::default(),
 		nftmart_order: Default::default(),
 		nftmart_auction: Default::default(),
 		nftmart_conf: node_runtime::NftmartConfConfig {
 			white_list: endowed_accounts,
 			auction_close_delay: nftmart_traits::time::MINUTES * 10,
-			category_list: vec![b"saaaa1".to_vec(), b"saaaa2".to_vec(), b"saaaa3".to_vec()],
+			category_list: vec![],
 			..Default::default()
 		},
+		evm: EVMConfig {
+			accounts: {
+				// Prefund the "Gerald" account
+				let mut accounts = std::collections::BTreeMap::new();
+				// We need _some_ code inserted at the precompile address so that
+				// the evm will actually call the address.
+				for addr in PrecompilesValue::get().keys().copied().collect::<Vec<_>>() {
+					accounts.insert(
+						addr.into(),
+						GenesisAccount {
+							nonce: Default::default(),
+							balance: Default::default(),
+							storage: Default::default(),
+							code: revert_bytecode.clone(),
+						},
+					);
+				}
+				accounts.insert(
+					H160::from_slice(&hex_literal::hex!(
+						"6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b"
+					)),
+					GenesisAccount {
+						nonce: U256::zero(),
+						// Using a larger number, so I can tell the accounts apart by balance.
+						balance: U256::from(10_000_000 * DOLLARS),
+						code: vec![],
+						storage: std::collections::BTreeMap::new(),
+					},
+				);
+				accounts.insert(
+					H160::from_slice(&hex_literal::hex!(
+						"bdE2f034C17953Ee34B5F4Bf89C63349845d713f"
+					)),
+					GenesisAccount {
+						nonce: U256::zero(),
+						// Using a larger number, so I can tell the accounts apart by balance.
+						balance: U256::from(10_000_000 * DOLLARS),
+						code: vec![],
+						storage: std::collections::BTreeMap::new(),
+					},
+				);
+				accounts
+			},
+		},
+		ethereum: Default::default(),
+		ethereum_chain_id: EthereumChainIdConfig { chain_id: 12191 },
 	}
 }
 
@@ -516,8 +421,7 @@ pub fn local_testnet_config() -> ChainSpec {
 #[cfg(test)]
 pub(crate) mod tests {
 	use super::*;
-	use crate::service::{new_full_base, new_light_base, NewFullBase};
-	use sc_service_test;
+
 	// use sp_runtime::BuildStorage;
 
 	fn local_testnet_genesis_instant_single() -> GenesisConfig {
@@ -559,32 +463,32 @@ pub(crate) mod tests {
 		)
 	}
 
-	#[test]
-	#[ignore]
-	fn test_connectivity() {
-		sc_service_test::connectivity(
-			integration_test_config_with_two_authorities(),
-			|config| {
-				let NewFullBase { task_manager, client, network, transaction_pool, .. } =
-					new_full_base(config, |_, _| ())?;
-				Ok(sc_service_test::TestNetComponents::new(
-					task_manager,
-					client,
-					network,
-					transaction_pool,
-				))
-			},
-			|config| {
-				let (keep_alive, _, client, network, transaction_pool) = new_light_base(config)?;
-				Ok(sc_service_test::TestNetComponents::new(
-					keep_alive,
-					client,
-					network,
-					transaction_pool,
-				))
-			},
-		);
-	}
+	// #[test]
+	// #[ignore]
+	// fn test_connectivity() {
+	// 	sc_service_test::connectivity(
+	// 		integration_test_config_with_two_authorities(),
+	// 		|config| {
+	// 			let NewFullBase { task_manager, client, network, transaction_pool, .. } =
+	// 				new_full_base(config, |_, _| ())?;
+	// 			Ok(sc_service_test::TestNetComponents::new(
+	// 				task_manager,
+	// 				client,
+	// 				network,
+	// 				transaction_pool,
+	// 			))
+	// 		},
+	// 		|config| {
+	// 			let (keep_alive, _, client, network, transaction_pool) = new_light_base(config)?;
+	// 			Ok(sc_service_test::TestNetComponents::new(
+	// 				keep_alive,
+	// 				client,
+	// 				network,
+	// 				transaction_pool,
+	// 			))
+	// 		},
+	// 	);
+	// }
 
 	// #[test]
 	// fn test_create_development_chain_spec() {

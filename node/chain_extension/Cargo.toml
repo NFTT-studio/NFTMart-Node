@@ -2,7 +2,7 @@
 name = "chain-extension"
 version = "2.0.1"
 authors = ["Parity Technologies <admin@parity.io>"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 homepage = "https://substrate.dev"
 repository = "https://github.com/paritytech/substrate/"
@@ -12,13 +12,13 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
-sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-contracts = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sp-core = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-std = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+frame-support = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+frame-system = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-contracts = { version = "4.0.0-dev", default-features = false, git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 nftmart-traits = { path = "../../pallets/nftmart-traits", default-features = false }
 nftmart-nft = { path = "../../pallets/nftmart-nft", default-features = false }
 

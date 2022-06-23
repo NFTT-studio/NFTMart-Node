@@ -74,7 +74,7 @@ rustup default $NIGHTLY
 ### Compile And Run
 
 ```
-cargo build --release -p nftmart-node
+cargo build --release -p node-cli
 
 ./target/release/nftmart-node --dev --alice --rpc-cors=all --rpc-methods=Unsafe --unsafe-ws-external
 ```

@@ -3,7 +3,7 @@ name = "node-executor"
 version = "2.0.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 description = "Substrate node implementation in Rust."
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 homepage = "https://substrate.dev"
 repository = "https://github.com/paritytech/substrate/"
@@ -15,34 +15,33 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "2.0.0" }
 node-primitives = { version = "2.0.0", path = "../primitives" }
 node-runtime = { version = "2.0.0", path = "../runtime" }
-sc-executor = { version = "0.10.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-core = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-keystore = { version = "0.10.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-io = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-state-machine = { version = "0.10.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-trie = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+sc-executor = { version = "0.10.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-core = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-keystore = { version = "0.10.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-io = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-state-machine = { version = "0.10.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-trie = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 trie-root = "0.16.0"
-frame-benchmarking = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+frame-benchmarking = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 
 [dev-dependencies]
 criterion = "0.3.0"
-frame-support = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-frame-system = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-node-testing = { version = "2.0.0", path = "../testing" }
-pallet-balances = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-contracts = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-grandpa = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-im-online = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-indices = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-session = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-timestamp = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-transaction-payment = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-pallet-treasury = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-application-crypto = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-consensus-babe = { version = "0.10.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-sp-externalities = { version = "0.10.0-dev", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
-substrate-test-client = { version = "2.0.0", git = 'https://github.com/paritytech/substrate.git', rev = 'fe663ed0' }
+frame-support = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+frame-system = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-balances = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-contracts = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-grandpa = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-im-online = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-indices = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-session = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-timestamp = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-transaction-payment = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+pallet-treasury = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-application-crypto = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-consensus-babe = { version = "0.10.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-runtime = { version = "4.0.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+sp-externalities = { version = "0.10.0-dev", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
+substrate-test-client = { version = "2.0.0", git = 'https://github.com/nftt-studio/substrate.git', branch = 'moonbeam-polkadot-v0.9.13' }
 wat = "1.0"
 futures = "0.3.9"
 

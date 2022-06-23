@@ -1,4 +1,5 @@
 use codec::{Decode, Encode, FullCodec};
+use scale_info::TypeInfo;
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Zero},
 	DispatchResult, RuntimeDebug,
@@ -38,7 +39,7 @@ pub trait NFT<AccountId> {
 }
 
 /// Class info
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 pub struct ClassInfo<TokenId, AccountId, Data> {
 	/// Class metadata
 	pub metadata: Vec<u8>,
@@ -52,7 +53,7 @@ pub struct ClassInfo<TokenId, AccountId, Data> {
 }
 
 /// Token info
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 pub struct TokenInfo<TokenId, Data> {
 	/// Token metadata
 	pub metadata: Vec<u8>,
@@ -64,7 +65,7 @@ pub struct TokenInfo<TokenId, Data> {
 }
 
 /// Account Token
-#[derive(Encode, Decode, Copy, Clone, Eq, PartialEq, RuntimeDebug)]
+#[derive(Encode, Decode, Copy, Clone, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 pub struct AccountToken<TokenId> {
 	/// account token number.
 	#[codec(compact)]

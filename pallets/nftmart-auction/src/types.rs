@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BritishAuction<CurrencyId, BlockNumber, ClassId, TokenId> {
 	/// currency ID for this auction
@@ -33,7 +33,7 @@ pub struct BritishAuction<CurrencyId, BlockNumber, ClassId, TokenId> {
 	pub commission_rate: PerU16,
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BritishAuctionBid<AccountId, BlockNumber> {
 	/// last bid price
@@ -48,7 +48,7 @@ pub struct BritishAuctionBid<AccountId, BlockNumber> {
 	pub commission_data: Option<Vec<u8>>,
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct DutchAuction<CurrencyId, BlockNumber, ClassId, TokenId> {
 	#[codec(compact)]
@@ -74,7 +74,7 @@ pub struct DutchAuction<CurrencyId, BlockNumber, ClassId, TokenId> {
 
 pub type DutchAuctionBid<AccountId, BlockNumber> = BritishAuctionBid<AccountId, BlockNumber>;
 
-#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, scale_info::TypeInfo)]
 pub enum Releases {
 	V1_0_0,
 }

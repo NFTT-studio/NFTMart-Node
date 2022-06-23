@@ -45,12 +45,11 @@ use sc_client_api::{
 	BlockBackend, ExecutionStrategy,
 };
 use sc_client_db::PruningMode;
-use sc_executor::{NativeExecutor, WasmExecutionMethod};
+use sc_consensus::{BlockImport, BlockImportParams, ForkChoiceStrategy, ImportResult, ImportedAux};
+use sc_executor::{NativeElseWasmExecutor, WasmExecutionMethod};
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
-use sp_consensus::{
-	BlockImport, BlockImportParams, BlockOrigin, ForkChoiceStrategy, ImportResult, ImportedAux,
-};
+use sp_consensus::BlockOrigin;
 use sp_core::{blake2_256, ed25519, sr25519, traits::SpawnNamed, ExecutionContext, Pair, Public};
 use sp_inherents::InherentData;
 use sp_runtime::{
@@ -221,10 +220,10 @@ pub enum DatabaseType {
 }
 
 impl DatabaseType {
-	fn into_settings(self, path: PathBuf) -> sc_client_db::DatabaseSettingsSrc {
+	fn into_settings(self, path: PathBuf) -> sc_client_db::DatabaseSource {
 		match self {
-			Self::RocksDb => sc_client_db::DatabaseSettingsSrc::RocksDb { path, cache_size: 512 },
-			Self::ParityDb => sc_client_db::DatabaseSettingsSrc::ParityDb { path },
+			Self::RocksDb => sc_client_db::DatabaseSource::RocksDb { path, cache_size: 512 },
+			Self::ParityDb => sc_client_db::DatabaseSource::ParityDb { path },
 		}
 	}
 }
@@ -244,14 +243,24 @@ impl TaskExecutor {
 }
 
 impl SpawnNamed for TaskExecutor {
-	fn spawn(&self, _: &'static str, future: futures::future::BoxFuture<'static, ()>) {
-		self.pool.spawn_ok(future);
-	}
+       fn spawn(
+               &self,
+               _: &'static str,
+               _: Option<&'static str>,
+               future: futures::future::BoxFuture<'static, ()>,
+       ) {
+               self.pool.spawn_ok(future);
+       }
 
-	fn spawn_blocking(&self, _: &'static str, future: futures::future::BoxFuture<'static, ()>) {
-		self.pool.spawn_ok(future);
-	}
-}
+       fn spawn_blocking(
+               &self,
+               _: &'static str,
+               _: Option<&'static str>,
+               future: futures::future::BoxFuture<'static, ()>,
+       ) {
+               self.pool.spawn_ok(future);
+       }
+ }
 
 /// Iterator for block content.
 pub struct BlockContentIterator<'a> {
@@ -300,19 +309,19 @@ impl<'a> Iterator for BlockContentIterator<'a> {
 				)),
 				function: match self.content.block_type {
 					BlockType::RandomTransfersKeepAlive =>
-						Call::Balances(BalancesCall::transfer_keep_alive(
-							sp_runtime::MultiAddress::Id(receiver),
-							node_runtime::ExistentialDeposit::get() + 1,
-						)),
+						Call::Balances(BalancesCall::transfer_keep_alive{
+							dest: sp_runtime::MultiAddress::Id(receiver),
+							value: node_runtime::ExistentialDeposit::get() + 1,
+						}),
 					BlockType::RandomTransfersReaping => {
-						Call::Balances(BalancesCall::transfer(
-							sp_runtime::MultiAddress::Id(receiver),
-							// Transfer so that ending balance would be 1 less than existential deposit
-							// so that we kill the sender account.
-							100 * DOLLARS - (node_runtime::ExistentialDeposit::get() - 1),
-						))
+						Call::Balances(BalancesCall::transfer{
+							dest: sp_runtime::MultiAddress::Id(receiver),
+							// Transfer so that ending balance would be 1 less than existential
+							// deposit so that we kill the sender account.
+							value: 100 * DOLLARS - (node_runtime::ExistentialDeposit::get() - 1),
+						})
 					},
-					BlockType::Noop => Call::System(SystemCall::remark(Vec::new())),
+					BlockType::Noop => Call::System(SystemCall::remark { remark: Vec::new() }),
 				},
 			},
 			self.runtime_version.spec_version,
@@ -391,7 +400,7 @@ impl BenchDb {
 		let backend = sc_service::new_db_backend(db_config).expect("Should not fail");
 		let client = sc_service::new_client(
 			backend.clone(),
-			NativeExecutor::new(WasmExecutionMethod::Compiled, None, 8),
+			NativeElseWasmExecutor::new(WasmExecutionMethod::Compiled, None, 8),
 			&keyring.generate_genesis(),
 			None,
 			None,
@@ -582,7 +591,6 @@ impl BenchKeyring {
 	/// Generate genesis with accounts from this keyring endowed with some balance.
 	pub fn generate_genesis(&self) -> node_runtime::GenesisConfig {
 		crate::genesis::config_endowed(
-			false,
 			Some(node_runtime::wasm_binary_unwrap()),
 			self.collect_account_ids(),
 		)

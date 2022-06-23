@@ -5,7 +5,7 @@ use crate as nftmart_auction;
 use codec::{Decode, Encode};
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Filter, InstanceFilter},
+	traits::{Contains, InstanceFilter},
 	PalletId, RuntimeDebug,
 };
 use orml_currencies::BasicCurrencyAdapter;
@@ -63,6 +63,7 @@ impl pallet_balances::Config for Runtime {
 impl pallet_utility::Config for Runtime {
 	type Event = Event;
 	type Call = Call;
+	type PalletsOrigin = OriginCaller;
 	type WeightInfo = ();
 }
 parameter_types! {
@@ -74,7 +75,17 @@ parameter_types! {
 	pub const AnnouncementDepositFactor: u64 = 1;
 }
 #[derive(
-	Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen,
+	Copy,
+	Clone,
+	Eq,
+	PartialEq,
+	Ord,
+	PartialOrd,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
 )]
 pub enum ProxyType {
 	Any,
@@ -91,7 +102,7 @@ impl InstanceFilter<Call> for ProxyType {
 		match self {
 			ProxyType::Any => true,
 			ProxyType::JustTransfer => {
-				matches!(c, Call::Balances(pallet_balances::Call::transfer(..)))
+				matches!(c, Call::Balances(pallet_balances::Call::transfer { .. }))
 			},
 			ProxyType::JustUtility => matches!(c, Call::Utility(..)),
 		}
@@ -101,11 +112,11 @@ impl InstanceFilter<Call> for ProxyType {
 	}
 }
 pub struct BaseFilter;
-impl Filter<Call> for BaseFilter {
-	fn filter(c: &Call) -> bool {
+impl Contains<Call> for BaseFilter {
+	fn contains(c: &Call) -> bool {
 		match *c {
 			// Remark is used as a no-op call in the benchmarking
-			Call::System(SystemCall::remark(_)) => true,
+			Call::System(SystemCall::remark { .. }) => true,
 			Call::System(_) => false,
 			_ => true,
 		}
@@ -182,12 +193,24 @@ parameter_types! {
 impl nftmart_nft::Config for Runtime {
 	type Event = Event;
 	type ExtraConfig = NftmartConf;
+	type OrderConfig = NftmartOrder;
 	type CreateClassDeposit = CreateClassDeposit;
 	type MetaDataByteDeposit = MetaDataByteDeposit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type ModuleId = NftModuleId;
 	type Currency = Balances;
 	type MultiCurrency = Currencies;
+}
+
+impl nftmart_order::Config for Runtime {
+	type Event = Event;
+	type MultiCurrency = Currencies;
+	type Currency = Balances;
+	type ClassId = nftmart_traits::ClassId;
+	type TokenId = nftmart_traits::TokenId;
+	type NFT = Nftmart;
+	type ExtraConfig = NftmartConf;
+	type TreasuryPalletId = TreasuryPalletId;
 }
 
 impl nftmart_config::Config for Runtime {
@@ -229,6 +252,7 @@ construct_runtime!(
 		Currencies: orml_currencies::{Pallet, Call, Event<T>},
 		OrmlNFT: orml_nft::{Pallet, Storage, Config<T>},
 		NftmartConf: nftmart_config::{Pallet, Call, Event<T>},
+		NftmartOrder: nftmart_order::{Pallet, Call, Event<T>},
 		Nftmart: nftmart_nft::{Pallet, Call, Event<T>},
 		NftmartAuction: nftmart_auction::{Pallet, Call, Event<T>},
 	}

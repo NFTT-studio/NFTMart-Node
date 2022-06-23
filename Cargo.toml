@@ -3,6 +3,63 @@ panic = 'unwind'
 
 [workspace]
 members = [
-	'node/*',
+# 'node/*',
+# 'node/testing',
+	'node/aura-cli',
+	'node/aura-runtime',
+	'node/chain_extension',
+	'node/cli',
+	'node/executor',
+	'node/inspect',
+	'node/primitives',
+	'node/rpc',
+	'node/runtime',
 	'pallets/*',
+	'precompiles/*',
 ]
+
+[patch.crates-io]
+ss58-registry = { git = "https://github.com/nftt-studio/ss58-registry.git", branch = "add-nftmart-prefix-12191" }
+ethereum = { git = "https://github.com/purestake/ethereum", branch = "tgm-0.11.1-typeinfo-patch" }
+# wasmtime = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-cache = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-cranelift = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-environ = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-jit = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-runtime = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+# wasmtime-types = { version = "0.33.0", git = "https://github.com/bytecodealliance/wasmtime.git", branch = "main"}
+
+# RustBlockchain/evm repo: https://github.com/rust-blockchain/evm/pull/63
+# evm-core = { git = "https://github.com/purestake/evm", branch = "joshy-scale-info"}
+# evm = { git = "https://github.com/purestake/evm", branch = "joshy-scale-info"}
+
+# [patch."https://github.com/nftt-studio/frontier.git"]
+# pallet-evm = { path = '../frontier/frame/evm'}
+# pallet-ethereum = { path = '../frontier/frame/ethereum'}
+# fp-rpc = { path = '../frontier/primitives/rpc'}
+# fp-evm = { path = '../frontier/primitives/evm'}
+# fc-rpc = { path = '../frontier/client/rpc'}
+# fc-rpc-core = { path = '../frontier/client/rpc-core'}
+# fc-db = { path = '../frontier/client/db'}
+# fc-consensus = { path = '../frontier/client/consensus'}
+# fp-consensus = { path = '../frontier/primitives/consensus'}
+# fc-mapping-sync = { path = '../frontier/client/mapping-sync'}
+# fp-self-contained = { path = '../frontier/primitives/self-contained'}
+# pallet-evm-precompile-dispatch = { path = '../frontier/frame/evm/precompile/dispatch'}
+# pallet-evm-precompile-blake2 = { path = '../frontier/frame/evm/precompile/blake2'}
+# pallet-evm-precompile-bn128 = { path = '../frontier/frame/evm/precompile/bn128'}
+# pallet-evm-precompile-curve25519 = { path = '../frontier/frame/evm/precompile/curve25519'}
+# pallet-evm-precompile-ed25519 = { path = '../frontier/frame/evm/precompile/ed25519'}
+# pallet-evm-precompile-modexp = { path = '../frontier/frame/evm/precompile/modexp'}
+# pallet-evm-precompile-sha3fips = { path = '../frontier/frame/evm/precompile/sha3fips'}
+# pallet-evm-precompile-simple = { path = '../frontier/frame/evm/precompile/simple'}
+
+# pallet-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13" }
+
+# RustBlockchain/ethereum repo: https://github.com/rust-blockchain/ethereum/pull/22
+# ethereum = { git = "https://github.com/purestake/ethereum", branch = "joshy-scale-info" }
+# ethereum = { version = "0.9.0", git = "https://github.com/purestake/ethereum", branch = "joshy-scale-info" }
+# ethereum = { version = "0.9.0", git = "https://github.com/rust-blockchain/ethereum", branch = "master" }
+# ethereum = { version = "0.11" }
+# sp-core = { git = 'https://github.com/btwiuse/substrate.git', rev = 'ba153b9ae050eda022f002d74d76f98d1e339a81' }
+

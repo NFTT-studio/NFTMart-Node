@@ -58,8 +58,14 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let caller: <Runtime as SysConfig>::AccountId = to_account_id(caller.as_ref())?;
-				let (metadata, name, description, properties, royalty_rate, cate_ids): (_, _, _, u8, u16, Vec<GlobalId>) =
-					env.read_as_unbounded(env.in_len())?;
+				let (metadata, name, description, properties, royalty_rate, cate_ids): (
+					_,
+					_,
+					_,
+					u8,
+					u16,
+					Vec<GlobalId>,
+				) = env.read_as_unbounded(env.in_len())?;
 				let p = Properties(
 					<BitFlags<ClassProperty>>::from_bits(properties)
 						.map_err(|_| "invalid class properties value")?,

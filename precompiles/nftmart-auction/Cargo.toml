@@ -1,0 +1,63 @@
+[lib]
+path = "lib.rs"
+
+[package]
+name = "nftmart-auction-precompiles"
+authors = [ "NFTMart" ]
+description = "A Precompile to make Substrate's pallet-template accessible to pallet-evm"
+edition = "2021"
+version = "4.0.0-dev"
+
+[dependencies]
+log = "0.4"
+num_enum = { version = "0.5.3", default-features = false }
+
+# Moonbeam
+precompile-utils = { default-features = false, path = '../utils' }
+
+# Substrate
+codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false }
+fp-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+frame-support = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+frame-system = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+sp-core = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+sp-io = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+sp-std = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+pallet-balances = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+pallet-template = { default-features = false, path = "../../pallets/template" }
+orml-nft = { version = "0.4.1-dev", default-features = false, path = "../../pallets/orml-nft" }
+nftmart-nft = { default-features = false, path = "../../pallets/nftmart-nft" }
+nftmart-auction = { default-features = false, path = "../../pallets/nftmart-auction" }
+nftmart-order = { default-features = false, path = "../../pallets/nftmart-order" }
+nftmart-traits = { default-features = false, path = "../../pallets/nftmart-traits" }
+
+# Frontier
+pallet-evm = { git = "https://github.com/nftt-studio/frontier.git", branch = "moonbeam-polkadot-v0.9.13", default-features = false }
+
+[dev-dependencies]
+derive_more = "0.99"
+hex-literal = "0.3.4"
+serde = "1.0.100"
+
+# Substrate
+scale-info = { version = "1.0", default-features = false, features = [ "derive" ] }
+sp-runtime = { git = "https://github.com/nftt-studio/substrate.git", branch = "moonbeam-polkadot-v0.9.13" }
+
+[features]
+default = [ "std" ]
+std = [
+	"codec/std",
+	"fp-evm/std",
+	"frame-support/std",
+	"frame-system/std",
+	"pallet-balances/std",
+	"orml-nft/std",
+	"nftmart-nft/std",
+	"nftmart-auction/std",
+	"nftmart-order/std",
+	"pallet-evm/std",
+	"precompile-utils/std",
+	"sp-core/std",
+	"sp-io/std",
+	"sp-std/std",
+]
